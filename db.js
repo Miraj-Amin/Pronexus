@@ -87,9 +87,83 @@
   function getActive() { try { return localStorage.getItem(ACTIVE) || null; } catch (e) { return null; } }
   function getTemplate() { return A.blankTemplate(); }
 
+  // ===========================================================================
+  //  COLLABORATION — snapshots / audit log / comments
+  // ===========================================================================
+
+  // ---- snapshots ----
+  async function listSnapshots(projectId) {
+    var res = await sb().from('snapshots').select('id,label,author,created_at').eq('project_id', projectId).order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+  async function getSnapshot(id) {
+    var res = await sb().from('snapshots').select('*').eq('id', id).maybeSingle();
+    if (res.error) throw res.error;
+    return res.data || null;
+  }
+  async function saveSnapshot(projectId, label, data, author) {
+    var row = { project_id: projectId, label: label || null, data: data, author: author || null };
+    var res = await sb().from('snapshots').insert(row).select('id,label,author,created_at').maybeSingle();
+    if (res.error) throw res.error;
+    return res.data;
+  }
+  async function deleteSnapshot(id) {
+    var res = await sb().from('snapshots').delete().eq('id', id);
+    if (res.error) throw res.error;
+  }
+
+  // ---- audit log ----
+  async function logChanges(projectId, author, entries) {
+    if (!entries || !entries.length) return;
+    var rows = entries.map(function (e) {
+      return { project_id: projectId, author: author || null, label: e.label, old_value: e.old, new_value: e.new };
+    });
+    var res = await sb().from('audit_log').insert(rows);
+    if (res.error) throw res.error;
+  }
+  async function listAudit(projectId, limit) {
+    var q = sb().from('audit_log').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
+    if (limit) q = q.limit(limit);
+    var res = await q;
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+
+  // ---- comments ----
+  async function listComments(projectId) {
+    var res = await sb().from('comments').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+  async function openCommentCount(projectId) {
+    var res = await sb().from('comments').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('resolved', false);
+    if (res.error) throw res.error;
+    return res.count || 0;
+  }
+  async function addComment(projectId, anchor, anchorLabel, body, author) {
+    var row = { project_id: projectId, anchor: anchor || 'scheme', anchor_label: anchorLabel || null, body: body, author: author || null };
+    var res = await sb().from('comments').insert(row).select('*').maybeSingle();
+    if (res.error) throw res.error;
+    return res.data;
+  }
+  async function setCommentResolved(id, resolved) {
+    var res = await sb().from('comments').update({ resolved: !!resolved }).eq('id', id);
+    if (res.error) throw res.error;
+  }
+  async function deleteComment(id) {
+    var res = await sb().from('comments').delete().eq('id', id);
+    if (res.error) throw res.error;
+  }
+
   global.DB = {
     list: list, get: get, upsert: upsert, create: create, clone: clone,
     remove: remove, seedIfEmpty: seedIfEmpty, getTemplate: getTemplate,
-    setActive: setActive, getActive: getActive
+    setActive: setActive, getActive: getActive,
+    // collaboration
+    listSnapshots: listSnapshots, getSnapshot: getSnapshot, saveSnapshot: saveSnapshot, deleteSnapshot: deleteSnapshot,
+    logChanges: logChanges, listAudit: listAudit,
+    listComments: listComments, openCommentCount: openCommentCount, addComment: addComment,
+    setCommentResolved: setCommentResolved, deleteComment: deleteComment
   };
 })(typeof window !== 'undefined' ? window : this);

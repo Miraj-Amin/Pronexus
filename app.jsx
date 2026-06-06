@@ -137,6 +137,11 @@ function Workspace({ session }) {
   const [pres, setPres] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
+  // collaboration: review drawer + live counters
+  const [review, setReview] = React.useState({ open: false, tab: 'history' });
+  const [openComments, setOpenComments] = React.useState(0);
+  const [collabKey, setCollabKey] = React.useState(0);
+  const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
   React.useEffect(() => { DB.setActive(activeId); }, [activeId]);
@@ -156,6 +161,16 @@ function Workspace({ session }) {
 
   const active = (activeId && projects) ? projects.filter(p => p.id === activeId)[0] : null;
   const model = React.useMemo(() => active ? window.Appraisal.computeModel(active) : null, [active]);
+
+  // record who-changed-what (debounced) and bump the activity panel when it logs
+  useAuditCapture(active, email, () => setCollabKey(k => k + 1));
+
+  // keep the open-comment badge fresh when switching scheme / after comment actions
+  const refreshCommentCount = React.useCallback(() => {
+    if (!activeId) { setOpenComments(0); return; }
+    DB.openCommentCount(activeId).then(setOpenComments).catch(() => {});
+  }, [activeId]);
+  React.useEffect(() => { refreshCommentCount(); }, [refreshCommentCount, collabKey]);
 
   // mutate active project — optimistic local update, then persist to the database
   const set = React.useCallback(updater => {
@@ -192,6 +207,21 @@ function Workspace({ session }) {
   };
   const signOut = async () => { try { await window.sb.auth.signOut(); } catch (e) {} };
 
+  // restore a snapshot's data as the current scheme (optimistic), then log it
+  const restoreSnapshot = async (snap) => {
+    if (!snap || !snap.data) return;
+    const restored = JSON.parse(JSON.stringify(snap.data));
+    restored.id = activeId; // never let a restore change identity
+    setProjects(prev => prev.map(p => p.id === activeId ? restored : p));
+    try {
+      await DB.upsert(restored);
+      await DB.logChanges(activeId, email, [{ label: 'Restored snapshot', old: '—', new: snap.label || ('#' + snap.id) }]);
+      setCollabKey(k => k + 1);
+      setReview(r => ({ ...r, open: false }));
+    } catch (e) { alert('Restore failed to save: ' + ((e && e.message) || e)); }
+  };
+  const openReview = (t) => setReview({ open: true, tab: t || 'history' });
+
   if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
 
   // ---- Portfolio view ----
@@ -218,7 +248,7 @@ function Workspace({ session }) {
   const r = model.ratios;
   const risk = window.Appraisal.riskScore(model);
   return (
-    <div className={'app' + (pres ? ' presmode' : '')}>
+    <div className={'app projview' + (pres ? ' presmode' : '')}>
       <div className="topbar">
         <div className="brand">
           <button className="backbtn" onClick={backToPortfolio} title="Back to portfolio">
@@ -227,7 +257,7 @@ function Workspace({ session }) {
           <div className="mark">N</div>
           <div className="title">{active.project.name}</div>
         </div>
-        <div className="ref">{active.project.ref}</div>
+        <div className="ref hide-mobile">{active.project.ref}</div>
         {!pres ? (
           <div className="nav">
             <button className={tab === 'input' ? 'active' : ''} onClick={() => setTab('input')}>Input</button>
@@ -241,13 +271,44 @@ function Workspace({ session }) {
           <div className="pb"><div className="lab">% GDV</div><div className="val">{dashFmt.pct(r.profitPctGdv)}</div></div>
           <div className="pb"><div className="lab">Risk</div><div className={'val risk-' + risk.sev}>{risk.level}</div></div>
         </div>
-        <div className={'toggle' + (pres ? ' on' : '')} onClick={() => setPres(p => !p)} style={{ marginLeft: 10 }}><span className="sw"></span>Presentation</div>
-        <button className="btn ghost acct-out" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
+        <div className={'toggle hide-mobile' + (pres ? ' on' : '')} onClick={() => setPres(p => !p)} style={{ marginLeft: 10 }}><span className="sw"></span>Presentation</div>
+        <button className="reviewbtn" onClick={() => openReview('history')} style={{ marginLeft: 10 }} title="Version history, activity & comments">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l2.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/></svg>
+          <span className="reviewbtn-lbl">Review</span>{openComments > 0 ? <span className="reviewbadge">{openComments}</span> : null}
+        </button>
+        <button className="btn ghost acct-out hide-mobile" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
       </div>
 
       {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
 
+      <ReviewDrawer open={review.open} initialTab={review.tab} onClose={() => setReview(r => ({ ...r, open: false }))}
+        project={active} author={email} refreshKey={collabKey}
+        onRestore={restoreSnapshot} onChanged={refreshCommentCount} />
+
       {!pres ? <FlagBar model={model} /> : null}
+
+      {!pres ? (
+        <nav className="mobile-tabs">
+          <button className={tab === 'input' ? 'active' : ''} onClick={() => { setTab('input'); window.scrollTo(0, 0); }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 7.5h7M6.5 10h7M6.5 12.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span>Input</span>
+          </button>
+          <button className={tab === 'cashflow' ? 'active' : ''} onClick={() => { setTab('cashflow'); window.scrollTo(0, 0); }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-4 3 2 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 17h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span>Cashflow</span>
+          </button>
+          <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => { setTab('dashboard'); window.scrollTo(0, 0); }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+            <span>Dashboard</span>
+          </button>
+          <button className="mt-more" onClick={() => setPres(p => !p)}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+            <span>Present</span>
+          </button>
+        </nav>
+      ) : null}
+
+      {pres ? <button className="pres-exit-mobile" onClick={() => setPres(false)}>✕ Exit presentation</button> : null}
 
       {pres
         ? <Presentation state={active} model={model} />
