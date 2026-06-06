@@ -1,0 +1,270 @@
+/* App shell — Portfolio ↔ Project routing, DB-backed multi-project store,
+   New Project modal (clone from locked template), per-project tabs incl. the
+   editable Cashflow table. */
+const dashFmt = window.Appraisal;
+const DB = window.DB;
+
+function FlagBar({ model }) {
+  const red = model.flags.filter(f => f.sev === 'red');
+  const amber = model.flags.filter(f => f.sev === 'amber');
+  return (
+    <div className="flagbar">
+      <div className="counts">
+        <span className={'fcount ' + (red.length ? 'red' : 'ok')}><span className="dot"></span>{red.length} red</span>
+        <span className={'fcount ' + (amber.length ? 'amber' : 'ok')}><span className="dot"></span>{amber.length} amber</span>
+      </div>
+      <div className="flaglist">
+        {model.flags.length === 0
+          ? <span className="allok">✓ All validation rules pass</span>
+          : model.flags.map((f, i) => (
+            <span key={i} className={'flagchip ' + f.sev}><span className="tl"></span><b>{f.rule}</b><span className="det">{f.detail}</span></span>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ state, model }) {
+  return (
+    <div className="main" data-screen-label="Dashboard">
+      <div className="sectiontitle"><h2>Headline Metrics</h2><div className="rule"></div></div>
+      <KpiRow model={model} />
+      <div className="grid" style={{ gridTemplateColumns: '1.55fr 1fr', marginTop: '22px' }}>
+        <div className="card">
+          <div className="cardhead"><h3>Cashflow &amp; Peak Funding</h3><span className="sub">{model.cashflow.horizon}-month horizon</span></div>
+          <div className="cardbody"><CashflowChart model={model} /></div>
+        </div>
+        <div className="card">
+          <div className="cardhead"><h3>Funding Waterfall</h3><span className="sub">reconcile to £0</span></div>
+          <div className="cardbody"><Waterfall model={model} /></div>
+        </div>
+      </div>
+      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '16px' }}>
+        <div className="card">
+          <div className="cardhead"><h3>Cost Breakdown</h3><span className="sub">{dashFmt.money(model.ratios.totalCost)} total</span></div>
+          <div className="cardbody"><Breakdown model={model} /></div>
+        </div>
+        <div className="card">
+          <div className="cardhead"><h3>Active Flags</h3><span className="sub">{model.flags.length} open</span></div>
+          <div className="cardbody"><FlagPanel flags={model.flags} /></div>
+        </div>
+      </div>
+      <div className="card" style={{ marginTop: '16px' }}>
+        <div className="cardhead"><h3>Sensitivity Analysis</h3><span className="sub">sale price × cost</span></div>
+        <div className="cardbody"><Sensitivity model={model} /></div>
+      </div>
+      <div className="card" style={{ marginTop: '16px' }}>
+        <div className="cardhead"><h3>Sales Comparables</h3><span className="sub">{state.comparables.length} evidenced</span></div>
+        <div className="cardbody"><Comps state={state} /></div>
+      </div>
+    </div>
+  );
+}
+
+function Presentation({ state, model }) {
+  const r = model.ratios; const p = state.project;
+  const heroKpis = [
+    { l: 'GDV', v: dashFmt.moneyShort(r.gdv) }, { l: 'Total Cost', v: dashFmt.moneyShort(r.totalCost) },
+    { l: 'Profit', v: dashFmt.moneyShort(r.profit) }, { l: 'Profit % GDV', v: dashFmt.pct(r.profitPctGdv) },
+    { l: 'Profit excl. Finance', v: dashFmt.pct(r.profitExFinance) }, { l: 'Peak Funding', v: dashFmt.moneyShort(r.peakFunding) }
+  ];
+  return (
+    <div className="main" data-screen-label="Presentation">
+      <div className="pres-header">
+        <div className="ph-l">
+          <div className="pres-badge" style={{ marginBottom: 12 }}>● BANK-FACING SUMMARY</div>
+          <h1>{p.name}</h1>
+          <div className="addr">{p.address}</div>
+        </div>
+        <div className="ph-meta">
+          <div className="m"><div className="l">Planning Ref</div><div className="v">{p.planningRef || '—'}</div></div>
+          <div className="m"><div className="l">Project Length</div><div className="v">{p.projectLengthMonths} mo</div></div>
+          <div className="m"><div className="l">Units</div><div className="v">{state.phases.reduce((a, x) => a + x.units, 0)}</div></div>
+        </div>
+      </div>
+      <div className="kpis" style={{ gridTemplateColumns: 'repeat(6,1fr)' }}>
+        {heroKpis.map((k, i) => <div className="kpi neutral" key={i}><div className="klab">{k.l}</div><div className="kval">{k.v}</div></div>)}
+      </div>
+      <div className="grid" style={{ gridTemplateColumns: '1.55fr 1fr', marginTop: '20px' }}>
+        <div className="card"><div className="cardhead"><h3>Cashflow &amp; Peak Funding</h3><span className="sub">{model.cashflow.horizon}-month horizon</span></div><div className="cardbody"><CashflowChart model={model} /></div></div>
+        <div className="card"><div className="cardhead"><h3>Sources &amp; Uses</h3></div><div className="cardbody"><Waterfall model={model} /></div></div>
+      </div>
+      <div className="card" style={{ marginTop: '16px' }}><div className="cardhead"><h3>Sensitivity — Lender Stress</h3><span className="sub">sale price × cost</span></div><div className="cardbody"><Sensitivity model={model} /></div></div>
+      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '16px' }}>
+        <div className="card"><div className="cardhead"><h3>Cost Breakdown</h3></div><div className="cardbody"><Breakdown model={model} /></div></div>
+        <div className="card"><div className="cardhead"><h3>Sales Comparables</h3></div><div className="cardbody"><Comps state={state} /></div></div>
+      </div>
+    </div>
+  );
+}
+
+function NewProjectModal({ onClose, onCreate }) {
+  const [name, setName] = React.useState('');
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <h3>New Appraisal</h3>
+          <p>Creates a new project entity cloned from the locked master template. Nothing is shared with existing schemes.</p>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Scheme name</label>
+            <input autoFocus value={name} placeholder="e.g. Birch Meadow, Redhill"
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onCreate(name.trim()); }} />
+          </div>
+          <div className="template-pill">
+            <div className="ti"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M5 6h6M5 8.5h6M5 11h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg></div>
+            <div><div className="tt">Master Template v1</div><div className="ts">14-category cost scaffold · default rate library</div></div>
+            <div className="lock"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="4.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1" /><path d="M3.3 4.5V3.4a1.7 1.7 0 013.4 0v1.1" stroke="currentColor" strokeWidth="1" /></svg>locked</div>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn ghost" onClick={onClose}>Cancel</button>
+          <button className="btn primary" disabled={!name.trim()} style={{ opacity: name.trim() ? 1 : .5 }} onClick={() => name.trim() && onCreate(name.trim())}>Create scheme</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Workspace({ session }) {
+  const [projects, setProjects] = React.useState(null); // null = still loading
+  const [loadErr, setLoadErr] = React.useState('');
+  const [activeId, setActiveId] = React.useState(() => DB.getActive());
+  const [tab, setTab] = React.useState(() => localStorage.getItem('appraisal_tab') || 'dashboard');
+  const [pres, setPres] = React.useState(false);
+  const [showNew, setShowNew] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
+  React.useEffect(() => { DB.setActive(activeId); }, [activeId]);
+
+  const loadProjects = React.useCallback(async () => {
+    try {
+      setLoadErr('');
+      await DB.seedIfEmpty();
+      const listed = await DB.list();
+      setProjects(listed);
+    } catch (e) {
+      setLoadErr((e && e.message) ? e.message : String(e));
+      setProjects([]);
+    }
+  }, []);
+  React.useEffect(() => { loadProjects(); }, [loadProjects]);
+
+  const active = (activeId && projects) ? projects.filter(p => p.id === activeId)[0] : null;
+  const model = React.useMemo(() => active ? window.Appraisal.computeModel(active) : null, [active]);
+
+  // mutate active project — optimistic local update, then persist to the database
+  const set = React.useCallback(updater => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== activeId) return p;
+      const copy = JSON.parse(JSON.stringify(p));
+      updater(copy);
+      DB.upsert(copy).catch(e => { console.error('Save failed:', e); setLoadErr('Save failed — check your connection. ' + ((e && e.message) || '')); });
+      return copy;
+    }));
+  }, [activeId]);
+
+  const openProject = id => { setActiveId(id); setTab('dashboard'); window.scrollTo(0, 0); };
+  const backToPortfolio = () => { setActiveId(null); setPres(false); window.scrollTo(0, 0); };
+  const newProject = async name => {
+    setBusy(true);
+    try { const p = await DB.create(name); setShowNew(false); await loadProjects(); openProject(p.id); setTab('input'); }
+    catch (e) { alert('Could not create scheme: ' + ((e && e.message) || e)); }
+    finally { setBusy(false); }
+  };
+  const cloneProject = async id => {
+    setBusy(true);
+    try { await DB.clone(id); await loadProjects(); }
+    catch (e) { alert('Could not duplicate scheme: ' + ((e && e.message) || e)); }
+    finally { setBusy(false); }
+  };
+  const deleteProject = async id => {
+    const p = (projects || []).filter(x => x.id === id)[0];
+    if (!confirm('Delete "' + (p ? p.project.name : 'this scheme') + '" for the whole team? This cannot be undone.')) return;
+    setBusy(true);
+    try { await DB.remove(id); if (activeId === id) backToPortfolio(); await loadProjects(); }
+    catch (e) { alert('Could not delete scheme: ' + ((e && e.message) || e)); }
+    finally { setBusy(false); }
+  };
+  const signOut = async () => { try { await window.sb.auth.signOut(); } catch (e) {} };
+
+  if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
+
+  // ---- Portfolio view ----
+  if (!active) {
+    return (
+      <div className="app">
+        <div className="topbar">
+          <div className="brand"><div className="mark">N</div><div className="title">North Gate <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
+          <div className="ref">PORTFOLIO</div>
+          <div className="spacer"></div>
+          <div className="acct">
+            <span className="acct-email" title={session.user.email}>{session.user.email}</span>
+            <button className="btn ghost acct-out" onClick={signOut}>Sign out</button>
+          </div>
+        </div>
+        {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
+        <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onClone={cloneProject} onDelete={deleteProject} />
+        {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
+      </div>
+    );
+  }
+
+  // ---- Project view ----
+  const r = model.ratios;
+  const risk = window.Appraisal.riskScore(model);
+  return (
+    <div className={'app' + (pres ? ' presmode' : '')}>
+      <div className="topbar">
+        <div className="brand">
+          <button className="backbtn" onClick={backToPortfolio} title="Back to portfolio">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+          <div className="mark">N</div>
+          <div className="title">{active.project.name}</div>
+        </div>
+        <div className="ref">{active.project.ref}</div>
+        {!pres ? (
+          <div className="nav">
+            <button className={tab === 'input' ? 'active' : ''} onClick={() => setTab('input')}>Input</button>
+            <button className={tab === 'cashflow' ? 'active' : ''} onClick={() => setTab('cashflow')}>Cashflow</button>
+            <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
+          </div>
+        ) : <div style={{ width: 8 }}></div>}
+        <div className="spacer"></div>
+        <div className="priceblock">
+          <div className="pb"><div className="lab">Profit</div><div className="val off">{dashFmt.moneyShort(r.profit)}</div></div>
+          <div className="pb"><div className="lab">% GDV</div><div className="val">{dashFmt.pct(r.profitPctGdv)}</div></div>
+          <div className="pb"><div className="lab">Risk</div><div className={'val risk-' + risk.sev}>{risk.level}</div></div>
+        </div>
+        <div className={'toggle' + (pres ? ' on' : '')} onClick={() => setPres(p => !p)} style={{ marginLeft: 10 }}><span className="sw"></span>Presentation</div>
+        <button className="btn ghost acct-out" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
+      </div>
+
+      {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
+
+      {!pres ? <FlagBar model={model} /> : null}
+
+      {pres
+        ? <Presentation state={active} model={model} />
+        : tab === 'input'
+          ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} /></div>
+          : tab === 'cashflow'
+            ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
+            : <Dashboard state={active} model={model} />}
+    </div>
+  );
+}
+
+function App() {
+  const session = useSession();
+  if (session === undefined) return <div className="app"><Splash label="Starting up…" /></div>;
+  if (!session) return <AuthScreen />;
+  return <Workspace session={session} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
