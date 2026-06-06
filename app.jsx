@@ -141,6 +141,7 @@ function Workspace({ session }) {
   const [review, setReview] = React.useState({ open: false, tab: 'history' });
   const [openComments, setOpenComments] = React.useState(0);
   const [collabKey, setCollabKey] = React.useState(0);
+  const [showPack, setShowPack] = React.useState(false);
   const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
@@ -276,6 +277,10 @@ function Workspace({ session }) {
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l2.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/></svg>
           <span className="reviewbtn-lbl">Review</span>{openComments > 0 ? <span className="reviewbadge">{openComments}</span> : null}
         </button>
+        <button className="reviewbtn" onClick={() => setShowPack(true)} style={{ marginLeft: 10 }} title="Generate lender-facing PDF appraisal pack">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M4 1.5h5l3 3V14a.5.5 0 01-.5.5h-7A.5.5 0 014 14V1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M9 1.5v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M6 8.5h4M6 11h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+          <span className="reviewbtn-lbl">PDF Pack</span>
+        </button>
         <button className="btn ghost acct-out hide-mobile" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
       </div>
 
@@ -284,6 +289,8 @@ function Workspace({ session }) {
       <ReviewDrawer open={review.open} initialTab={review.tab} onClose={() => setReview(r => ({ ...r, open: false }))}
         project={active} author={email} refreshKey={collabKey}
         onRestore={restoreSnapshot} onChanged={refreshCommentCount} />
+
+      {showPack ? <PrintPack state={active} model={model} author={email} onClose={() => setShowPack(false)} /> : null}
 
       {!pres ? <FlagBar model={model} /> : null}
 

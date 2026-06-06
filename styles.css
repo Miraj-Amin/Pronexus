@@ -832,3 +832,102 @@ input, select { font-family: inherit; }
   .pcard { padding: 15px 15px 13px; }
   .pcard-kpis { grid-template-columns: 1fr 1fr; gap: 8px 4px; }
 }
+
+/* ============================================================================
+   PDF APPRAISAL PACK — print-optimised A4, light "paper" theme
+   ========================================================================== */
+.pp-overlay { position: fixed; inset: 0; z-index: 200; background: #2a3340; overflow-y: auto; }
+.pp-toolbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 11px 18px; background: rgba(13,22,38,.96); backdrop-filter: blur(8px); border-bottom: 1px solid #1d3c5a; }
+.pp-tb-l { display: flex; align-items: baseline; gap: 11px; min-width: 0; }
+.pp-tb-title { font-family: var(--mono); font-size: 13px; font-weight: 700; color: #eef6fd; letter-spacing: .5px; text-transform: uppercase; }
+.pp-tb-sub { font-size: 12px; color: #93b4ce; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-tb-r { display: flex; gap: 9px; flex: none; }
+.pp-btn { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .3px; padding: 9px 15px; border-radius: 5px; border: 1px solid transparent; transition: all .12s; }
+.pp-btn.ghost { background: transparent; border-color: #2a517a; color: #c4ddf1; }
+.pp-btn.ghost:hover { background: rgba(45,212,255,.08); color: #fff; }
+.pp-btn.primary { background: #2dd4ff; color: #04141c; }
+.pp-btn.primary:hover { background: #6fe3ff; box-shadow: 0 0 16px rgba(45,212,255,.4); }
+
+/* the document + A4 sheets (screen preview) */
+.printpack { padding: 26px 16px 60px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.pp-page {
+  --bg: #fff; --surface: #fff; --surface-2: #f5f7fa; --surface-3: #eceff4;
+  --border: #e1e6ec; --border-strong: #cdd5df;
+  --ink: #0e1c2c; --ink-2: #2c3e51; --muted: #69768a; --muted-2: #9aa6b4;
+  --green-900: #eef7fb; --green-700: #0a7fa6; --green-600: #0a7fa6; --green-500: #1499c4;
+  --ok: #0f8a52; --ok-bg: #e7f6ee; --ok-border: #b6e2cb;
+  --amber: #b5730a; --amber-ink: #9a6109; --amber-bg: #fbf1dd; --amber-border: #ecd5a3;
+  --red: #c0392b; --red-ink: #a8281b; --red-bg: #fbe9e7; --red-border: #f0c4bd;
+  width: 210mm; min-height: 297mm; background: #fff; color: var(--ink);
+  padding: 15mm 15mm 12mm; box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  position: relative; display: flex; flex-direction: column; box-sizing: border-box;
+  font-family: var(--sans);
+}
+
+/* section header */
+.pp-h { display: flex; align-items: center; gap: 11px; margin-bottom: 3mm; }
+.pp-h-n { font-family: var(--mono); font-size: 12px; font-weight: 700; color: #1499c4; border: 1px solid #cfe6f0; border-radius: 3px; padding: 2px 7px; }
+.pp-h h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .2px; color: #0e1c2c; }
+.pp-h-rule { flex: 1; height: 2px; background: linear-gradient(90deg, #1499c4, transparent); }
+.pp-sub { font-size: 11.5px; color: #69768a; margin-bottom: 6mm; max-width: 150mm; line-height: 1.5; }
+.pp-block-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #2c3e51; margin: 7mm 0 3.5mm; padding-bottom: 2mm; border-bottom: 1px solid #e1e6ec; }
+.pp-block-h span { font-family: var(--mono); font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: 0; color: #9aa6b4; }
+
+/* footer */
+.pp-foot { margin-top: auto; padding-top: 5mm; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; color: #9aa6b4; letter-spacing: .3px; border-top: 1px solid #eceff4; }
+
+/* ---- cover page ---- */
+.pp-cover { padding: 0; overflow: hidden; }
+.pp-cover-top { display: flex; align-items: center; justify-content: space-between; padding: 15mm 15mm 0; }
+.pp-brand { display: flex; align-items: center; gap: 11px; }
+.pp-mark { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(135deg, #0e2236, #14517d); color: #2dd4ff; display: grid; place-items: center; font-weight: 700; font-size: 19px; }
+.pp-bn { font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: 2px; color: #0e1c2c; }
+.pp-bt { font-size: 11px; color: #69768a; letter-spacing: .3px; margin-top: 2px; }
+.pp-doctag { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #14517d; background: #eaf5fa; border: 1px solid #cfe6f0; padding: 5px 12px; border-radius: 99px; }
+.pp-cover-mid { padding: 0 15mm; margin-top: 40mm; }
+.pp-eyebrow { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #1499c4; margin-bottom: 5mm; }
+.pp-scheme { margin: 0; font-size: 42px; font-weight: 700; letter-spacing: -.5px; color: #0e1c2c; line-height: 1.05; }
+.pp-addr { font-size: 14px; color: #69768a; margin-top: 4mm; max-width: 150mm; }
+.pp-refs { display: flex; gap: 14mm; margin-top: 9mm; }
+.pp-refs > div { display: flex; flex-direction: column; gap: 3px; }
+.pp-refs span { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .8px; color: #9aa6b4; }
+.pp-refs b { font-family: var(--mono); font-size: 13px; color: #0e1c2c; font-weight: 600; }
+.pp-verdict { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 38mm 15mm 0; border: 1px solid #e1e6ec; border-radius: 8px; overflow: hidden; }
+.pp-v { padding: 7mm 8mm; border-right: 1px solid #e1e6ec; }
+.pp-v:last-child { border-right: 0; }
+.pp-v-l { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: #69768a; }
+.pp-v-v { font-family: var(--mono); font-size: 30px; font-weight: 600; letter-spacing: -.5px; margin: 4mm 0 3mm; line-height: 1; color: #0e1c2c; }
+.pp-v-v.ok { color: #0f8a52; } .pp-v-v.red { color: #c0392b; } .pp-v-v.amber { color: #b5730a; }
+.pp-v-s { font-size: 10.5px; color: #9aa6b4; }
+.pp-cover-foot { margin: auto 15mm 15mm; padding-top: 8mm; }
+.pp-prepared { font-size: 12px; color: #2c3e51; margin-bottom: 4mm; }
+.pp-disclaimer { font-size: 9.5px; color: #9aa6b4; line-height: 1.5; max-width: 165mm; padding-top: 4mm; border-top: 1px solid #eceff4; }
+
+/* tighten reused components for print density */
+.printpack .kpis { gap: 3mm; }
+.printpack .kpi { padding: 4mm 4.5mm; box-shadow: none; }
+.printpack .kpi .kval { font-size: 21px; }
+.printpack .card { box-shadow: none; }
+.printpack .breakdown .row { padding: 1.3mm 0; }
+.printpack .heat-tabs, .printpack .heat-scale { display: none; }
+.printpack .callout { margin-top: 4mm; }
+.printpack .cf-legend { margin-top: 3mm; }
+
+/* surgical chart recolour for white paper (targets the dark grid/axis only) */
+.printpack .chartwrap svg line[stroke="#143150"] { stroke: #e6eaef; }
+.printpack .chartwrap svg line[stroke="#21466d"] { stroke: #c2cbd6; }
+.printpack .chartwrap svg text[fill="#7f9fb9"] { fill: #8693a3; }
+.printpack .chartwrap svg circle[stroke="#0a1626"] { stroke: #fff; }
+
+/* ---- actual print output ---- */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+  body.pp-open > *:not(.pp-portal) { display: none !important; }
+  .pp-portal .pp-toolbar { display: none !important; }
+  .pp-overlay { position: static !important; background: #fff !important; overflow: visible !important; }
+  .printpack { padding: 0 !important; gap: 0 !important; display: block !important; }
+  .pp-page { box-shadow: none !important; margin: 0 !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always; break-after: page; }
+  .pp-page:last-child { page-break-after: auto; break-after: auto; }
+  .pp-page, .pp-page * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
