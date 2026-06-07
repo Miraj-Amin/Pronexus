@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Versions — style preview</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { padding: 30px; }
+  .pv-wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 34px; }
+  .pv-sec > h4 { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--page-ink-2); margin: 0 0 14px; }
+  .pv-bar { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pv-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pv-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .pv-modalholder { position: relative; min-height: 560px; border: 1px dashed var(--paper-border); border-radius: 8px; overflow: hidden; }
+  .pv-modalholder .modal-overlay { position: absolute; }
+  .pv-cmpholder { position: relative; min-height: 640px; border: 1px dashed var(--paper-border); border-radius: 8px; overflow: hidden; }
+  .pv-cmpholder .cmp-overlay { position: absolute; }
+  .pv-cardholder { max-width: 380px; }
+</style>
+</head>
+<body>
+<div class="pv-wrap" id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="engine.js"></script>
+<!-- DB defines familyId (pure) without needing a live connection -->
+<script>window.DB = window.DB || {};</script>
+<script>
+  // minimal DB shim: only familyId is used by the version components
+  window.DB.familyId = function (p) { return (p && p.version && p.version.parentId) ? p.version.parentId : (p ? p.id : null); };
+</script>
+<script type="text/babel" src="versions.jsx"></script>
+<script type="text/babel" src="portfolio.jsx"></script>
+<script type="text/babel">
+  const A = window.Appraisal;
+  // base scheme + three audience versions + one adjusted scenario
+  const base = A.seedState();
+  function mkVersion(id, type, label, adjust) {
+    const v = JSON.parse(JSON.stringify(base));
+    v.id = id;
+    v.version = { type, label, parentId: base.id, createdBy: 'joy@northgate', createdAt: '2026-06-05' };
+    if (adjust) {
+      if (adjust.salesPct) v.phases = v.phases.map(p => ({ ...p, salePsf: p.salePsf * (1 + adjust.salesPct / 100) }));
+      if (adjust.interestPts) v.assumptions = { ...v.assumptions, base_rate: v.assumptions.base_rate + adjust.interestPts / 100 };
+    }
+    return v;
+  }
+  const versions = [
+    mkVersion('v-inv', 'Investor', 'Investor version'),
+    mkVersion('v-bank', 'Bank / Valuer', 'Bank / valuer — stressed', { salesPct: -7, interestPts: 1.5 }),
+    mkVersion('v-own', 'Owner / Seller', 'Owner / seller version'),
+    mkVersion('v-adj', 'Adjusted assumptions', 'Adjusted — sales −5%', { salesPct: -5 })
+  ];
+  const all = [base, ...versions];
+
+  function Preview() {
+    return (
+      <React.Fragment>
+        <div className="pv-sec">
+          <h4>Version chips (per-audience accent)</h4>
+          <div className="pv-bar">
+            <div className="pv-chips">
+              {[base, ...versions].map(p => { const t = window.versionTag(p); return <span key={p.id} className={'vchip ' + t.cls}>{t.code}</span>; })}
+            </div>
+          </div>
+        </div>
+
+        <div className="pv-sec">
+          <h4>Version switcher — in a scheme header</h4>
+          <div className="pv-bar">
+            <div style={{ fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--ink)' }}>Walnut Marches</div>
+            <VersionSwitcher active={versions[1]} projects={all} onSwitch={() => {}} onCreate={() => {}} onCompare={() => {}} />
+          </div>
+        </div>
+
+        <div className="pv-sec">
+          <h4>Create-version modal</h4>
+          <div className="pv-modalholder">
+            <CreateVersionModal source={base} author="joy@northgate" onClose={() => {}} onCreate={() => {}} />
+          </div>
+        </div>
+
+        <div className="pv-sec">
+          <h4>Compare two versions</h4>
+          <div className="pv-cmpholder">
+            <CompareView active={versions[0]} projects={all} onClose={() => {}} onSwitch={() => {}} />
+          </div>
+        </div>
+
+        <div className="pv-sec">
+          <h4>Portfolio card — linked versions grouped under the scheme</h4>
+          <div className="pv-cardholder">
+            <ProjectCard proj={base} versions={versions} onOpen={() => {}} onClone={() => {}} onDelete={() => {}} />
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Preview />);
+</script>
+</body>
+</html>

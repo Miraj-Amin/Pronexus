@@ -61,43 +61,6 @@ function Dashboard({ state, model }) {
   );
 }
 
-function Presentation({ state, model }) {
-  const r = model.ratios; const p = state.project;
-  const heroKpis = [
-    { l: 'GDV', v: dashFmt.moneyShort(r.gdv) }, { l: 'Total Cost', v: dashFmt.moneyShort(r.totalCost) },
-    { l: 'Profit', v: dashFmt.moneyShort(r.profit) }, { l: 'Profit % GDV', v: dashFmt.pct(r.profitPctGdv) },
-    { l: 'Profit excl. Finance', v: dashFmt.pct(r.profitExFinance) }, { l: 'Peak Funding', v: dashFmt.moneyShort(r.peakFunding) }
-  ];
-  return (
-    <div className="main" data-screen-label="Presentation">
-      <div className="pres-header">
-        <div className="ph-l">
-          <div className="pres-badge" style={{ marginBottom: 12 }}>● BANK-FACING SUMMARY</div>
-          <h1>{p.name}</h1>
-          <div className="addr">{p.address}</div>
-        </div>
-        <div className="ph-meta">
-          <div className="m"><div className="l">Planning Ref</div><div className="v">{p.planningRef || '—'}</div></div>
-          <div className="m"><div className="l">Project Length</div><div className="v">{p.projectLengthMonths} mo</div></div>
-          <div className="m"><div className="l">Units</div><div className="v">{state.phases.reduce((a, x) => a + x.units, 0)}</div></div>
-        </div>
-      </div>
-      <div className="kpis" style={{ gridTemplateColumns: 'repeat(6,1fr)' }}>
-        {heroKpis.map((k, i) => <div className="kpi neutral" key={i}><div className="klab">{k.l}</div><div className="kval">{k.v}</div></div>)}
-      </div>
-      <div className="grid" style={{ gridTemplateColumns: '1.55fr 1fr', marginTop: '20px' }}>
-        <div className="card"><div className="cardhead"><h3>Cashflow &amp; Peak Funding</h3><span className="sub">{model.cashflow.horizon}-month horizon</span></div><div className="cardbody"><CashflowChart model={model} /></div></div>
-        <div className="card"><div className="cardhead"><h3>Sources &amp; Uses</h3></div><div className="cardbody"><Waterfall model={model} /></div></div>
-      </div>
-      <div className="card" style={{ marginTop: '16px' }}><div className="cardhead"><h3>Sensitivity — Lender Stress</h3><span className="sub">sale price × cost</span></div><div className="cardbody"><Sensitivity model={model} /></div></div>
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '16px' }}>
-        <div className="card"><div className="cardhead"><h3>Cost Breakdown</h3></div><div className="cardbody"><Breakdown model={model} /></div></div>
-        <div className="card"><div className="cardhead"><h3>Sales Comparables</h3></div><div className="cardbody"><Comps state={state} /></div></div>
-      </div>
-    </div>
-  );
-}
-
 function NewProjectModal({ onClose, onCreate }) {
   const [name, setName] = React.useState('');
   return (
@@ -142,6 +105,8 @@ function Workspace({ session }) {
   const [openComments, setOpenComments] = React.useState(0);
   const [collabKey, setCollabKey] = React.useState(0);
   const [showPack, setShowPack] = React.useState(false);
+  const [showVersion, setShowVersion] = React.useState(false);
+  const [showCompare, setShowCompare] = React.useState(false);
   const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
@@ -208,6 +173,18 @@ function Workspace({ session }) {
   };
   const signOut = async () => { try { await window.sb.auth.signOut(); } catch (e) {} };
 
+  // create a labelled version (live editable copy, grouped under the family)
+  const createVersion = async (opts) => {
+    setBusy(true);
+    try {
+      const v = await DB.createVersion(activeId, opts);
+      setShowVersion(false);
+      await loadProjects();
+      openProject(v.id);
+    } catch (e) { alert('Could not create version: ' + ((e && e.message) || e)); }
+    finally { setBusy(false); }
+  };
+
   // restore a snapshot's data as the current scheme (optimistic), then log it
   const restoreSnapshot = async (snap) => {
     if (!snap || !snap.data) return;
@@ -258,6 +235,8 @@ function Workspace({ session }) {
           <div className="mark">N</div>
           <div className="title">{active.project.name}</div>
         </div>
+        <VersionSwitcher active={active} projects={projects}
+          onSwitch={openProject} onCreate={() => setShowVersion(true)} onCompare={() => setShowCompare(true)} />
         <div className="ref hide-mobile">{active.project.ref}</div>
         {!pres ? (
           <div className="nav">
@@ -291,6 +270,8 @@ function Workspace({ session }) {
         onRestore={restoreSnapshot} onChanged={refreshCommentCount} />
 
       {showPack ? <PrintPack state={active} model={model} author={email} onClose={() => setShowPack(false)} /> : null}
+      {showVersion ? <CreateVersionModal source={active} author={email} onClose={() => setShowVersion(false)} onCreate={createVersion} /> : null}
+      {showCompare ? <CompareView active={active} projects={projects} onClose={() => setShowCompare(false)} onSwitch={openProject} /> : null}
 
       {!pres ? <FlagBar model={model} /> : null}
 

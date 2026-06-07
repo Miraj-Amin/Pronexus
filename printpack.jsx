@@ -26,6 +26,7 @@ function PrintPack({ state, model, author, onClose }) {
   const amber = model.flags.filter(f => f.sev === 'amber').length;
 
   const profitSev = r.profitPctGdv < 0.15 ? 'red' : (r.profitPctGdv < 0.20 ? 'amber' : 'ok');
+  const vtag = window.versionTag ? window.versionTag(state) : null;
 
   const Foot = ({ n }) => (
     <div className="pp-foot">
@@ -39,7 +40,7 @@ function PrintPack({ state, model, author, onClose }) {
       <div className="pp-toolbar">
         <div className="pp-tb-l">
           <span className="pp-tb-title">Appraisal Pack</span>
-          <span className="pp-tb-sub">{p.name}</span>
+          <span className="pp-tb-sub">{p.name}{vtag && !vtag.isBase ? ' · ' + vtag.label : ''}</span>
         </div>
         <div className="pp-tb-r">
           <button className="pp-btn ghost" onClick={onClose}>Close</button>
@@ -62,6 +63,7 @@ function PrintPack({ state, model, author, onClose }) {
             <div className="pp-eyebrow">Residential Development Appraisal</div>
             <h1 className="pp-scheme">{p.name}</h1>
             <div className="pp-addr">{p.address}</div>
+            {vtag && !vtag.isBase ? <div className={'pp-vtag ' + vtag.cls}><span className="pp-vtag-code">{vtag.code}</span>{vtag.label}</div> : null}
             <div className="pp-refs">
               <div><span>Project ref</span><b>{p.ref}</b></div>
               <div><span>Planning ref</span><b>{p.planningRef || '—'}</b></div>

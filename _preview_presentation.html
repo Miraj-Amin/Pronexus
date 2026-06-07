@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Audience presentations — preview</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { padding: 0; background: var(--bg); }
+  .pp-switch { position: sticky; top: 0; z-index: 30; display: flex; gap: 8px; padding: 12px 22px; background: var(--paper); border-bottom: 1px solid var(--paper-border); flex-wrap: wrap; }
+  .pp-switch button { font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 7px 14px; border: 1px solid var(--paper-border); background: #fff; color: var(--page-ink); border-radius: 5px; cursor: pointer; }
+  .pp-switch button.on { background: var(--page-ink); color: #fff; border-color: var(--page-ink); }
+  .pp-stage { padding: 24px 22px 60px; }
+  .app.projview.presmode { background: transparent; }
+</style>
+</head>
+<body>
+<div class="pp-switch" id="switch"></div>
+<div class="pp-stage app projview presmode"><div id="root"></div></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="engine.js"></script>
+<script type="text/babel" src="dashboard.jsx"></script>
+<script type="text/babel" src="presentation.jsx"></script>
+<script type="text/babel">
+  const A = window.Appraisal;
+  function withVersion(type, label) {
+    const v = A.seedState();
+    if (type) v.version = { type, label, parentId: v.id, createdAt: '2026-06-05' };
+    return v;
+  }
+  const AUD = [
+    { k: 'Base / internal', s: withVersion(null) },
+    { k: 'Investor', s: withVersion('Investor', 'Investor version') },
+    { k: 'Bank / Valuer', s: withVersion('Bank / Valuer', 'Bank — stressed') },
+    { k: 'Owner / Seller', s: withVersion('Owner / Seller', 'Owner version') }
+  ];
+
+  function Harness() {
+    const [i, setI] = React.useState(1);
+    const st = AUD[i].s;
+    const model = React.useMemo(() => A.computeModel(st), [st]);
+    React.useEffect(() => {
+      const sw = document.getElementById('switch');
+      sw.innerHTML = '';
+      AUD.forEach((a, idx) => {
+        const b = document.createElement('button');
+        b.textContent = a.k; b.className = idx === i ? 'on' : '';
+        b.onclick = () => setI(idx);
+        sw.appendChild(b);
+      });
+    }, [i]);
+    return <window.Presentation state={st} model={model} />;
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Harness />);
+</script>
+</body>
+</html>

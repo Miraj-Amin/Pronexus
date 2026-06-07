@@ -25,12 +25,14 @@ function statusColor(status) {
   }
 }
 
-function ProjectCard({ proj, onOpen, onClone, onDelete }) {
+function ProjectCard({ proj, onOpen, onClone, onDelete, versions }) {
   const model = React.useMemo(() => window.Appraisal.computeModel(proj), [proj]);
   const risk = window.Appraisal.riskScore(model);
   const r = model.ratios;
   const sc = statusColor(proj.meta && proj.meta.status);
   const units = proj.phases.reduce((a, p) => a + p.units, 0);
+  const vers = versions || [];
+  const [open, setOpen] = React.useState(false);
   return (
     <div className={'pcard risk-' + risk.sev} onClick={() => onOpen(proj.id)}>
       <div className="pcard-top">
@@ -43,7 +45,7 @@ function ProjectCard({ proj, onOpen, onClone, onDelete }) {
       <div className="pcard-meta">
         <span className="pchip" style={{ background: sc.bg, color: sc.fg }}>{(proj.meta && proj.meta.status) || 'Draft'}</span>
         <span className="pchip ghost num">{units} units</span>
-        <span className="pchip ghost mono">{proj.project.ref}</span>
+        {vers.length ? <span className="pchip ghost">{vers.length + 1} versions</span> : <span className="pchip ghost mono">{proj.project.ref}</span>}
       </div>
       <div className="pcard-kpis">
         <div className="pk"><div className="pk-l">GDV</div><div className="pk-v">{pfFmt.moneyShort(r.gdv)}</div></div>
@@ -65,13 +67,42 @@ function ProjectCard({ proj, onOpen, onClone, onDelete }) {
           </button>
         </div>
       </div>
+      {vers.length ? (
+        <div className="pcard-vers" onClick={e => e.stopPropagation()}>
+          <button className="pcard-vers-h" onClick={() => setOpen(o => !o)}>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}><path d="M4.5 3L7.5 6l-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {vers.length} linked version{vers.length > 1 ? 's' : ''}
+          </button>
+          {open ? (
+            <div className="pcard-vers-list">
+              {vers.map(v => {
+                const t = window.versionTag(v);
+                const vm = window.Appraisal.computeModel(v);
+                return (
+                  <button key={v.id} className="pcard-vrow" onClick={() => onOpen(v.id)}>
+                    <span className={'vchip ' + t.cls}>{t.code}</span>
+                    <span className="pcard-vrow-lbl">{t.label}</span>
+                    <span className="pcard-vrow-m">{pfFmt.moneyShort(vm.ratios.profit)}</span>
+                    <span className="pcard-vrow-del" title="Delete version" onClick={e => { e.stopPropagation(); onDelete(v.id); }}>×</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
-  // portfolio rollup
-  const models = projects.map(p => ({ p, m: window.Appraisal.computeModel(p), risk: null }));
+  // group versions under their base scheme: a scheme is a "head" when it has no
+  // version parent (or points at itself); everything else is a linked version.
+  const heads = projects.filter(p => DB.familyId(p) === p.id);
+  const versionsOf = (headId) => projects.filter(p => p.id !== headId && DB.familyId(p) === headId);
+
+  // portfolio rollup — heads only, so linked versions don't double-count
+  const models = heads.map(p => ({ p, m: window.Appraisal.computeModel(p), risk: null }));
   models.forEach(x => x.risk = window.Appraisal.riskScore(x.m));
   const totalGdv = models.reduce((a, x) => a + x.m.ratios.gdv, 0);
   const totalProfit = models.reduce((a, x) => a + x.m.ratios.profit, 0);
@@ -84,7 +115,7 @@ function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
       <div className="pf-head">
         <div>
           <h1 className="pf-title">Portfolio</h1>
-          <div className="pf-sub">{projects.length} schemes · {pfFmt.moneyShort(totalGdv)} GDV under appraisal</div>
+          <div className="pf-sub">{heads.length} schemes · {pfFmt.moneyShort(totalGdv)} GDV under appraisal</div>
         </div>
         <button className="btn primary lg" onClick={onNew}>
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5v10M2.5 7.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
@@ -113,7 +144,7 @@ function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
 
       <div className="sectiontitle"><h2>Schemes</h2><div className="rule"></div></div>
       <div className="pcard-grid">
-        {projects.map(p => <ProjectCard key={p.id} proj={p} onOpen={onOpen} onClone={onClone} onDelete={onDelete} />)}
+        {heads.map(p => <ProjectCard key={p.id} proj={p} versions={versionsOf(p.id)} onOpen={onOpen} onClone={onClone} onDelete={onDelete} />)}
         <div className="pcard newcard" onClick={onNew}>
           <div className="newcard-inner">
             <div className="newcard-plus"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></div>

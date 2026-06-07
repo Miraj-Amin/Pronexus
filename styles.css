@@ -415,7 +415,39 @@ input, select { font-family: inherit; }
 .pres-header .ph-meta { display: flex; gap: 26px; }
 .pres-header .ph-meta .m .l { font-size: 9px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted-2); font-family: var(--mono); }
 .pres-header .ph-meta .m .v { font-family: var(--mono); font-size: 13px; color: var(--ink); margin-top: 3px; }
-.pres-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 600; color: var(--green-500); background: rgba(45,212,255,.08); border: 1px solid var(--border-strong); padding: 4px 11px; border-radius: 0; letter-spacing: .8px; white-space: nowrap; font-family: var(--mono); text-transform: uppercase; }
+.pres-badge { display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 600; color: var(--vc, var(--green-500)); background: var(--vc-bg, rgba(45,212,255,.08)); border: 1px solid color-mix(in srgb, var(--vc, var(--green-500)) 38%, var(--border-strong)); padding: 4px 11px; border-radius: 0; letter-spacing: .8px; white-space: nowrap; font-family: var(--mono); text-transform: uppercase; }
+.pres-blurb { margin-top: 9px; font-size: 12px; color: var(--muted); max-width: 460px; line-height: 1.5; }
+/* the version accent runs along the top edge of the audience-summary header */
+.pres-header.v-investor, .pres-header.v-bank, .pres-header.v-owner, .pres-header.v-adj, .pres-header.v-internal { box-shadow: var(--shadow-md), inset 0 3px 0 var(--vc); }
+.pres-header.v-investor::before, .pres-header.v-bank::before, .pres-header.v-owner::before, .pres-header.v-adj::before, .pres-header.v-internal::before,
+.pres-header.v-investor::after, .pres-header.v-bank::after, .pres-header.v-owner::after, .pres-header.v-adj::after, .pres-header.v-internal::after { border-color: var(--vc); }
+
+/* hero KPI row — 6-up, collapses gracefully */
+.pres-kpis { grid-template-columns: repeat(6, 1fr); }
+
+/* Owner/Seller — offer position */
+.pricestory { display: flex; flex-direction: column; gap: 14px; }
+.ps-bars { display: flex; flex-direction: column; gap: 12px; }
+.ps-row { display: grid; grid-template-columns: 180px 1fr 96px; align-items: center; gap: 14px; }
+.ps-lab { font-size: 12px; color: var(--ink-2); }
+.ps-track { height: 22px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 0; overflow: hidden; position: relative; }
+.ps-fill { height: 100%; transition: width .4s cubic-bezier(.4,0,.2,1); }
+.ps-fill.ask { background: repeating-linear-gradient(90deg, var(--muted-2) 0 7px, color-mix(in srgb, var(--muted-2) 55%, transparent) 7px 9px); }
+.ps-fill.offer { background: repeating-linear-gradient(90deg, var(--green-500) 0 7px, rgba(45,212,255,.5) 7px 9px); }
+.ps-fill.support { background: repeating-linear-gradient(90deg, var(--ok) 0 7px, color-mix(in srgb, var(--ok) 55%, transparent) 7px 9px); }
+.ps-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--ink); text-align: right; }
+.ps-note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 11px 13px; background: var(--green-900); border: 1px solid var(--border); }
+.ps-note b { color: var(--ink); font-family: var(--mono); }
+
+@media (max-width: 1180px) {
+  .pres-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 760px) {
+  .pres-kpis { grid-template-columns: 1fr 1fr; }
+  .ps-row { grid-template-columns: 1fr; gap: 4px; }
+  .ps-val { text-align: left; }
+}
+
 
 .placeholder {
   background:
@@ -930,4 +962,124 @@ input, select { font-family: inherit; }
   .pp-page { box-shadow: none !important; margin: 0 !important; width: 210mm !important; min-height: 297mm !important; page-break-after: always; break-after: page; }
   .pp-page:last-child { page-break-after: auto; break-after: auto; }
   .pp-page, .pp-page * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ============================================================================
+   VERSIONS — audience & scenario variants of a scheme
+   Per-audience accent (harmonious hues off the brand cyan): each type class
+   sets --vc / --vc-bg, which the chip, switcher, picker and rows all inherit.
+   ========================================================================== */
+.v-base     { --vc: #93b4ce; --vc-bg: rgba(147,180,206,.12); }
+.v-investor { --vc: #9d86ff; --vc-bg: rgba(157,134,255,.13); }
+.v-bank     { --vc: #2dd4ff; --vc-bg: rgba(45,212,255,.12); }
+.v-owner    { --vc: #f0c460; --vc-bg: rgba(240,196,96,.13); }
+.v-adj      { --vc: #ff8fb3; --vc-bg: rgba(255,143,179,.13); }
+.v-internal { --vc: #8ea3bb; --vc-bg: rgba(142,163,187,.12); }
+.v-custom   { --vc: #9aa6b4; --vc-bg: rgba(154,166,180,.12); }
+
+/* ---- shared version chip ---- */
+.vchip {
+  display: inline-flex; align-items: center; font-family: var(--mono); font-size: 9px;
+  font-weight: 700; letter-spacing: .6px; text-transform: uppercase; white-space: nowrap;
+  padding: 2px 6px; border-radius: 3px;
+  color: var(--vc, #93b4ce); background: var(--vc-bg, rgba(147,180,206,.12));
+  border: 1px solid color-mix(in srgb, var(--vc, #93b4ce) 36%, transparent);
+}
+
+@keyframes vfade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ---- version switcher (project header) ---- */
+.vswitch { position: relative; margin-left: 12px; }
+.vswitch-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 30px; max-width: 230px;
+  padding: 0 10px; border-radius: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface-2); color: var(--ink-2); font-family: var(--mono);
+  font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all .12s;
+}
+.vswitch-btn:hover { border-color: var(--vc); color: var(--ink); background: var(--vc-bg); }
+.vswitch-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--vc, #93b4ce); box-shadow: 0 0 7px var(--vc); flex: none; }
+.vswitch-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vswitch-count { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 99px; flex: none; color: var(--vc); background: var(--vc-bg); border: 1px solid color-mix(in srgb, var(--vc) 36%, transparent); }
+.vswitch-btn > svg { opacity: .55; flex: none; }
+
+.vswitch-menu {
+  position: absolute; top: 38px; left: 0; width: 274px; z-index: 60; padding: 7px;
+  background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 8px;
+  box-shadow: var(--shadow-lg); animation: vfade .12s ease;
+}
+.vswitch-menu-h { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted-2); padding: 5px 8px 7px; }
+.vswitch-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; text-align: left; transition: all .1s; }
+.vswitch-item:hover { background: var(--surface-3); }
+.vswitch-item.on { background: var(--surface-3); border-color: var(--border-strong); }
+.vswitch-item-lbl { flex: 1; font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vswitch-here { font-family: var(--mono); font-size: 8.5px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--green-500); flex: none; }
+.vswitch-menu-actions { display: flex; gap: 6px; margin-top: 6px; padding-top: 7px; border-top: 1px solid var(--border); }
+.vswitch-menu-actions button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--ink-2); font-family: var(--mono); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.vswitch-menu-actions button:hover { border-color: var(--green-500); color: var(--green-500); background: var(--green-50); }
+
+/* ---- create-version modal ---- */
+.modal.vmodal { width: 470px; max-width: 94vw; }
+.vtype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vtype { display: inline-flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--surface-2); color: var(--ink-2); font-size: 12.5px; font-weight: 500; cursor: pointer; text-align: left; transition: all .12s; }
+.vtype:hover { border-color: var(--vc); color: var(--ink); }
+.vtype.on { border-color: var(--vc); background: var(--vc-bg); color: var(--ink); box-shadow: inset 0 0 0 1px var(--vc); }
+.vtype-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--vc, #93b4ce); box-shadow: 0 0 7px var(--vc); flex: none; }
+
+.vlevers { margin-top: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.vlevers-h { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.vlevers-h span { font-family: var(--sans); font-size: 11px; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.vl { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.vl:last-of-type { border-bottom: 0; }
+.vl-l { font-size: 12.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 2px; }
+.vl-l span { font-family: var(--mono); font-size: 9.5px; color: var(--muted-2); }
+.vl-in { display: inline-flex; align-items: center; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.vl-in button { width: 28px; height: 30px; border: 0; background: var(--surface-3); color: var(--muted); font-size: 15px; cursor: pointer; transition: all .1s; }
+.vl-in button:hover { background: var(--green-600); color: #04141c; }
+.vl-in input { width: 50px; border: 0; background: transparent; color: var(--ink); font-family: var(--mono); font-size: 13px; text-align: center; padding: 6px 2px; }
+.vl-in input:focus { outline: none; }
+.vl-in input::-webkit-outer-spin-button, .vl-in input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.vl-u { font-family: var(--mono); font-size: 10px; color: var(--muted-2); padding: 0 8px; }
+.vl-preview { margin-top: 11px; padding: 9px 11px; border-radius: 6px; background: var(--green-900); border: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.5; }
+.vl-preview b { color: var(--green-700); }
+
+/* ---- compare two versions ---- */
+.cmp-overlay { position: fixed; inset: 0; z-index: 120; background: rgba(4,10,20,.72); backdrop-filter: blur(5px); display: grid; place-items: center; padding: 24px; animation: vfade .14s ease; }
+.cmp-panel { width: 640px; max-width: 96vw; max-height: 90vh; overflow: auto; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: var(--shadow-lg); }
+.cmp-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 2; }
+.cmp-title { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: .4px; color: var(--ink); display: flex; flex-direction: column; gap: 3px; }
+.cmp-title span { font-family: var(--sans); font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.cmp-cols { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 14px; padding: 18px 20px 10px; align-items: end; }
+.cmp-col-h { display: flex; flex-direction: column; gap: 8px; }
+.cmp-col-h .vchip { align-self: flex-start; }
+.cmp-col-h select { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface-2); color: var(--ink); font-size: 12px; font-family: var(--sans); cursor: pointer; }
+.cmp-col-h select:focus { outline: none; border-color: var(--vc); }
+.cmp-rows { padding: 6px 20px 4px; }
+.cmp-row { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.cmp-row:last-child { border-bottom: 0; }
+.cmp-v { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.cmp-v.left { text-align: right; }
+.cmp-v.right { text-align: left; }
+.cmp-v.risk-red { color: var(--red); } .cmp-v.risk-amber { color: var(--amber); } .cmp-v.risk-ok { color: var(--ok); }
+.cmp-l { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .2px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.cmp-d { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; }
+.cmp-d.up { color: var(--green-700); background: rgba(45,212,255,.1); }
+.cmp-d.dn { color: var(--muted); background: var(--surface-3); }
+.cmp-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: var(--surface); }
+
+/* ---- linked versions on a portfolio card ---- */
+.pcard-vers { margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--border); }
+.pcard-vers-h { display: inline-flex; align-items: center; gap: 7px; background: transparent; border: 0; color: var(--muted); font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .3px; cursor: pointer; padding: 2px 0; }
+.pcard-vers-h:hover { color: var(--green-500); }
+.pcard-vers-list { display: flex; flex-direction: column; gap: 5px; margin-top: 9px; }
+.pcard-vrow { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); cursor: pointer; transition: all .12s; }
+.pcard-vrow:hover { border-color: var(--vc); background: var(--vc-bg); }
+.pcard-vrow-lbl { flex: 1; font-size: 11.5px; color: var(--ink-2); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard-vrow-m { font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--ink); flex: none; }
+.pcard-vrow-del { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 4px; color: var(--muted-2); font-size: 15px; line-height: 1; flex: none; transition: all .1s; }
+.pcard-vrow-del:hover { background: var(--red-bg); color: var(--red); }
+
+@media (max-width: 640px) {
+  .cmp-cols, .cmp-row { grid-template-columns: 1fr 0.9fr 1fr; gap: 8px; }
+  .cmp-v { font-size: 13px; }
+  .vtype-grid { grid-template-columns: 1fr; }
 }

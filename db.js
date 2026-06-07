@@ -65,6 +65,56 @@
     if (res.error) throw res.error;
   }
 
+  // ---- versions: live, editable variants grouped under a parent scheme -------
+  // familyId = the base scheme's id; every version points its version.parentId
+  // at the family head so versions-of-versions still group correctly.
+  function familyId(p) { return (p && p.version && p.version.parentId) ? p.version.parentId : (p ? p.id : null); }
+
+  function applyAdjustments(p, adj) {
+    adj = adj || {};
+    if (adj.interestPts) p.assumptions.base_rate = (p.assumptions.base_rate || 0) + Number(adj.interestPts) / 100;
+    if (adj.buildPct || adj.salesPct) {
+      p.phases = p.phases.map(function (ph) {
+        var n = Object.assign({}, ph);
+        if (adj.buildPct) n.buildRatePsf = ph.buildRatePsf * (1 + Number(adj.buildPct) / 100);
+        if (adj.salesPct) n.salePsf = ph.salePsf * (1 + Number(adj.salesPct) / 100);
+        return n;
+      });
+    }
+    if (adj.purchasePct) p.project.offerPrice = Math.round((p.project.offerPrice || 0) * (1 + Number(adj.purchasePct) / 100));
+    if (adj.lengthMonths) p.project.projectLengthMonths = Math.max(1, (p.project.projectLengthMonths || 18) + Number(adj.lengthMonths));
+  }
+
+  async function createVersion(srcId, opts) {
+    opts = opts || {};
+    var src = await get(srcId);
+    if (!src) return null;
+    var copy = JSON.parse(JSON.stringify(src));
+    copy.id = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    copy.isTemplate = false; copy.isLocked = false;
+    copy.version = {
+      type: opts.type || 'Working',
+      label: opts.label || (opts.type || 'Working'),
+      parentId: familyId(src),
+      createdBy: opts.author || null,
+      createdAt: nowISO()
+    };
+    // a full live copy keeps figures + status; only timestamps reset
+    copy.meta = Object.assign({}, src.meta || {}, { createdAt: nowISO(), updatedAt: nowISO() });
+    applyAdjustments(copy, opts.adjust);
+    await upsert(copy);
+    return copy;
+  }
+
+  // relabel / retype an existing version (or tag the base) — used by the switcher
+  async function setVersionMeta(id, patch) {
+    var p = await get(id);
+    if (!p) return null;
+    p.version = Object.assign({}, p.version || {}, patch);
+    await upsert(p);
+    return p;
+  }
+
   // ---- one-time seed: load demo schemes the first time the table is empty ----
   // Idempotent: seed ids are stable and we ignore duplicates, so two people
   // hitting an empty DB at once can't create doubles.
@@ -160,6 +210,8 @@
     list: list, get: get, upsert: upsert, create: create, clone: clone,
     remove: remove, seedIfEmpty: seedIfEmpty, getTemplate: getTemplate,
     setActive: setActive, getActive: getActive,
+    // versions
+    createVersion: createVersion, setVersionMeta: setVersionMeta, familyId: familyId,
     // collaboration
     listSnapshots: listSnapshots, getSnapshot: getSnapshot, saveSnapshot: saveSnapshot, deleteSnapshot: deleteSnapshot,
     logChanges: logChanges, listAudit: listAudit,

@@ -212,9 +212,9 @@ function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol }) {
   );
 }
 
-function Sensitivity({ model }) {
+function Sensitivity({ model, initialTab }) {
   const s = model.sensitivity;
-  const [tab, setTab] = React.useState('profit');
+  const [tab, setTab] = React.useState(initialTab || 'profit');
   const baseCol = s.psfSteps.indexOf(0);
   const baseRow = s.costSteps.indexOf(0);
   const tabs = [
