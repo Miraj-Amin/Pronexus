@@ -210,7 +210,7 @@ function Workspace({ session }) {
           <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
           <div className="ref">PORTFOLIO</div>
           <div className="spacer"></div>
-          <a href="../Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginRight:10 }}>← Hub</a>
+          <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginRight:10 }}>← Hub</a>
           <div className="acct">
             <span className="acct-email" title={session.user.email}>{session.user.email}</span>
             <button className="btn ghost acct-out" onClick={signOut}>Sign out</button>
@@ -261,7 +261,7 @@ function Workspace({ session }) {
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M4 1.5h5l3 3V14a.5.5 0 01-.5.5h-7A.5.5 0 014 14V1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M9 1.5v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M6 8.5h4M6 11h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
           <span className="reviewbtn-lbl">PDF Pack</span>
         </button>
-        <a href="../Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginLeft:10 }}>← Hub</a>
+        <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginLeft:10 }}>← Hub</a>
         <button className="btn ghost acct-out hide-mobile" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
       </div>
 
