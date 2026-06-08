@@ -14,20 +14,27 @@
 }
 *,*::before,*::after{box-sizing:border-box;}
 body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
-.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;}
+
+/* topbar */
+.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:12px;padding:0 20px;}
 .brand{display:flex;align-items:center;gap:10px;}
 .mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
 .bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
-.bsep{color:var(--paper-border);margin:0 2px;}
-.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.bsep{color:var(--paper-border);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
 .spacer{flex:1;}
 .tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
 .tbtn:hover{border-color:#1366d6;color:#1366d6;}
+.tbtn.pri{background:#1366d6;border-color:#1366d6;color:#fff;}
+.tbtn.pri:hover{background:#0f55bb;}
+
+/* main */
 .main{padding:20px;max-width:1700px;margin:0 auto;}
 .sectitle{display:flex;align-items:center;gap:11px;margin:0 0 14px;}
 .sectitle h2{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4452;font-family:var(--mono);}
 .sectitle h2::before{content:'┌─ ';color:#b8a884;}
 .sectitle .rule{flex:1;height:1px;background:repeating-linear-gradient(90deg,#cdbfa3 0 6px,transparent 6px 12px);}
+
+/* rollup */
 .rollup{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
 .ru{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--border);padding:14px 16px;position:relative;}
 .ru::before,.ru::after{content:'';position:absolute;width:6px;height:6px;border-color:var(--cyan);opacity:.5;}
@@ -37,11 +44,15 @@ body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:
 .ru .v{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--ink);margin-top:6px;letter-spacing:-.4px;}
 .ru .v.ok{color:var(--ok);}.ru .v.amber{color:var(--amber);}.ru .v.red{color:var(--red);}
 .ru .s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* filters */
 .filterbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;}
 .flabel{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--page-ink-2);}
 .fbtn{border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:2px;cursor:pointer;transition:all .12s;}
 .fbtn:hover{border-color:#1366d6;color:#1366d6;}
 .fbtn.act{background:#1366d6;border-color:#1366d6;color:#fff;}
+
+/* kanban */
 .kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:start;}
 .col{background:rgba(10,22,38,.35);border:1px solid var(--border);border-radius:6px;min-height:160px;}
 .col-head{padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
@@ -63,36 +74,64 @@ body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:
 .dk .dv.ok{color:var(--ok);}.dk .dv.amber{color:var(--amber);}.dk .dv.red{color:var(--red);}
 .chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
 .chip{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);}
-.overlay{position:fixed;inset:0;background:rgba(3,8,16,.7);backdrop-filter:blur(3px);z-index:100;display:grid;place-items:center;}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(3,8,16,.75);backdrop-filter:blur(4px);z-index:100;display:grid;place-items:center;padding:20px;}
 .overlay.hid{display:none;}
-.modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;width:530px;max-width:92vw;max-height:86vh;overflow-y:auto;}
-.mhead{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
-.mhead h3{margin:0;font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink);}
+.modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;width:600px;max-width:100%;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;}
+.mhead{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;}
+.mhead h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--ink);}
+.mhead-actions{display:flex;gap:8px;align-items:center;}
 .mclose{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface-2);border-radius:4px;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;transition:all .12s;}
-.mclose:hover{color:var(--red);}
-.mbody{padding:20px 24px;}
-.mstats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
-.mstat{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;}
-.mstat .ml{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
-.mstat .mv{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--ink);margin-top:4px;}
-.mstat .mv.ok{color:var(--ok);}.mstat .mv.amber{color:var(--amber);}.mstat .mv.red{color:var(--red);}
-.mlabel{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:7px;}
-.stages{display:flex;gap:0;margin-bottom:16px;}
-.sstep{flex:1;padding:6px 8px;font-family:var(--mono);font-size:9px;text-align:center;border:1px solid var(--border);border-right:none;color:var(--muted);}
-.sstep:last-child{border-right:1px solid var(--border);}
-.sstep.act{background:rgba(45,212,255,.1);color:var(--cyan);border-color:var(--cyan);font-weight:600;}
-.sstep.done{background:rgba(55,224,176,.07);color:var(--ok);}
-.ntarea{width:100%;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--ink);border-radius:4px;padding:9px 11px;font-family:var(--sans);font-size:13px;line-height:1.5;resize:vertical;min-height:70px;}
+.mclose:hover{border-color:var(--red);color:var(--red);}
+.mbody{padding:20px 24px;display:flex;flex-direction:column;gap:18px;}
+
+/* form fields */
+.frow{display:grid;gap:12px;}
+.frow.cols2{grid-template-columns:1fr 1fr;}
+.frow.cols3{grid-template-columns:1fr 1fr 1fr;}
+.frow.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.finput{padding:8px 10px;border:1px solid var(--border-strong);border-radius:3px;background:var(--surface-2);color:var(--ink);font-family:var(--mono);font-size:13px;width:100%;transition:border-color .12s;}
+.finput:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(45,212,255,.1);}
+.finput::placeholder{color:rgba(147,180,206,.4);}
+select.finput{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2393b4ce' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+select.finput option{background:var(--surface-2);}
+.ntarea{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:3px;background:var(--surface-2);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.55;resize:vertical;min-height:80px;transition:border-color .12s;}
 .ntarea:focus{outline:none;border-color:var(--cyan);}
-.ntarea::placeholder{color:var(--muted);}
-.mbtns{display:flex;gap:8px;margin-top:14px;}
-.mbtn{flex:1;padding:8px 12px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2);font-family:var(--mono);font-size:11px;border-radius:3px;cursor:pointer;transition:all .12s;}
+.ntarea::placeholder{color:rgba(147,180,206,.4);}
+.fsep{height:1px;background:var(--border);margin:2px 0;}
+.fseclabel{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-2);}
+
+/* stage progress */
+.stages{display:flex;gap:0;margin:0;}
+.sstep{flex:1;padding:7px 4px;font-family:var(--mono);font-size:9px;text-align:center;border:1px solid var(--border);border-right:none;color:var(--muted);cursor:pointer;transition:all .1s;line-height:1.3;}
+.sstep:last-child{border-right:1px solid var(--border);}
+.sstep:hover{background:rgba(45,212,255,.06);color:var(--ink-2);}
+.sstep.act{background:rgba(45,212,255,.12);color:var(--cyan);border-color:var(--cyan);font-weight:700;}
+.sstep.done{background:rgba(55,224,176,.07);color:var(--ok);}
+
+/* modal footer */
+.mfoot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex:none;background:var(--surface-2);}
+.mbtn{flex:1;padding:9px 12px;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);font-family:var(--mono);font-size:11px;border-radius:3px;cursor:pointer;transition:all .12s;}
 .mbtn:hover{border-color:var(--cyan);color:var(--cyan);}
-.mbtn:disabled{opacity:.3;cursor:default;}
-.mbtn.pri{background:var(--cyan-2);border-color:var(--cyan-2);color:#04141c;font-weight:600;}
-.mbtn.pri:hover{background:var(--cyan);box-shadow:0 0 12px rgba(45,212,255,.3);}
+.mbtn.save{background:var(--cyan-2);border-color:var(--cyan-2);color:#04141c;font-weight:700;}
+.mbtn.save:hover{background:var(--cyan);box-shadow:0 0 12px rgba(45,212,255,.3);}
+.mbtn.del{color:var(--red);border-color:rgba(255,90,90,.3);}
+.mbtn.del:hover{background:rgba(255,90,90,.1);border-color:var(--red);}
+
+/* risk selector */
+.risk-row{display:flex;gap:8px;}
+.risk-opt{flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:3px;font-family:var(--mono);font-size:10px;text-align:center;cursor:pointer;transition:all .12s;background:var(--surface-2);color:var(--muted);}
+.risk-opt:hover{border-color:var(--cyan);color:var(--cyan);}
+.risk-opt.sel-ok{background:rgba(55,224,176,.12);border-color:rgba(55,224,176,.5);color:var(--ok);}
+.risk-opt.sel-amber{background:rgba(255,186,69,.1);border-color:rgba(255,186,69,.5);color:var(--amber);}
+.risk-opt.sel-red{background:rgba(255,90,90,.1);border-color:rgba(255,90,90,.5);color:var(--red);}
+.risk-opt.sel-n{background:rgba(147,180,206,.08);border-color:rgba(147,180,206,.4);color:var(--muted);}
+
 @media(max-width:1200px){.kanban{grid-template-columns:repeat(3,1fr);}.rollup{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:700px){.kanban{grid-template-columns:1fr 1fr;}.rollup{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.kanban{grid-template-columns:1fr 1fr;}.rollup{grid-template-columns:1fr 1fr;}.frow.cols4{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
@@ -103,7 +142,7 @@ body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:
     <span class="bdoc">Pipeline Tracker</span>
   </div>
   <div class="spacer"></div>
-  <button class="tbtn" onclick="addDeal()">+ New Deal</button>
+  <button class="tbtn pri" onclick="newDeal()">+ New Deal</button>
   <a class="tbtn" href="Phoenix Hub.html">← Hub</a>
 </div>
 
@@ -121,26 +160,31 @@ body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:
   <div class="kanban" id="board"></div>
 </div>
 
-<div class="overlay hid" id="ov" onclick="closeM(event)">
+<div class="overlay hid" id="ov" onclick="bgClose(event)">
   <div class="modal" id="modal"></div>
 </div>
 
 <script>
 const STAGES=['Sourcing','Due Diligence','Under Offer','In Appraisal','Legals','Complete'];
+const TYPES=['Residential','Conversion','Mixed Use','Commercial','Refurbishment','Other'];
 let filter='all';
+let editing=null; // draft being edited in modal
+
 let deals=JSON.parse(localStorage.getItem('phx_pipe')||'null')||[
-  {id:1,name:'Walnut Marches',addr:'East Grinstead, W. Sussex',stage:'In Appraisal',units:29,gdv:14.5,margin:22.4,peak:9.2,risk:'ok',type:'Residential',notes:'FPC submitted. Planning committee scheduled Nov.'},
-  {id:2,name:'Cedar Rise',addr:'Haywards Heath, W. Sussex',stage:'Under Offer',units:14,gdv:7.8,margin:18.1,peak:5.1,risk:'amber',type:'Residential',notes:'Solicitors instructed. Title queries outstanding.'},
-  {id:3,name:'Quarry Fields',addr:'Crawley, W. Sussex',stage:'Complete',units:52,gdv:24.2,margin:25.3,peak:15.6,risk:'ok',type:'Residential',notes:'All units sold. Final account agreed.'},
-  {id:4,name:'Elm Court',addr:'Tunbridge Wells, Kent',stage:'Due Diligence',units:8,gdv:4.1,margin:15.2,peak:2.8,risk:'red',type:'Conversion',notes:'Listed building constraints. Heritage officer meeting booked.'},
-  {id:5,name:'Brook House',addr:'Horsham, W. Sussex',stage:'Sourcing',units:22,gdv:11.2,margin:null,peak:null,risk:'n',type:'Residential',notes:'Initial site visit done. Awaiting asking price.'},
-  {id:6,name:'Station Quarter',addr:'Three Bridges, W. Sussex',stage:'Legals',units:64,gdv:31.5,margin:21.8,peak:20.4,risk:'ok',type:'Mixed Use',notes:'Facility agreed with Barclays. Exchange expected Dec.'},
-  {id:7,name:'Fairfield Lane',addr:'Burgess Hill, W. Sussex',stage:'Sourcing',units:12,gdv:6.4,margin:null,peak:null,risk:'n',type:'Residential',notes:'Agent intro via Smith & Partners.'},
+  {id:1,name:'Walnut Marches',addr:'East Grinstead, W. Sussex',stage:'In Appraisal',units:29,gdv:14.5,margin:22.4,peak:9.2,risk:'ok',type:'Residential',agent:'Smith & Partners',vendor:'Private',notes:'FPC submitted. Planning committee scheduled Nov.'},
+  {id:2,name:'Cedar Rise',addr:'Haywards Heath, W. Sussex',stage:'Under Offer',units:14,gdv:7.8,margin:18.1,peak:5.1,risk:'amber',type:'Residential',agent:'Knight Frank',vendor:'Private',notes:'Solicitors instructed. Title queries outstanding.'},
+  {id:3,name:'Quarry Fields',addr:'Crawley, W. Sussex',stage:'Complete',units:52,gdv:24.2,margin:25.3,peak:15.6,risk:'ok',type:'Residential',agent:'Savills',vendor:'Corporate',notes:'All units sold. Final account agreed.'},
+  {id:4,name:'Elm Court',addr:'Tunbridge Wells, Kent',stage:'Due Diligence',units:8,gdv:4.1,margin:15.2,peak:2.8,risk:'red',type:'Conversion',agent:'Strutt & Parker',vendor:'Private',notes:'Listed building constraints. Heritage officer meeting booked.'},
+  {id:5,name:'Brook House',addr:'Horsham, W. Sussex',stage:'Sourcing',units:22,gdv:11.2,margin:null,peak:null,risk:'n',type:'Residential',agent:'',vendor:'',notes:'Initial site visit done. Awaiting asking price.'},
+  {id:6,name:'Station Quarter',addr:'Three Bridges, W. Sussex',stage:'Legals',units:64,gdv:31.5,margin:21.8,peak:20.4,risk:'ok',type:'Mixed Use',agent:'CBRE',vendor:'Corporate',notes:'Facility agreed with Barclays. Exchange expected Dec.'},
+  {id:7,name:'Fairfield Lane',addr:'Burgess Hill, W. Sussex',stage:'Sourcing',units:12,gdv:6.4,margin:null,peak:null,risk:'n',type:'Residential',agent:'',vendor:'',notes:'Agent intro via Smith & Partners.'},
 ];
+
 function save(){localStorage.setItem('phx_pipe',JSON.stringify(deals));}
 function fmt(n){return n==null?'—':'£'+n.toFixed(1)+'m';}
 function mc(m){return m==null?'':(m>=20?'ok':m>=15?'amber':'red');}
 function setF(f,btn){filter=f;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');render();}
+
 function render(){
   const active=deals.filter(d=>d.stage!=='Complete');
   const totalGDV=deals.reduce((s,d)=>s+(d.gdv||0),0);
@@ -155,6 +199,7 @@ function render(){
     <div class="ru"><div class="l">Avg Margin</div><div class="v ${avgM!=null?(avgM>=20?'ok':avgM>=15?'amber':'red'):''}'">${avgM!=null?avgM.toFixed(1)+'%':'—'}</div><div class="s">appraisal+ only</div></div>
     <div class="ru"><div class="l">Total Units</div><div class="v">${units}</div><div class="s">all stages</div></div>
     <div class="ru"><div class="l">Risk Profile</div><div class="v" style="font-size:14px;margin-top:10px;display:flex;gap:10px;"><span style="color:var(--ok)">${rc.ok} low</span><span style="color:var(--amber)">${rc.amber} mid</span><span style="color:var(--red)">${rc.red} high</span></div></div>`;
+
   const board=document.getElementById('board');board.innerHTML='';
   STAGES.forEach(stage=>{
     const sd=deals.filter(d=>{
@@ -166,56 +211,167 @@ function render(){
     col.innerHTML=`<div class="col-head"><span class="col-stage">${stage}</span><span class="col-count">${sd.length}</span></div>
     <div class="col-body">${sd.map(d=>`
       <div class="deal r-${d.risk}" onclick="openD(${d.id})">
-        <div class="deal-name">${d.name}</div>
-        <div class="deal-addr">${d.addr}</div>
+        <div class="deal-name">${esc(d.name)}</div>
+        <div class="deal-addr">${esc(d.addr)}</div>
         <div class="deal-row">
           <div class="dk"><div class="dl">GDV</div><div class="dv">${fmt(d.gdv)}</div></div>
           <div class="dk"><div class="dl">Margin</div><div class="dv ${mc(d.margin)}">${d.margin!=null?d.margin.toFixed(1)+'%':'—'}</div></div>
         </div>
-        <div class="chips"><span class="chip">${d.units} units</span><span class="chip">${d.type}</span></div>
+        <div class="chips"><span class="chip">${d.units} units</span><span class="chip">${esc(d.type)}</span></div>
       </div>`).join('')}</div>`;
     board.appendChild(col);
   });
 }
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 function openD(id){
-  const d=deals.find(x=>x.id===id);if(!d)return;
+  const d=deals.find(x=>x.id===id);
+  if(!d)return;
+  editing=JSON.parse(JSON.stringify(d)); // clone for editing
+  renderModal(false);
+  document.getElementById('ov').classList.remove('hid');
+}
+
+function newDeal(){
+  editing={id:Date.now(),name:'',addr:'',stage:'Sourcing',units:0,gdv:0,margin:null,peak:null,risk:'n',type:'Residential',agent:'',vendor:'',notes:''};
+  renderModal(true);
+  document.getElementById('ov').classList.remove('hid');
+  setTimeout(()=>{const f=document.getElementById('f_name');if(f)f.focus();},60);
+}
+
+function renderModal(isNew){
+  const d=editing;
   const si=STAGES.indexOf(d.stage);
   document.getElementById('modal').innerHTML=`
     <div class="mhead">
-      <div><h3>${d.name}</h3><div style="color:var(--muted);font-family:var(--mono);font-size:11px;margin-top:4px;">${d.addr} · ${d.type} · ${d.units} units</div></div>
-      <button class="mclose" onclick="closeM()">×</button>
+      <h3>${isNew?'New Deal':esc(d.name)||'Untitled'}</h3>
+      <div class="mhead-actions">
+        ${!isNew?`<button class="tbtn" style="color:var(--red);border-color:rgba(255,90,90,.3);" onclick="deleteDeal(${d.id})">Delete</button>`:''}
+        <button class="mclose" onclick="closeModal()">×</button>
+      </div>
     </div>
     <div class="mbody">
-      <div class="mstats">
-        <div class="mstat"><div class="ml">GDV</div><div class="mv">${fmt(d.gdv)}</div></div>
-        <div class="mstat"><div class="ml">Margin</div><div class="mv ${mc(d.margin)}">${d.margin!=null?d.margin.toFixed(1)+'%':'—'}</div></div>
-        <div class="mstat"><div class="ml">Peak Funding</div><div class="mv">${fmt(d.peak)}</div></div>
+
+      <div>
+        <div class="fseclabel" style="margin-bottom:10px;">Site Details</div>
+        <div class="frow" style="margin-bottom:10px;">
+          <div class="field"><label>Scheme name</label><input id="f_name" class="finput" value="${esc(d.name)}" placeholder="e.g. Walnut Marches" oninput="upd('name',this.value)"></div>
+        </div>
+        <div class="frow cols2">
+          <div class="field"><label>Address / location</label><input class="finput" value="${esc(d.addr)}" placeholder="Town, County" oninput="upd('addr',this.value)"></div>
+          <div class="field"><label>Type</label>
+            <select class="finput" onchange="upd('type',this.value)">
+              ${TYPES.map(t=>`<option value="${t}" ${d.type===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="mlabel">Stage Progress</div>
-      <div class="stages">${STAGES.map((s,i)=>`<div class="sstep ${i<si?'done':i===si?'act':''}">${s}</div>`).join('')}</div>
-      <div class="mlabel">Notes</div>
-      <textarea class="ntarea" placeholder="Add notes…" oninput="updN(${id},this.value)">${d.notes||''}</textarea>
-      <div class="mbtns">
-        <button class="mbtn" ${si===0?'disabled':''} onclick="mvS(${id},-1)">← Back</button>
-        <button class="mbtn pri" ${si===STAGES.length-1?'disabled':''} onclick="mvS(${id},1)">Advance →</button>
+
+      <div class="fsep"></div>
+
+      <div>
+        <div class="fseclabel" style="margin-bottom:10px;">Appraisal Metrics</div>
+        <div class="frow cols4">
+          <div class="field"><label>Units</label><input class="finput" type="number" min="0" value="${d.units||0}" oninput="updN('units',this.value)"></div>
+          <div class="field"><label>GDV (£m)</label><input class="finput" type="number" step="0.1" min="0" value="${d.gdv||''}" placeholder="0.0" oninput="updN('gdv',this.value)"></div>
+          <div class="field"><label>Margin (%)</label><input class="finput" type="number" step="0.1" value="${d.margin!=null?d.margin:''}" placeholder="—" oninput="updNNull('margin',this.value)"></div>
+          <div class="field"><label>Peak funding (£m)</label><input class="finput" type="number" step="0.1" min="0" value="${d.peak!=null?d.peak:''}" placeholder="—" oninput="updNNull('peak',this.value)"></div>
+        </div>
       </div>
+
+      <div class="fsep"></div>
+
+      <div>
+        <div class="fseclabel" style="margin-bottom:10px;">Stage</div>
+        <div class="stages" id="stage-steps">
+          ${STAGES.map((s,i)=>`<div class="sstep ${i<si?'done':i===si?'act':''}" onclick="setStage('${s}')">${s}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+
+      <div>
+        <div class="fseclabel" style="margin-bottom:10px;">Risk Rating</div>
+        <div class="risk-row">
+          <div class="risk-opt ${d.risk==='ok'?'sel-ok':''}" onclick="setRisk('ok')">Low risk</div>
+          <div class="risk-opt ${d.risk==='amber'?'sel-amber':''}" onclick="setRisk('amber')">Elevated</div>
+          <div class="risk-opt ${d.risk==='red'?'sel-red':''}" onclick="setRisk('red')">High risk</div>
+          <div class="risk-opt ${d.risk==='n'?'sel-n':''}" onclick="setRisk('n')">Unrated</div>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+
+      <div>
+        <div class="fseclabel" style="margin-bottom:10px;">Contacts</div>
+        <div class="frow cols2">
+          <div class="field"><label>Agent</label><input class="finput" value="${esc(d.agent||'')}" placeholder="Agency name" oninput="upd('agent',this.value)"></div>
+          <div class="field"><label>Vendor / source</label><input class="finput" value="${esc(d.vendor||'')}" placeholder="Vendor / off-market etc." oninput="upd('vendor',this.value)"></div>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+
+      <div class="field">
+        <label>Notes</label>
+        <textarea class="ntarea" placeholder="Status, key actions, watch points…" oninput="upd('notes',this.value)">${esc(d.notes||'')}</textarea>
+      </div>
+
+    </div>
+    <div class="mfoot">
+      <button class="mbtn" onclick="closeModal()">Cancel</button>
+      <button class="mbtn save" onclick="saveEditing(${isNew})">Save Deal</button>
     </div>`;
-  document.getElementById('ov').classList.remove('hid');
 }
-function closeM(e){if(!e||e.target===document.getElementById('ov'))document.getElementById('ov').classList.add('hid');}
-function updN(id,val){const d=deals.find(x=>x.id===id);if(d){d.notes=val;save();}}
-function mvS(id,dir){
-  const d=deals.find(x=>x.id===id);if(!d)return;
-  const i=STAGES.indexOf(d.stage);
-  d.stage=STAGES[Math.max(0,Math.min(STAGES.length-1,i+dir))];
-  save();closeM();render();setTimeout(()=>openD(id),60);
+
+function upd(key,val){if(editing)editing[key]=val;}
+function updN(key,val){if(editing)editing[key]=parseFloat(val)||0;}
+function updNNull(key,val){if(editing)editing[key]=val===''||val==null?null:parseFloat(val);}
+
+function setStage(stage){
+  if(!editing)return;
+  editing.stage=stage;
+  const si=STAGES.indexOf(stage);
+  document.querySelectorAll('.sstep').forEach((el,i)=>{
+    el.className='sstep'+(i<si?' done':i===si?' act':'');
+  });
 }
-function addDeal(){
-  const name=prompt('Deal name:');if(!name)return;
-  const addr=prompt('Address:')||'';
-  deals.push({id:Date.now(),name,addr,stage:'Sourcing',units:0,gdv:0,margin:null,peak:null,risk:'n',type:'Residential',notes:''});
-  save();render();
+
+function setRisk(r){
+  if(!editing)return;
+  editing.risk=r;
+  const map={ok:'sel-ok',amber:'sel-amber',red:'sel-red',n:'sel-n'};
+  document.querySelectorAll('.risk-opt').forEach((el,i)=>{
+    const keys=['ok','amber','red','n'];
+    el.className='risk-opt'+(r===keys[i]?' '+map[r]:'');
+  });
 }
+
+function saveEditing(isNew){
+  if(!editing)return;
+  editing.name=(editing.name||'').trim()||'Untitled';
+  if(isNew){
+    deals.push(editing);
+  } else {
+    const idx=deals.findIndex(x=>x.id===editing.id);
+    if(idx>=0)deals[idx]=editing;
+  }
+  save();closeModal();render();
+}
+
+function deleteDeal(id){
+  if(!confirm('Delete this deal? This cannot be undone.'))return;
+  deals=deals.filter(x=>x.id!==id);
+  save();closeModal();render();
+}
+
+function closeModal(){
+  editing=null;
+  document.getElementById('ov').classList.add('hid');
+}
+function bgClose(e){if(e.target===document.getElementById('ov'))closeModal();}
+
 render();
 </script>
 </body>
