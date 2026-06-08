@@ -10,7 +10,7 @@
   var SUPABASE_KEY = 'sb_publishable_bnyXHSp3aUK-pGPvNEQDqQ_bpSz7uVi';
 
   if (!global.supabase || !global.supabase.createClient) {
-    console.error('[Pronexus] Supabase library failed to load — check the CDN <script> tag.');
+    console.error('[Phoenix] Supabase library failed to load — check the CDN <script> tag.');
     global.sb = null;
     return;
   }
@@ -20,7 +20,7 @@
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: 'pronexus-auth'
+      storageKey: 'phoenix-auth'
     }
   });
 })(typeof window !== 'undefined' ? window : this);

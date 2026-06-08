@@ -1,4 +1,4 @@
-# Pronexus — Supabase setup
+# Phoenix — Supabase setup
 
 Do these **once** in your Supabase dashboard to bring the database online. ~5 minutes.
 

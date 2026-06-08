@@ -17,7 +17,7 @@ function useSession() {
 function Splash({ label }) {
   return (
     <div className="bootsplash">
-      <div className="boot-mark">N</div>
+      <div className="boot-mark">P</div>
       <div className="boot-spin"></div>
       <div className="boot-label">{label || 'Loading…'}</div>
     </div>
@@ -63,9 +63,9 @@ function AuthScreen() {
       <form className="authcard" onSubmit={submit}>
         <span className="cn tl"></span><span className="cn tr"></span><span className="cn bl"></span><span className="cn br"></span>
         <div className="auth-brand">
-          <div className="auth-mark">N</div>
+          <div className="auth-mark">P</div>
           <div>
-            <div className="auth-name">PRONEXUS</div>
+            <div className="auth-name">PHOENIX</div>
             <div className="auth-tag">Development Appraisal</div>
           </div>
         </div>

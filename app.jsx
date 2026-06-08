@@ -207,7 +207,7 @@ function Workspace({ session }) {
     return (
       <div className="app">
         <div className="topbar">
-          <div className="brand"><div className="mark">N</div><div className="title">North Gate <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
+          <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
           <div className="ref">PORTFOLIO</div>
           <div className="spacer"></div>
           <div className="acct">
@@ -232,7 +232,7 @@ function Workspace({ session }) {
           <button className="backbtn" onClick={backToPortfolio} title="Back to portfolio">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
-          <div className="mark">N</div>
+          <div className="mark">P</div>
           <div className="title">{active.project.name}</div>
         </div>
         <VersionSwitcher active={active} projects={projects}
