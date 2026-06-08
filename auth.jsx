@@ -44,11 +44,13 @@ function AuthScreen() {
         if (!data.session) {
           setNotice('Account created. If email confirmation is on, check your inbox, then sign in.');
           setMode('signin');
+        } else {
+          window.location.href = 'Phoenix Hub.html';
         }
-        // with confirmation off, a session is returned and onAuthStateChange routes in
       } else {
         const { error } = await window.sb.auth.signInWithPassword({ email: email.trim(), password: pw });
         if (error) throw error;
+        window.location.href = 'Phoenix Hub.html';
       }
     } catch (e2) {
       setErr(e2 && e2.message ? e2.message : String(e2));
