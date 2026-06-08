@@ -91,6 +91,20 @@ function SiteDetails({ state, model, set }) {
         {f('Asking Price', 'askingPrice', true)}
         {f('Offer Price', 'offerPrice', true)}
       </div>
+      <div className="fieldrow" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: '4px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+        <div className="field">
+          <label>Third-party Equity (£) <span style={{ color: 'var(--muted)', fontWeight: 400 }}>investor contribution</span></label>
+          <input className="num" value={state.assumptions.equity || 0} onChange={e => set(s => { s.assumptions.equity = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0; })} />
+        </div>
+        <div className="field">
+          <label>Loan to GDV (%)</label>
+          <input className="num" value={(state.assumptions.loan_to_gdv * 100).toFixed(1)} onChange={e => set(s => { s.assumptions.loan_to_gdv = (parseFloat(e.target.value) || 0) / 100; })} />
+        </div>
+        <div className="field">
+          <label>All-in interest rate (% pa)</label>
+          <input className="num" value={((state.assumptions.base_rate + state.assumptions.margin) * 100).toFixed(2)} onChange={e => set(s => { const total = (parseFloat(e.target.value) || 0) / 100; s.assumptions.margin = Math.max(0, total - s.assumptions.base_rate); })} />
+        </div>
+      </div>
       <div className="fieldrow" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginTop: '4px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Net Area</label><div className="derived">{Math.round(inpFmt.totalGdv ? state.phases.reduce((a, x) => a + x.netAreaSqft, 0) : 0).toLocaleString()} sqft</div></div>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Gross Area</label><div className="derived">{Math.round(state.phases.reduce((a, x) => a + x.netAreaSqft * (x.phaseType === 'Flat' || x.phaseType === 'Mixed' ? 1 + state.assumptions.gross_area_allowance : 1.0), 0)).toLocaleString()} sqft</div></div>

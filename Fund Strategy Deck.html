@@ -114,7 +114,7 @@ const DEFAULTS = {
 };
 
 let C = {...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE)||'{}')};
-const or = (v,fb='—') => (v||'').trim()||fb;
+const or = (v,fb='—') => (v!=null?String(v):'').trim()||fb;
 const LOGO = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.5"/></svg>`;
 const TOPBAR = `<div style="display:flex;align-items:center;gap:14px;">${LOGO}<span style="font-family:var(--mono);font-weight:600;letter-spacing:4px;font-size:20px;">PHOENIX</span><span style="margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:4px 12px;border-radius:2px;">CONFIDENTIAL</span></div>`;
 

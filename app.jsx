@@ -215,10 +215,10 @@ function Workspace({ session }) {
       lpa: state.project.borough || '',
       planningRef: state.project.planningRef || '',
       ref: state.project.clientRef || state.project.ref || '',
-      units: totalUnits || '',
-      netArea: netArea || '',
-      programme: state.project.projectLengthMonths || '',
-      offerPrice: state.project.offerPrice || '',
+      units: String(totalUnits || ''),
+      netArea: String(netArea || ''),
+      programme: String(state.project.projectLengthMonths || ''),
+      offerPrice: String(state.project.offerPrice || ''),
       date: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
       gdv: fmm(r.gdv),
       land: fmm(cat(1)),
@@ -236,7 +236,7 @@ function Workspace({ session }) {
       profitPctGdv: fmp(r.profitPctGdv),
       profitExFin: fmp(r.profitExFinance),
       peakFunding: fmm(r.peakFunding),
-      peakMonth: r.peakMonth || '',
+      peakMonth: String(r.peakMonth || ''),
       ltv: fmp(r.peakLoanToGdv),
       ltc: fmp(r.peakLoanToCost),
       // deal memo specific
@@ -314,38 +314,53 @@ function Workspace({ session }) {
           <div className="pb"><div className="lab">Risk</div><div className={'val risk-' + risk.sev}>{risk.level}</div></div>
         </div>
         <div className={'toggle hide-mobile' + (pres ? ' on' : '')} onClick={() => setPres(p => !p)} style={{ marginLeft: 10 }}><span className="sw"></span>Presentation</div>
-        <button className="reviewbtn" onClick={() => openReview('history')} style={{ marginLeft: 10 }} title="Version history, activity & comments">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l2.5 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/></svg>
-          <span className="reviewbtn-lbl">Review</span>{openComments > 0 ? <span className="reviewbadge">{openComments}</span> : null}
+        <button className="reviewbtn" onClick={() => setShowMenu(m => !m)} style={{ marginLeft: 10 }}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 3.5h12M2 8h12M2 12.5h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <span className="reviewbtn-lbl">Menu</span>{openComments > 0 ? <span className="reviewbadge">{openComments}</span> : null}
         </button>
-        <button className="reviewbtn" onClick={() => setShowPack(true)} style={{ marginLeft: 10 }} title="Generate lender-facing PDF appraisal pack">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M4 1.5h5l3 3V14a.5.5 0 01-.5.5h-7A.5.5 0 014 14V1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M9 1.5v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M6 8.5h4M6 11h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
-          <span className="reviewbtn-lbl">PDF Pack</span>
-        </button>
-        <div style={{ position: 'relative', marginLeft: 10 }}>
-          <button className="reviewbtn" onClick={() => setShowGenerate(g => !g)} title="Generate a presentation or report from this project">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-            <span className="reviewbtn-lbl">Generate</span>
-          </button>
-          {showGenerate && (
-            <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:6, zIndex:200, minWidth:210, boxShadow:'0 8px 24px rgba(0,0,0,.5)', overflow:'hidden' }} onMouseLeave={() => setShowGenerate(false)}>
-              <div style={{ padding:'8px 12px 6px', fontFamily:'var(--mono)', fontSize:9.5, textTransform:'uppercase', letterSpacing:1, color:'var(--muted)', borderBottom:'1px solid var(--border)' }}>From this project</div>
-              {[['pitch','Investor Pitch Deck','7-slide LP presentation'],['report','Client Report','4-page printable appraisal'],['memo','Deal Memo','1-page decision memo'],['update','Project Update Deck','5-slide progress update']].map(([type,label,sub]) => (
-                <button key={type} onClick={() => generateDoc(type)} style={{ display:'block', width:'100%', padding:'10px 14px', background:'none', border:'none', textAlign:'left', cursor:'pointer', borderBottom:'1px solid var(--border)' }}
-                  onMouseEnter={e => e.currentTarget.style.background='var(--surface-2)'}
-                  onMouseLeave={e => e.currentTarget.style.background='none'}>
-                  <div style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--ink)' }}>{label}</div>
-                  <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--muted)', marginTop:2 }}>{sub}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginLeft:10 }}>← Hub</a>
-        <button className="btn ghost acct-out hide-mobile" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
       </div>
 
       {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
+
+      {/* Menu backdrop */}
+      {showMenu && <div onClick={() => setShowMenu(false)} style={{position:'fixed',inset:0,zIndex:198,background:'rgba(0,0,0,.45)'}} />}
+
+      {/* Slide-out menu */}
+      <div style={{position:'fixed',right:0,top:0,bottom:0,width:290,background:'var(--surface)',borderLeft:'1px solid var(--border-strong)',zIndex:199,transform:showMenu?'translateX(0)':'translateX(110%)',transition:'transform .25s ease',display:'flex',flexDirection:'column',boxShadow:'-8px 0 40px rgba(0,0,0,.5)'}}>
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+          <div style={{fontFamily:'var(--mono)',fontWeight:700,letterSpacing:'3px',fontSize:13,color:'var(--ink)'}}>PHOENIX</div>
+          <button onClick={() => setShowMenu(false)} style={{width:28,height:28,display:'grid',placeItems:'center',border:'1px solid var(--border)',borderRadius:4,background:'var(--surface-2)',color:'var(--muted)',cursor:'pointer',fontSize:18,lineHeight:1}}>×</button>
+        </div>
+        <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
+          <div style={{fontFamily:'var(--mono)',fontSize:9,textTransform:'uppercase',letterSpacing:'1.2px',color:'var(--muted)',marginBottom:8}}>Version</div>
+          <VersionSwitcher active={active} projects={projects} onSwitch={id=>{openProject(id);setShowMenu(false);}} onCreate={()=>{setShowMenu(false);setShowVersion(true);}} onCompare={()=>{setShowMenu(false);setShowCompare(true);}} />
+          <div style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--muted)',marginTop:8,wordBreak:'break-all'}}>{active.project.ref}</div>
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:'4px 0'}}>
+          {[['Review','History, comments & activity',()=>{openReview('history');setShowMenu(false);}],['PDF Pack','Lender-facing appraisal report',()=>{setShowPack(true);setShowMenu(false);}]].map(([label,sub,action])=>(
+            <button key={label} onClick={action} style={{display:'block',width:'100%',padding:'12px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+              <div style={{fontFamily:'var(--mono)',fontSize:13,fontWeight:600,color:'var(--ink)',display:'flex',alignItems:'center',gap:8}}>{label}{label==='Review'&&openComments>0?<span style={{background:'var(--cyan-2)',color:'#04141c',fontFamily:'var(--mono)',fontSize:9,fontWeight:700,padding:'1px 6px',borderRadius:3}}>{openComments}</span>:null}</div>
+              <div style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--muted)',marginTop:2}}>{sub}</div>
+            </button>
+          ))}
+          <div style={{padding:'10px 18px 6px',fontFamily:'var(--mono)',fontSize:9,textTransform:'uppercase',letterSpacing:'1.2px',color:'var(--cyan)',borderTop:'1px solid var(--border)',marginTop:4}}>Generate from project</div>
+          {[['pitch','Investor Pitch Deck','7-slide LP presentation'],['report','Client Report','Printable appraisal report'],['memo','Deal Memo','Decision memorandum'],['update','Project Update Deck','Monthly progress deck']].map(([type,label,sub])=>(
+            <button key={type} onClick={()=>generateDoc(type)} style={{display:'block',width:'100%',padding:'10px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+              <div style={{fontFamily:'var(--mono)',fontSize:12,fontWeight:600,color:'var(--ink-2)'}}>↳ {label}</div>
+              <div style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--muted)',marginTop:2}}>{sub}</div>
+            </button>
+          ))}
+        </div>
+        <div style={{borderTop:'1px solid var(--border)',flexShrink:0}}>
+          <a href="Phoenix Hub.html" style={{display:'flex',alignItems:'center',padding:'13px 18px',textDecoration:'none',borderBottom:'1px solid var(--border)'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+            <span style={{fontFamily:'var(--mono)',fontSize:13,fontWeight:600,color:'var(--ink)'}}>← Phoenix Hub</span>
+          </a>
+          <button onClick={signOut} style={{display:'flex',alignItems:'center',gap:10,padding:'13px 18px',background:'none',border:'none',width:'100%',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+            <span style={{fontFamily:'var(--mono)',fontSize:13,color:'var(--muted)'}}>Sign out</span>
+            <span style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--muted)',marginLeft:'auto',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{session.user.email}</span>
+          </button>
+        </div>
+      </div>
 
       <ReviewDrawer open={review.open} initialTab={review.tab} onClose={() => setReview(r => ({ ...r, open: false }))}
         project={active} author={email} refreshKey={collabKey}

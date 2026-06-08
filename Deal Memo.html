@@ -5,7 +5,7 @@
 <title>Phoenix — Deal Memo</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#ece5d4;--paper:#f7f3e9;--paper2:#efe9da;--pb:#d2c6ac;--ink:#26313f;--ink2:#6a6256;--sur:#0a1626;--sur2:#0d1d31;--border:#173251;--border2:#21466d;--dinк:#eef6fd;--muted:#93b4ce;--cyan:#2dd4ff;--cyan2:#1fc0e8;--amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;--sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;--serif:'Newsreader',Georgia,serif;}
+:root{--bg:#ece5d4;--paper:#f7f3e9;--paper2:#efe9da;--pb:#d2c6ac;--ink:#26313f;--ink2:#6a6256;--sur:#0a1626;--sur2:#0d1d31;--border:#173251;--border2:#21466d;--d-ink:#eef6fd;--muted:#93b4ce;--cyan:#2dd4ff;--cyan2:#1fc0e8;--amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;--sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;--serif:'Newsreader',Georgia,serif;}
 *,*::before,*::after{box-sizing:border-box;}
 body{margin:0;background:var(--bg);font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink);-webkit-font-smoothing:antialiased;}
 .topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--pb);display:flex;align-items:center;gap:16px;padding:0 20px;}
@@ -47,7 +47,7 @@ h2.sec{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.
 .kcard.amber::before,.kcard.amber::after{border-color:var(--amber);}
 .kcard.red::before,.kcard.red::after{border-color:var(--red);}
 .kcard .kl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
-.kcard .kv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--dinк);margin-top:6px;letter-spacing:-.3px;}
+.kcard .kv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--d-ink);margin-top:6px;letter-spacing:-.3px;}
 .kcard.ok .kv{color:var(--ok);}.kcard.amber .kv{color:var(--amber);}.kcard.red .kv{color:var(--red);}
 .tbl{width:100%;border-collapse:collapse;margin-bottom:20px;}
 .tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink2);font-weight:600;padding:7px 10px;border-bottom:2px solid var(--ink);background:var(--paper2);}
@@ -80,7 +80,7 @@ h2.sec{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.
 .cfg-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--sur);border-left:1px solid var(--border2);z-index:301;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.5);}
 .cfg-panel.open{transform:translateX(0);}
 .cfg-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex:none;}
-.cfg-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dinк);}
+.cfg-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--d-ink);}
 .cfg-x{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--sur2);color:var(--muted);cursor:pointer;font-size:16px;}
 .cfg-x:hover{border-color:var(--red);color:var(--red);}
 .cfg-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
@@ -89,7 +89,7 @@ h2.sec{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.
 .cfg-sec{font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--cyan);padding:6px 0;border-bottom:1px solid var(--border);margin-top:6px;}
 .cfg-f{display:flex;flex-direction:column;gap:4px;}
 .cfg-f label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
-.cfg-f input,.cfg-f select,.cfg-f textarea{background:var(--sur2);border:1px solid var(--border2);color:var(--dinк);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;width:100%;}
+.cfg-f input,.cfg-f select,.cfg-f textarea{background:var(--sur2);border:1px solid var(--border2);color:var(--d-ink);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;width:100%;}
 .cfg-f input:focus,.cfg-f textarea:focus{outline:none;border-color:var(--cyan);}
 .cfg-f textarea{resize:vertical;min-height:56px;font-family:var(--sans);font-size:12px;line-height:1.5;}
 .cfg-foot{padding:12px 16px;border-top:1px solid var(--border);flex:none;}
@@ -139,7 +139,7 @@ const fm = n => { const v=parseFloat(n); return v?'£'+v.toLocaleString('en-GB')
 const fmm = n => { const v=parseFloat(n); return v?'£'+v.toFixed(2)+'m':'—'; };
 const fp = n => { const v=parseFloat(n); return v?v.toFixed(1)+'%':'—'; };
 const sev = n => { const v=parseFloat(n); return v>=20?'ok':v>=15?'amber':'red'; };
-const or = (v,fb='—') => (v||'').trim()||fb;
+const or = (v,fb='—') => (v!=null?String(v):'').trim()||fb;
 const REC_MAP = {proceed:['proceed','Recommend: Proceed'],review:['review','Recommend: Subject to review'],pass:['pass','Recommend: Pass']};
 
 function costRow(label, val, pctOf) {
