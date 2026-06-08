@@ -5,6 +5,27 @@ function MoneyInput({ value, onChange, cls }) {
   return <input className={'num ' + (cls || '')} value={value == null ? '' : value}
     onChange={e => { const n = parseFloat(e.target.value.replace(/[^0-9.\-]/g, '')); onChange(isNaN(n) ? 0 : n); }} />;
 }
+
+/* PctInput — buffers local string so decimal point isn't swallowed mid-type */
+function PctInput({ value, onChange, style }) {
+  const [local, setLocal] = React.useState(null);
+  const display = local !== null ? local : String(parseFloat((value * 100).toPrecision(8)));
+  return <input
+    className="num mwidth"
+    value={display}
+    style={style || { width: 56 }}
+    onChange={e => {
+      setLocal(e.target.value);
+      const n = parseFloat(e.target.value);
+      if (!isNaN(n)) onChange(n / 100);
+    }}
+    onBlur={() => {
+      const n = parseFloat(display);
+      onChange(isNaN(n) ? 0 : n / 100);
+      setLocal(null);
+    }}
+  />;
+}
 function Check({ on, onClick }) {
   return <div className={'chk' + (on ? ' on' : '')} onClick={onClick}>
     {on ? <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
@@ -72,7 +93,7 @@ function SiteDetails({ state, model, set }) {
       </div>
       <div className="fieldrow" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginTop: '4px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Net Area</label><div className="derived">{Math.round(inpFmt.totalGdv ? state.phases.reduce((a, x) => a + x.netAreaSqft, 0) : 0).toLocaleString()} sqft</div></div>
-        <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Gross Area</label><div className="derived">{Math.round(state.phases.reduce((a, x) => a + x.netAreaSqft * (1 + state.assumptions.gross_area_allowance), 0)).toLocaleString()} sqft</div></div>
+        <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Gross Area</label><div className="derived">{Math.round(state.phases.reduce((a, x) => a + x.netAreaSqft * (x.phaseType === 'Flat' || x.phaseType === 'Mixed' ? 1 + state.assumptions.gross_area_allowance : 1.0), 0)).toLocaleString()} sqft</div></div>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Blended £psf</label><div className="derived">£{Math.round(model.ratios.gdv / (state.phases.reduce((a, x) => a + x.netAreaSqft, 0) || 1))}</div></div>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>GDV</label><div className="derived" style={{ color: 'var(--green-700)', fontWeight: 600 }}>{inpFmt.money(model.ratios.gdv)}</div></div>
       </div>
@@ -157,11 +178,18 @@ function IncomeByPhase({ state, model, set }) {
     <Section idx="D" title="Income by Phase" total={model.ratios.gdv}>
       <div style={{ overflowX: 'auto' }}>
         <table className="unittbl">
-          <thead><tr><th>Phase</th><th className="r">Units</th><th className="r">Net Area ft²</th><th className="r">Build £psf</th><th className="r">Sale £psf</th><th className="r">GDV</th></tr></thead>
+          <thead><tr><th>Phase</th><th className="r">Type</th><th className="r">Units</th><th className="r">Net Area ft²</th><th className="r">Build £psf</th><th className="r">Sale £psf</th><th className="r">GDV</th></tr></thead>
           <tbody>
             {state.phases.map(p => (
               <tr key={p.id} style={{ opacity: inpFmt.phaseGdv(p) > 0 ? 1 : 0.55 }}>
                 <td style={{ minWidth: 110 }}>{p.name}</td>
+                <td className="r" style={{ width: 80 }}>
+                  <select className="num" value={p.phaseType || 'House'} onChange={e => set(s => { s.phases.find(x => x.id === p.id).phaseType = e.target.value; })} style={{ fontSize: 12, padding: '2px 4px', background: 'var(--surface-2)', color: 'var(--ink)', border: '1px solid var(--border)' }}>
+                    <option value="House">House</option>
+                    <option value="Flat">Flat</option>
+                    <option value="Mixed">Mixed</option>
+                  </select>
+                </td>
                 <td className="r" style={{ width: 70 }}>{cell(p, 'units', true)}</td>
                 <td className="r" style={{ width: 100 }}>{cell(p, 'netAreaSqft', true)}</td>
                 <td className="r" style={{ width: 80 }}>{cell(p, 'buildRatePsf', true)}</td>
@@ -169,7 +197,7 @@ function IncomeByPhase({ state, model, set }) {
                 <td className="r num" style={{ fontWeight: 600 }}>{inpFmt.money(inpFmt.phaseGdv(p))}</td>
               </tr>
             ))}
-            <tr className="totalrow"><td>Total</td><td className="r">{state.phases.reduce((a, p) => a + p.units, 0)}</td><td className="r">{Math.round(state.phases.reduce((a, p) => a + p.netAreaSqft, 0)).toLocaleString()}</td><td></td><td></td><td className="r">{inpFmt.money(model.ratios.gdv)}</td></tr>
+            <tr className="totalrow"><td>Total</td><td></td><td className="r">{state.phases.reduce((a, p) => a + p.units, 0)}</td><td className="r">{Math.round(state.phases.reduce((a, p) => a + p.netAreaSqft, 0)).toLocaleString()}</td><td></td><td></td><td className="r">{inpFmt.money(model.ratios.gdv)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -243,7 +271,7 @@ function CostSection({ idx, cat, model, state, set }) {
                   {editable.indexOf(line.basis) >= 0
                     ? <MoneyInput value={src.amount || 0} cls="mwidth" onChange={v => set(s => { s.costLines.find(x => x.id === line.id).amount = v; })} />
                     : editPct.indexOf(line.basis) >= 0
-                      ? <input className="num mwidth" value={(src.pct * 100)} onChange={e => set(s => { s.costLines.find(x => x.id === line.id).pct = (parseFloat(e.target.value) || 0) / 100; })} style={{ width: 56 }} />
+                      ? <PctInput value={src.pct} onChange={v => set(s => { s.costLines.find(x => x.id === line.id).pct = v; })} />
                       : line.basis === 'per_unit'
                         ? <input className="num mwidth" value={src.rate} onChange={e => set(s => { s.costLines.find(x => x.id === line.id).rate = parseFloat(e.target.value) || 0; })} style={{ width: 80 }} />
                         : <span style={{ color: 'var(--muted-2)', fontSize: 11 }}>auto</span>}

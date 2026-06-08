@@ -297,13 +297,18 @@
     return a.vat_newbuild;
   }
 
+  function grossMultiplier(phase, a) {
+    var t = phase.phaseType;
+    return (t === 'Flat' || t === 'Mixed') ? (1 + a.gross_area_allowance) : 1.0;
+  }
+
   function constructionBase(state) {
     var a = state.assumptions, total = 0;
     state.costLines.forEach(function (l) {
       if (l.cat === 6 && l.included) {
         var p = state.phases.filter(function (x) { return x.id === l.phaseId; })[0];
         if (!p) return;
-        var gross = (p.netAreaSqft || 0) * (1 + a.gross_area_allowance);
+        var gross = (p.netAreaSqft || 0) * grossMultiplier(p, a);
         total += (p.buildRatePsf || 0) * gross; // net of VAT
       }
     });
@@ -345,7 +350,7 @@
       case 'construction': {
         var ph = state.phases.filter(function (x) { return x.id === line.phaseId; })[0];
         if (!ph) return 0;
-        var gross = (ph.netAreaSqft || 0) * (1 + a.gross_area_allowance);
+        var gross = (ph.netAreaSqft || 0) * grossMultiplier(ph, a);
         var net = (ph.buildRatePsf || 0) * gross;
         return net * (1 + vatRate(a, line.vatType));
       }
