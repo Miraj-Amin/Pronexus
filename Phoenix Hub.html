@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ece5d4;--paper:#f7f3e9;--paper-2:#efe9da;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
+  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
+  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
+  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
+
+/* HERO BANNER */
+.hero{background:var(--surface);position:relative;overflow:hidden;padding:64px 80px 56px;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
+.hero-glow-r{position:absolute;top:-180px;right:-180px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,255,.16),transparent 62%);pointer-events:none;}
+.hero-glow-l{position:absolute;bottom:-160px;left:-160px;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle,rgba(109,75,214,.12),transparent 62%);pointer-events:none;}
+.hero-inner{position:relative;z-index:1;max-width:1400px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:40px;}
+.hero-left{}
+.hero-brand{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+.hmark{width:38px;height:38px;border-radius:7px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:16px;font-family:var(--mono);box-shadow:0 2px 10px rgba(19,102,214,.45);}
+.hwm{font-family:var(--mono);font-weight:600;letter-spacing:3px;font-size:18px;color:#fff;}
+.hchip{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:4px 11px;border-radius:2px;margin-left:4px;}
+.hero-title{font-family:var(--serif);font-weight:500;font-size:52px;line-height:1.06;color:#fff;letter-spacing:-.4px;margin:0 0 14px;}
+.hero-title em{font-style:italic;color:#7ad4f0;}
+.hero-sub{font-size:17px;color:#9fb2c4;max-width:560px;line-height:1.55;}
+.hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:16px;}
+.hero-stats{display:flex;gap:28px;}
+.hstat{text-align:right;}
+.hstat .sl{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:#6f8497;}
+.hstat .sv{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--ink);margin-top:4px;}
+.hero-link{display:inline-flex;align-items:center;gap:8px;background:rgba(45,212,255,.1);border:1px solid rgba(45,212,255,.3);color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:9px 18px;border-radius:3px;text-decoration:none;transition:all .14s;}
+.hero-link:hover{background:rgba(45,212,255,.18);box-shadow:0 0 20px rgba(45,212,255,.2);}
+
+/* MAIN */
+.main{max-width:1400px;margin:0 auto;padding:40px 80px 80px;}
+.section-header{display:flex;align-items:center;gap:14px;margin:36px 0 18px;}
+.sh-icon{width:32px;height:32px;border-radius:6px;display:grid;place-items:center;font-size:15px;flex:none;}
+.sh-label{font-family:var(--mono);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#3a4452;}
+.sh-label::before{content:'┌─ ';color:#b8a884;}
+.sh-rule{flex:1;height:1px;background:repeating-linear-gradient(90deg,#cdbfa3 0 6px,transparent 6px 12px);}
+
+/* TOOL CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:20px 22px;cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .16s;text-decoration:none;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;}
+.tcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--tc,var(--border-strong));transition:box-shadow .14s;}
+.tcard:hover{border-color:var(--tc,var(--cyan));box-shadow:0 6px 24px rgba(0,0,0,.3);transform:translateY(-2px);}
+.tcard:hover::before{box-shadow:0 0 12px var(--tc,var(--cyan));}
+.tc-top{display:flex;align-items:center;gap:12px;}
+.tc-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:17px;flex:none;background:rgba(45,212,255,.08);border:1px solid var(--border-strong);}
+.tc-name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);}
+.tc-badge{margin-left:auto;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.4px;padding:2px 8px;border-radius:2px;border:1px solid;flex:none;}
+.tc-desc{font-size:13px;color:var(--muted);line-height:1.55;flex:1;}
+.tc-foot{display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:10px;margin-top:2px;}
+.tc-tag{font-family:var(--mono);font-size:9.5px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:2px;}
+.tc-arrow{margin-left:auto;color:var(--muted);font-size:14px;transition:transform .14s;}
+.tcard:hover .tc-arrow{color:var(--tc,var(--cyan));transform:translateX(3px);}
+
+/* core app card */
+.bigcard{background:var(--surface);border:1px solid rgba(45,212,255,.35);border-radius:8px;padding:26px 28px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;text-decoration:none;position:relative;overflow:hidden;transition:all .16s;margin-bottom:14px;}
+.bigcard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(45,212,255,.06),transparent 60%);pointer-events:none;}
+.bigcard:hover{border-color:var(--cyan);box-shadow:0 8px 32px rgba(45,212,255,.12);transform:translateY(-1px);}
+.bc-left h3{margin:0 0 6px;font-family:var(--serif);font-size:24px;font-weight:500;color:var(--ink);}
+.bc-left p{margin:0;font-size:14px;color:var(--muted);line-height:1.55;max-width:500px;}
+.bc-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.bc-chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+.bc-chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:2px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--muted);}
+.bc-arrow{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:.6px;}
+
+@media(max-width:900px){.main{padding:24px 20px 60px;}.hero{padding:36px 24px 32px;}.hero-inner{flex-direction:column;}.hero-right{align-items:flex-start;}.hero-stats{flex-wrap:wrap;}.cards{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.cards{grid-template-columns:1fr;}.bigcard{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow-r"></div>
+  <div class="hero-glow-l"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-brand">
+        <div class="hmark">P</div>
+        <span class="hwm">PHOENIX</span>
+        <span class="hchip">DEVELOPMENT APPRAISAL</span>
+      </div>
+      <h1 class="hero-title">Everything you need<br>to <em>run a deal.</em></h1>
+      <div class="hero-sub">Tools for every stage — appraise, track, present, and manage development deals from sourcing to completion.</div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stats">
+        <div class="hstat"><div class="sl">Tools</div><div class="sv">10</div></div>
+        <div class="hstat"><div class="sl">Schemes</div><div class="sv">7</div></div>
+        <div class="hstat"><div class="sl">Pipeline GDV</div><div class="sv">£110m</div></div>
+      </div>
+      <a href="North Gate Appraisal Tool.html" class="hero-link">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Open Appraisal Tool
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CORE APP -->
+  <div class="section-header">
+    <div class="sh-icon" style="background:rgba(45,212,255,.08);">⚡</div>
+    <span class="sh-label">Core Application</span>
+    <div class="sh-rule"></div>
+  </div>
+  <a class="bigcard" href="North Gate Appraisal Tool.html">
+    <div class="bc-left">
+      <h3>North Gate Appraisal Tool</h3>
+      <p>Full development appraisal — input, dashboard, cashflow, versions, PDF export, comparables, and collaboration. The main platform.</p>
+    </div>
+    <div class="bc-right">
+      <div class="bc-chips">
+        <span class="bc-chip">Multi-scheme</span>
+        <span class="bc-chip">14-cat cost model</span>
+        <span class="bc-chip">Cashflow</span>
+        <span class="bc-chip">Versions</span>
+        <span class="bc-chip">PDF export</span>
+      </div>
+      <div class="bc-arrow">Open <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  </a>
+  <a class="bigcard" href="Phoenix Operating &amp; Deployment Manual.html" style="margin-bottom:0;">
+    <div class="bc-left">
+      <h3>Operating &amp; Deployment Manual</h3>
+      <p>Complete user and administrator guide — how to build an appraisal, read the dashboard, manage versions, deploy and maintain the tool.</p>
+    </div>
+    <div class="bc-right">
+      <div class="bc-chips">
+        <span class="bc-chip">User guide</span>
+        <span class="bc-chip">Admin guide</span>
+        <span class="bc-chip">Print-ready</span>
+      </div>
+      <div class="bc-arrow">Read <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+  </a>
+
+  <!-- DEAL TOOLS -->
+  <div class="section-header" style="margin-top:44px;">
+    <div class="sh-icon" style="background:rgba(55,224,176,.08);">📊</div>
+    <span class="sh-label">Deal Analysis</span>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="cards">
+    <a class="tcard" href="Quick Yield Calc.html" style="--tc:var(--cyan)">
+      <div class="tc-top"><div class="tc-icon">🧮</div><div class="tc-name">Quick Yield Calculator</div><span class="tc-badge" style="color:var(--cyan);border-color:rgba(45,212,255,.35);background:rgba(45,212,255,.08)">Analysis</span></div>
+      <div class="tc-desc">Instant appraisal calculator — enter GDV, land, build cost and finance to get profit, margin, loan-to-GDV and ROE in real time. Includes sensitivity heatmap.</div>
+      <div class="tc-foot"><span class="tc-tag">Live calc</span><span class="tc-tag">Sensitivity</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Scenario Modeller.html" style="--tc:var(--ok)">
+      <div class="tc-top"><div class="tc-icon">📈</div><div class="tc-name">Scenario Modeller</div><span class="tc-badge" style="color:var(--ok);border-color:rgba(55,224,176,.35);background:rgba(55,224,176,.08)">Analysis</span></div>
+      <div class="tc-desc">Run base, optimistic and bear cases side by side. Adjust GDV, build cost, finance rate and programme length per scenario and compare KPIs instantly.</div>
+      <div class="tc-foot"><span class="tc-tag">3 scenarios</span><span class="tc-tag">Live levers</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Comps Map.html" style="--tc:var(--amber)">
+      <div class="tc-top"><div class="tc-icon">🗺️</div><div class="tc-name">Comparable Sales Map</div><span class="tc-badge" style="color:var(--amber);border-color:rgba(255,186,69,.35);background:rgba(255,186,69,.08)">Research</span></div>
+      <div class="tc-desc">Interactive map of comparable sales with price-per-sqft analysis, filters by bed count and an evidence sidebar. East Grinstead demo loaded.</div>
+      <div class="tc-foot"><span class="tc-tag">Interactive map</span><span class="tc-tag">£psf analysis</span><span class="tc-arrow">→</span></div>
+    </a>
+  </div>
+
+  <!-- DEAL MANAGEMENT -->
+  <div class="section-header" style="margin-top:36px;">
+    <div class="sh-icon" style="background:rgba(109,75,214,.08);">🗂️</div>
+    <span class="sh-label">Deal Management</span>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="cards">
+    <a class="tcard" href="Pipeline Tracker.html" style="--tc:#a78bfa">
+      <div class="tc-top"><div class="tc-icon">🏗️</div><div class="tc-name">Pipeline Tracker</div><span class="tc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.08)">Operations</span></div>
+      <div class="tc-desc">Kanban board tracking all deals from sourcing to completion. Shows GDV, margin, risk rating and stage. Move deals forward with one click.</div>
+      <div class="tc-foot"><span class="tc-tag">Kanban</span><span class="tc-tag">Risk RAG</span><span class="tc-tag">Persistent</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Due Diligence Checklist.html" style="--tc:var(--ok)">
+      <div class="tc-top"><div class="tc-icon">✅</div><div class="tc-name">Due Diligence Checklist</div><span class="tc-badge" style="color:var(--ok);border-color:rgba(55,224,176,.35);background:rgba(55,224,176,.08)">Operations</span></div>
+      <div class="tc-desc">Structured DD checklist across 6 categories — title, planning, construction, finance, commercial and environmental. Track progress with status and notes. Print-ready.</div>
+      <div class="tc-foot"><span class="tc-tag">6 categories</span><span class="tc-tag">Progress tracking</span><span class="tc-tag">Print</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Deal Memo.html" style="--tc:var(--cyan)">
+      <div class="tc-top"><div class="tc-icon">📋</div><div class="tc-name">Deal Memo</div><span class="tc-badge" style="color:var(--cyan);border-color:rgba(45,212,255,.35);background:rgba(45,212,255,.08)">Documents</span></div>
+      <div class="tc-desc">One-page deal memo template — site details, appraisal summary, rationale, risks and recommendation. Editable in browser and print-ready as PDF.</div>
+      <div class="tc-foot"><span class="tc-tag">Editable</span><span class="tc-tag">PDF export</span><span class="tc-arrow">→</span></div>
+    </a>
+  </div>
+
+  <!-- PRESENTATIONS -->
+  <div class="section-header" style="margin-top:36px;">
+    <div class="sh-icon" style="background:rgba(255,186,69,.08);">🎯</div>
+    <span class="sh-label">Presentations &amp; Reports</span>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="cards">
+    <a class="tcard" href="Investor Pitch Deck.html" style="--tc:var(--amber)">
+      <div class="tc-top"><div class="tc-icon">💼</div><div class="tc-name">Investor Pitch Deck</div><span class="tc-badge" style="color:var(--amber);border-color:rgba(255,186,69,.35);background:rgba(255,186,69,.08)">Presentation</span></div>
+      <div class="tc-desc">7-slide investor deck for Walnut Marches — site overview, financials, returns profile, sensitivity analysis and proposed deal structure. Keyboard-navigable.</div>
+      <div class="tc-foot"><span class="tc-tag">7 slides</span><span class="tc-tag">Deck</span><span class="tc-tag">Returns focus</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Project Update Deck.html" style="--tc:var(--red)">
+      <div class="tc-top"><div class="tc-icon">📅</div><div class="tc-name">Project Update Deck</div><span class="tc-badge" style="color:var(--red);border-color:rgba(255,90,90,.35);background:rgba(255,90,90,.08)">Presentation</span></div>
+      <div class="tc-desc">5-slide monthly update deck — programme milestones, budget vs. actuals, sales progress and open action items. Month 14 demo state.</div>
+      <div class="tc-foot"><span class="tc-tag">5 slides</span><span class="tc-tag">Deck</span><span class="tc-tag">Monthly update</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Client Report.html" style="--tc:var(--muted)">
+      <div class="tc-top"><div class="tc-icon">📄</div><div class="tc-name">Client Report</div><span class="tc-badge" style="color:var(--muted);border-color:rgba(147,180,206,.35);background:rgba(147,180,206,.06)">Documents</span></div>
+      <div class="tc-desc">Multi-page printable appraisal report — cover, executive summary, cost breakdown, cashflow chart, comparables table and recommendation. A4 print-ready.</div>
+      <div class="tc-foot"><span class="tc-tag">5 pages</span><span class="tc-tag">Print PDF</span><span class="tc-arrow">→</span></div>
+    </a>
+    <a class="tcard" href="Fund Strategy Deck.html" style="--tc:#a78bfa">
+      <div class="tc-top"><div class="tc-icon">🏦</div><div class="tc-name">Fund Strategy Deck</div><span class="tc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.08)">Presentation</span></div>
+      <div class="tc-desc">8-slide LP presentation for Phoenix Fund I — market thesis, three-pillar strategy, track record, fund terms, deal process and team. Keyboard-navigable.</div>
+      <div class="tc-foot"><span class="tc-tag">8 slides</span><span class="tc-tag">LP deck</span><span class="tc-tag">Fund terms</span><span class="tc-arrow">→</span></div>
+    </a>
+  </div>
+
+</div>
+
+</body>
+</html>
