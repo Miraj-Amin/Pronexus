@@ -107,6 +107,7 @@ function Workspace({ session }) {
   const [showPack, setShowPack] = React.useState(false);
   const [showVersion, setShowVersion] = React.useState(false);
   const [showCompare, setShowCompare] = React.useState(false);
+  const [showGenerate, setShowGenerate] = React.useState(false);
   const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
@@ -200,6 +201,66 @@ function Workspace({ session }) {
   };
   const openReview = (t) => setReview({ open: true, tab: t || 'history' });
 
+  // ---- Generate documents from live project data ----
+  function exportData(state, mdl) {
+    const r = mdl.ratios, bc = mdl.byCat;
+    const fmm = n => n ? (n / 1e6).toFixed(3) : '';
+    const fmp = n => n ? (n * 100).toFixed(1) : '';
+    const totalUnits = state.phases.reduce((s, p) => s + (p.units || 0), 0);
+    const netArea = Math.round(state.phases.reduce((s, p) => s + (p.netAreaSqft || 0), 0));
+    const cat = id => (bc[id] && bc[id].total) || 0;
+    return {
+      name: state.project.name || '',
+      address: state.project.address || '',
+      lpa: state.project.borough || '',
+      planningRef: state.project.planningRef || '',
+      ref: state.project.clientRef || state.project.ref || '',
+      units: totalUnits || '',
+      netArea: netArea || '',
+      programme: state.project.projectLengthMonths || '',
+      offerPrice: state.project.offerPrice || '',
+      date: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+      gdv: fmm(r.gdv),
+      land: fmm(cat(1)),
+      landAcq: fmm(cat(2)),
+      localAuth: fmm(cat(3)),
+      profFees: fmm(cat(4) + cat(7) + cat(8) + cat(9)),
+      demolition: fmm(cat(5)),
+      build: fmm(cat(6)),
+      contingency: fmm(cat(10)),
+      sales: fmm(cat(11) + cat(12) + cat(13)),
+      salesMkt: fmm(cat(11) + cat(12) + cat(13)),
+      finance: fmm(cat(14)),
+      totalCost: fmm(r.totalCost),
+      profit: fmm(r.profit),
+      profitPctGdv: fmp(r.profitPctGdv),
+      profitExFin: fmp(r.profitExFinance),
+      peakFunding: fmm(r.peakFunding),
+      peakMonth: r.peakMonth || '',
+      ltv: fmp(r.peakLoanToGdv),
+      ltc: fmp(r.peakLoanToCost),
+      // deal memo specific
+      landCost: fmm(cat(1)),
+      acqCosts: fmm(cat(2)),
+      ciilS106: fmm(cat(3)),
+    };
+  }
+
+  function generateDoc(type) {
+    if (!active || !model) return;
+    const d = exportData(active, model);
+    const docs = {
+      pitch:  { key: 'phx_pitch',  url: 'Investor Pitch Deck.html' },
+      report: { key: 'phx_report', url: 'Client Report.html' },
+      memo:   { key: 'phx_memo',   url: 'Deal Memo.html' },
+      update: { key: 'phx_update', url: 'Project Update Deck.html' },
+    };
+    const doc = docs[type]; if (!doc) return;
+    localStorage.setItem(doc.key, JSON.stringify(d));
+    window.open(doc.url, '_blank');
+    setShowGenerate(false);
+  }
+
   if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
 
   // ---- Portfolio view ----
@@ -261,6 +322,25 @@ function Workspace({ session }) {
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M4 1.5h5l3 3V14a.5.5 0 01-.5.5h-7A.5.5 0 014 14V1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M9 1.5v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M6 8.5h4M6 11h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
           <span className="reviewbtn-lbl">PDF Pack</span>
         </button>
+        <div style={{ position: 'relative', marginLeft: 10 }}>
+          <button className="reviewbtn" onClick={() => setShowGenerate(g => !g)} title="Generate a presentation or report from this project">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            <span className="reviewbtn-lbl">Generate</span>
+          </button>
+          {showGenerate && (
+            <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, background:'var(--surface)', border:'1px solid var(--border-strong)', borderRadius:6, zIndex:200, minWidth:210, boxShadow:'0 8px 24px rgba(0,0,0,.5)', overflow:'hidden' }} onMouseLeave={() => setShowGenerate(false)}>
+              <div style={{ padding:'8px 12px 6px', fontFamily:'var(--mono)', fontSize:9.5, textTransform:'uppercase', letterSpacing:1, color:'var(--muted)', borderBottom:'1px solid var(--border)' }}>From this project</div>
+              {[['pitch','Investor Pitch Deck','7-slide LP presentation'],['report','Client Report','4-page printable appraisal'],['memo','Deal Memo','1-page decision memo'],['update','Project Update Deck','5-slide progress update']].map(([type,label,sub]) => (
+                <button key={type} onClick={() => generateDoc(type)} style={{ display:'block', width:'100%', padding:'10px 14px', background:'none', border:'none', textAlign:'left', cursor:'pointer', borderBottom:'1px solid var(--border)' }}
+                  onMouseEnter={e => e.currentTarget.style.background='var(--surface-2)'}
+                  onMouseLeave={e => e.currentTarget.style.background='none'}>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--ink)' }}>{label}</div>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--muted)', marginTop:2 }}>{sub}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginLeft:10 }}>← Hub</a>
         <button className="btn ghost acct-out hide-mobile" onClick={signOut} style={{ marginLeft: 10 }} title={'Signed in as ' + session.user.email}>Sign out</button>
       </div>
