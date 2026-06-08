@@ -5,28 +5,20 @@
 <title>Phoenix — Deal Memo</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#ece5d4;--paper:#f7f3e9;--paper-2:#efe9da;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
-  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
-  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
-  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
-  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif;
-}
+:root{--bg:#ece5d4;--paper:#f7f3e9;--paper2:#efe9da;--pb:#d2c6ac;--ink:#26313f;--ink2:#6a6256;--sur:#0a1626;--sur2:#0d1d31;--border:#173251;--border2:#21466d;--dinк:#eef6fd;--muted:#93b4ce;--cyan:#2dd4ff;--cyan2:#1fc0e8;--amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;--sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;--serif:'Newsreader',Georgia,serif;}
 *,*::before,*::after{box-sizing:border-box;}
-body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
-.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink);-webkit-font-smoothing:antialiased;}
+.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--pb);display:flex;align-items:center;gap:16px;padding:0 20px;}
 .brand{display:flex;align-items:center;gap:10px;}
 .mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
 .bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
-.bsep{color:var(--paper-border);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.bsep{color:var(--pb);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--ink2);}
 .spacer{flex:1;}
-.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
+.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--pb);background:var(--paper);color:var(--ink2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
 .tbtn:hover{border-color:#1366d6;color:#1366d6;}
-.column{display:flex;flex-direction:column;align-items:center;padding:32px 20px 60px;gap:0;}
-.page{width:780px;max-width:calc(100vw - 40px);background:var(--paper);border:1px solid var(--paper-border);border-radius:3px;box-shadow:0 1px 3px rgba(20,40,70,.04),0 14px 36px rgba(20,40,70,.07);padding:56px 64px;}
-
-/* cover band */
-.memo-cover{background:var(--surface);padding:28px 32px;margin:-56px -64px 36px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;position:relative;overflow:hidden;}
+.column{display:flex;flex-direction:column;align-items:center;padding:32px 20px 60px;}
+.page{width:780px;max-width:calc(100vw - 40px);background:var(--paper);border:1px solid var(--pb);border-radius:3px;box-shadow:0 1px 3px rgba(20,40,70,.04),0 14px 36px rgba(20,40,70,.07);overflow:hidden;}
+.memo-cover{background:var(--sur);padding:28px 32px;margin-bottom:0;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;position:relative;overflow:hidden;}
 .memo-cover::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px;}
 .memo-cover::after{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,255,.18),transparent 62%);}
 .mc-left{position:relative;z-index:1;}
@@ -42,13 +34,12 @@ body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:
 .mc-rec.review{background:rgba(255,186,69,.12);border:1px solid rgba(255,186,69,.35);color:var(--amber);}
 .mc-rec.pass{background:rgba(255,90,90,.1);border:1px solid rgba(255,90,90,.3);color:var(--red);}
 .mc-rec::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
-
-/* content styles */
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan-2);margin-bottom:10px;}
+.pagebody{padding:48px 60px;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan2);margin-bottom:10px;}
 h2.sec{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.3px;margin:0 0 4px;}
-.sec-rule{height:2px;background:linear-gradient(90deg,var(--cyan-2),transparent);margin:12px 0 20px;border-radius:2px;}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
-.kcard{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:13px 15px;position:relative;}
+.sec-rule{height:2px;background:linear-gradient(90deg,var(--cyan2),transparent);margin:12px 0 20px;border-radius:2px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.kcard{background:var(--sur);border:1px solid var(--border);padding:13px 15px;position:relative;}
 .kcard::before,.kcard::after{content:'';position:absolute;width:5px;height:5px;border-color:var(--cyan);opacity:.4;}
 .kcard::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid;}
 .kcard::after{bottom:-1px;right:-1px;border-bottom:1px solid;border-right:1px solid;}
@@ -56,196 +47,243 @@ h2.sec{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.
 .kcard.amber::before,.kcard.amber::after{border-color:var(--amber);}
 .kcard.red::before,.kcard.red::after{border-color:var(--red);}
 .kcard .kl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
-.kcard .kv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--ink);margin-top:6px;letter-spacing:-.3px;}
+.kcard .kv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--dinк);margin-top:6px;letter-spacing:-.3px;}
 .kcard.ok .kv{color:var(--ok);}.kcard.amber .kv{color:var(--amber);}.kcard.red .kv{color:var(--red);}
-
-.tbl{width:100%;border-collapse:collapse;margin-bottom:22px;}
-.tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--page-ink-2);font-weight:600;padding:7px 10px;border-bottom:2px solid var(--page-ink);background:var(--paper-2);}
-.tbl td{padding:9px 10px;border-bottom:1px solid var(--paper-border);font-size:13px;color:var(--page-ink-2);}
-.tbl td:first-child{font-weight:500;color:var(--page-ink);}
-.tbl tr:hover td{background:var(--paper-2);}
-.tbl .mono{font-family:var(--mono);}
-
-.textarea-field{width:100%;padding:10px 12px;border:1px solid var(--paper-border);border-radius:4px;background:var(--paper);font-family:var(--sans);font-size:13px;line-height:1.6;color:var(--page-ink);resize:vertical;min-height:100px;transition:border-color .12s;}
-.textarea-field:focus{outline:none;border-color:#1366d6;}
-.editable-input{border:none;background:transparent;font-family:inherit;font-size:inherit;color:inherit;width:100%;padding:2px 4px;border-bottom:1px dashed var(--paper-border);transition:border-color .12s;}
-.editable-input:focus{outline:none;border-bottom-color:#1366d6;}
-.section{margin-bottom:32px;}
-
-.flag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+.tbl{width:100%;border-collapse:collapse;margin-bottom:20px;}
+.tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink2);font-weight:600;padding:7px 10px;border-bottom:2px solid var(--ink);background:var(--paper2);}
+.tbl th.r{text-align:right;}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--pb);font-size:13px;color:var(--ink2);}
+.tbl td.r{text-align:right;font-family:var(--mono);}
+.tbl td.s{font-weight:500;color:var(--ink);}
+.tbl tr.sub td{font-weight:600;color:var(--ink);background:var(--paper2);}
+.callout{display:flex;gap:12px;padding:14px 16px;border-radius:4px;margin:14px 0;border:1px solid;font-size:13px;}
+.callout.note{background:rgba(13,159,196,.07);border-color:rgba(13,159,196,.3);color:var(--ink2);}
+.section{margin-bottom:28px;}
+.editinput{border:none;background:transparent;font-family:inherit;font-size:inherit;color:inherit;width:100%;padding:2px 4px;border-bottom:1px dashed var(--pb);transition:border-color .12s;line-height:inherit;}
+.editinput:focus{outline:none;border-bottom-color:#1366d6;}
+.edittarea{width:100%;padding:8px 10px;border:1px solid var(--pb);border-radius:4px;background:var(--paper);font-family:var(--sans);font-size:13px;line-height:1.65;color:var(--ink);resize:vertical;min-height:90px;}
+.edittarea:focus{outline:none;border-color:#1366d6;}
+.flag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px;}
 .flag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:2px;border-left:2px solid;}
 .flag.ok{background:rgba(55,224,176,.08);border-color:var(--ok);color:#16855a;}
 .flag.amber{background:rgba(255,186,69,.08);border-color:var(--amber);color:#98620a;}
 .flag.red{background:rgba(214,61,61,.08);border-color:var(--red);color:#c0392b;}
-.flag::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.flag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.sign-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:28px;padding-top:20px;border-top:1px solid var(--pb);}
+.sig-block .sig-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink2);margin-bottom:10px;}
+.sig-line{height:1px;background:var(--ink);margin-bottom:6px;}
+.sig-name{font-size:11px;color:var(--ink2);}
 
-.sign-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:32px;padding-top:20px;border-top:1px solid var(--paper-border);}
-.sig-block .sig-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--page-ink-2);margin-bottom:10px;}
-.sig-line{height:1px;background:var(--page-ink);margin-bottom:6px;}
-.sig-name{font-size:11px;color:var(--page-ink-2);}
-
+/* config panel */
+.cfg-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:300;background:var(--sur);border:1px solid var(--border);border-right:none;border-radius:4px 0 0 4px;padding:12px 6px;cursor:pointer;writing-mode:vertical-lr;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);transition:all .14s;}
+.cfg-tab:hover{color:var(--cyan);border-color:var(--cyan);}
+.cfg-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--sur);border-left:1px solid var(--border2);z-index:301;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.5);}
+.cfg-panel.open{transform:translateX(0);}
+.cfg-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex:none;}
+.cfg-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dinк);}
+.cfg-x{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--sur2);color:var(--muted);cursor:pointer;font-size:16px;}
+.cfg-x:hover{border-color:var(--red);color:var(--red);}
+.cfg-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.cfg-body::-webkit-scrollbar{width:4px;}
+.cfg-body::-webkit-scrollbar-thumb{background:var(--border2);}
+.cfg-sec{font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--cyan);padding:6px 0;border-bottom:1px solid var(--border);margin-top:6px;}
+.cfg-f{display:flex;flex-direction:column;gap:4px;}
+.cfg-f label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.cfg-f input,.cfg-f select,.cfg-f textarea{background:var(--sur2);border:1px solid var(--border2);color:var(--dinк);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;width:100%;}
+.cfg-f input:focus,.cfg-f textarea:focus{outline:none;border-color:var(--cyan);}
+.cfg-f textarea{resize:vertical;min-height:56px;font-family:var(--sans);font-size:12px;line-height:1.5;}
+.cfg-foot{padding:12px 16px;border-top:1px solid var(--border);flex:none;}
+.cfg-save{width:100%;padding:10px;background:var(--cyan2);border:none;color:#04141c;font-family:var(--mono);font-size:12px;font-weight:700;border-radius:3px;cursor:pointer;}
+.cfg-save:hover{background:var(--cyan);}
 @media print{
   @page{size:A4;margin:12mm 10mm 14mm;}
-  .topbar{display:none!important;}
+  .topbar,.cfg-tab,.cfg-panel{display:none!important;}
   .column{padding:0;}
-  .page{border:none;box-shadow:none;width:auto;max-width:none;padding:0;}
+  .page{border:none;box-shadow:none;width:auto;max-width:none;}
   .memo-cover,.kcard,.tbl th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   h2.sec{font-size:18pt;}
-  .editable-input{border-bottom:1px solid #ccc;}
-  .textarea-field{border:none;padding:0;}
 }
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="brand">
-    <div class="mark">P</div>
-    <span class="bname">PHOENIX</span><span class="bsep">|</span>
-    <span class="bdoc">Deal Memo</span>
-  </div>
+  <div class="brand"><div class="mark">P</div><span class="bname">PHOENIX</span><span class="bsep">|</span><span class="bdoc">Deal Memo</span></div>
   <div class="spacer"></div>
   <button class="tbtn" onclick="window.print()">Print / Save PDF</button>
   <a class="tbtn" href="Phoenix Hub.html">← Hub</a>
 </div>
 
-<div class="column">
-<div class="page">
+<div class="cfg-tab" onclick="toggleCfg()">⚙ Edit Data</div>
+<div class="cfg-panel" id="cfg">
+  <div class="cfg-head"><h3>Project Data</h3><div class="cfg-x" onclick="toggleCfg()">×</div></div>
+  <div class="cfg-body" id="cfg-body"></div>
+  <div class="cfg-foot"><button class="cfg-save" onclick="saveCfg()">Save &amp; Update</button></div>
+</div>
 
-  <!-- COVER BAND -->
-  <div class="memo-cover">
-    <div class="mc-left">
-      <div class="mc-eyebrow">Deal Memorandum · Phoenix</div>
-      <div class="mc-title"><input class="editable-input" style="font-family:var(--serif);font-size:26px;font-weight:500;color:#fff;width:340px;" value="Walnut Marches, East Grinstead"></div>
-      <div class="mc-sub"><input class="editable-input" style="font-family:var(--mono);font-size:12px;color:var(--muted);width:300px;" value="Residential, 29 units · West Sussex"></div>
-      <div class="mc-rec proceed" id="rec-badge">Recommend: Proceed</div>
-    </div>
-    <div class="mc-right">
-      <div class="mc-meta">
-        <div class="m"><div class="ml">Date</div><div class="mv"><input class="editable-input" style="font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);text-align:right;width:160px;" value="June 2026"></div></div>
-        <div class="m"><div class="ml">Prepared by</div><div class="mv"><input class="editable-input" style="font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);text-align:right;width:160px;" value=""></div></div>
-        <div class="m"><div class="ml">Ref</div><div class="mv"><input class="editable-input" style="font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);text-align:right;width:160px;" value="PHX-2026-001"></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- KEY METRICS -->
-  <div class="section">
-    <div class="eyebrow">Headline Metrics</div>
-    <div class="kpi-row">
-      <div class="kcard ok"><div class="kl">GDV</div><div class="kv">£14.5m</div></div>
-      <div class="kcard ok"><div class="kl">Profit % GDV</div><div class="kv">22.4%</div></div>
-      <div class="kcard ok"><div class="kl">Profit excl. Finance</div><div class="kv">31.2%</div></div>
-      <div class="kcard"><div class="kl">Peak Funding</div><div class="kv">£9.2m</div></div>
-    </div>
-    <div class="flag-row">
-      <span class="flag ok">Margin ≥ 20% GDV</span>
-      <span class="flag ok">Lender margin ≥ 30%</span>
-      <span class="flag ok">LTV 63% (≤ 65% target)</span>
-      <span class="flag amber">Build-cost inflation risk noted</span>
-    </div>
-  </div>
-
-  <!-- SITE DETAILS -->
-  <div class="section">
-    <div class="eyebrow">Section 1</div>
-    <h2 class="sec">Site Details</h2>
-    <div class="sec-rule"></div>
-    <table class="tbl">
-      <tbody>
-        <tr><td>Address</td><td class="mono"><input class="editable-input" value="Land at Station Road, East Grinstead, RH19"></td></tr>
-        <tr><td>Borough / LPA</td><td class="mono"><input class="editable-input" value="Mid Sussex District Council"></td></tr>
-        <tr><td>Planning reference</td><td class="mono"><input class="editable-input" value="DM/2025/1234"></td></tr>
-        <tr><td>Planning status</td><td><input class="editable-input" value="Full planning permission granted — Nov 2025"></td></tr>
-        <tr><td>Scheme description</td><td><input class="editable-input" value="29 residential units (18 houses, 11 flats) — open market"></td></tr>
-        <tr><td>Offer price</td><td class="mono"><input class="editable-input" value="£3,200,000"></td></tr>
-        <tr><td>Asking price</td><td class="mono"><input class="editable-input" value="£3,600,000"></td></tr>
-        <tr><td>Project duration</td><td><input class="editable-input" value="24 months (construction 18 months)"></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- APPRAISAL SUMMARY -->
-  <div class="section">
-    <div class="eyebrow">Section 2</div>
-    <h2 class="sec">Appraisal Summary</h2>
-    <div class="sec-rule"></div>
-    <table class="tbl">
-      <thead><tr><th>Category</th><th style="text-align:right">£m</th><th style="text-align:right">% GDV</th></tr></thead>
-      <tbody>
-        <tr><td>GDV</td><td class="mono" style="text-align:right">14.50</td><td class="mono" style="text-align:right">100.0%</td></tr>
-        <tr><td>Land &amp; acquisition</td><td class="mono" style="text-align:right">(3.41)</td><td class="mono" style="text-align:right">23.5%</td></tr>
-        <tr><td>Construction (incl. prof. fees)</td><td class="mono" style="text-align:right">(5.18)</td><td class="mono" style="text-align:right">35.7%</td></tr>
-        <tr><td>Finance</td><td class="mono" style="text-align:right">(0.82)</td><td class="mono" style="text-align:right">5.7%</td></tr>
-        <tr><td>Sales, marketing &amp; after-sales</td><td class="mono" style="text-align:right">(0.51)</td><td class="mono" style="text-align:right">3.5%</td></tr>
-        <tr><td>Contingency</td><td class="mono" style="text-align:right">(0.33)</td><td class="mono" style="text-align:right">2.3%</td></tr>
-        <tr><td><strong>Total cost</strong></td><td class="mono" style="text-align:right"><strong>(10.25)</strong></td><td class="mono" style="text-align:right"><strong>70.7%</strong></td></tr>
-        <tr><td><strong>Profit</strong></td><td class="mono" style="text-align:right"><strong>4.25</strong></td><td class="mono" style="text-align:right"><strong>29.3%</strong></td></tr>
-        <tr><td><strong>Project profit</strong></td><td class="mono" style="text-align:right"></td><td class="mono" style="text-align:right"></td></tr>
-        <tr><td>Profit % GDV</td><td class="mono" style="text-align:right" colspan="2">22.4% (target ≥ 20%)</td></tr>
-        <tr><td>Peak funding / LTV</td><td class="mono" style="text-align:right" colspan="2">£9.2m / 63.4%</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- RATIONALE & RISKS -->
-  <div class="section">
-    <div class="eyebrow">Section 3</div>
-    <h2 class="sec">Rationale &amp; Key Risks</h2>
-    <div class="sec-rule"></div>
-    <p style="font-size:13px;color:var(--page-ink-2);margin-bottom:12px;line-height:1.65;font-weight:600;">Why we should proceed:</p>
-    <textarea class="textarea-field" oninput="save()">Planning is in place on a consented residential allocation. Strong local comparables at £400–430 psf support the GDV assumption. The scheme is within a well-served commuter location with consistent buyer demand. Margin of 22.4% GDV is above our 20% threshold and maintains a comfortable buffer against cost movement.</textarea>
-    <p style="font-size:13px;color:var(--page-ink-2);margin:16px 0 8px;line-height:1.65;font-weight:600;">Key risks &amp; mitigants:</p>
-    <textarea class="textarea-field" oninput="save()">1. Build-cost inflation — monitor quarterly against BCIS; contingency of 5% provides initial buffer.
-2. Sales rate — absorption of 2–3 units/month assumed; agent confirms similar schemes selling at this pace.
-3. Interest rate — facility to be fixed/capped; 1% rate rise reduces margin to ~20.1%.
-4. Programme overrun — construction period is 18 months with 6-month sales tail; any slip extends finance cost.</textarea>
-  </div>
-
-  <!-- RECOMMENDATION -->
-  <div class="section">
-    <div class="eyebrow">Section 4</div>
-    <h2 class="sec">Recommendation</h2>
-    <div class="sec-rule"></div>
-    <p style="font-size:13px;color:var(--page-ink-2);line-height:1.65;">
-      <select onchange="updateRec(this)" style="border:1px solid var(--paper-border);background:var(--paper);font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:3px;color:var(--page-ink);">
-        <option value="proceed">Recommend: Proceed</option>
-        <option value="review">Recommend: Subject to review</option>
-        <option value="pass">Recommend: Pass</option>
-      </select>
-    </p>
-    <textarea class="textarea-field" style="margin-top:12px;" oninput="save()">Appraisal supports proceeding subject to: (1) instruction of solicitors to progress title review, (2) confirmation of build-cost quotes from at least two contractors, and (3) finalisation of finance terms with the proposed lender. Recommend tabling for sign-off at the next investment committee.</textarea>
-  </div>
-
-  <!-- SIGN-OFF -->
-  <div class="sign-row">
-    <div class="sig-block">
-      <div class="sig-label">Prepared by</div>
-      <div class="sig-line"></div>
-      <div class="sig-name"><input class="editable-input" placeholder="Name / role"></div>
-    </div>
-    <div class="sig-block">
-      <div class="sig-label">Reviewed by</div>
-      <div class="sig-line"></div>
-      <div class="sig-name"><input class="editable-input" placeholder="Name / role"></div>
-    </div>
-    <div class="sig-block">
-      <div class="sig-label">Approved by</div>
-      <div class="sig-line"></div>
-      <div class="sig-name"><input class="editable-input" placeholder="Name / role"></div>
-    </div>
-  </div>
-
-</div><!-- /page -->
-</div><!-- /column -->
+<div class="column"><div class="page" id="page"></div></div>
 
 <script>
-function save(){localStorage.setItem('phx_memo',JSON.stringify({ts:Date.now()}));}
-function updateRec(sel){
-  const badge=document.getElementById('rec-badge');
-  const map={proceed:['proceed','Recommend: Proceed'],review:['review','Recommend: Subject to review'],pass:['pass','Recommend: Pass']};
-  const [cls,label]=map[sel.value];
-  badge.className='mc-rec '+cls;badge.textContent=label;
+const STORE = 'phx_memo';
+const DEFAULTS = {
+  name:'Your Scheme Name', address:'', type:'Residential', units:'', date:'', ref:'PHX-2026-001', preparedBy:'', recommendation:'proceed',
+  gdv:'', profitPctGdv:'', profitExFin:'', peakFunding:'',
+  offerPrice:'', offerAddr:'', borough:'', planningRef:'', planningStatus:'', schemeDesc:'', saleDesc:'',
+  landCost:'', acqCosts:'', ciilS106:'', profFees:'', demolition:'', build:'', contingency:'', salesMkt:'', finance:'', totalCost:'', profit:'', ltv:'', ltc:'',
+  flag1:'', flag1type:'ok', flag2:'', flag2type:'ok', flag3:'', flag3type:'amber', flag4:'', flag4type:'amber',
+  rationale:'', risks:'', recommendation_text:'',
+  sig1Name:'', sig1Role:'', sig2Name:'', sig2Role:'', sig3Name:'', sig3Role:''
+};
+
+let C = {...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE)||'{}')};
+const fm = n => { const v=parseFloat(n); return v?'£'+v.toLocaleString('en-GB'):'—'; };
+const fmm = n => { const v=parseFloat(n); return v?'£'+v.toFixed(2)+'m':'—'; };
+const fp = n => { const v=parseFloat(n); return v?v.toFixed(1)+'%':'—'; };
+const sev = n => { const v=parseFloat(n); return v>=20?'ok':v>=15?'amber':'red'; };
+const or = (v,fb='—') => (v||'').trim()||fb;
+const REC_MAP = {proceed:['proceed','Recommend: Proceed'],review:['review','Recommend: Subject to review'],pass:['pass','Recommend: Pass']};
+
+function costRow(label, val, pctOf) {
+  const v=parseFloat(val)||0, g=parseFloat(pctOf)||1;
+  return `<tr><td class="s">${label}</td><td class="r">${v?'('+v.toFixed(2)+')':'—'}</td><td class="r">${v&&g?(v/g*100).toFixed(1)+'%':'—'}</td></tr>`;
 }
+
+function render() {
+  const [recCls, recLabel] = REC_MAP[C.recommendation]||REC_MAP.proceed;
+  const gdv = parseFloat(C.gdv)||0;
+  const flags = [1,2,3,4].filter(i=>C['flag'+i]).map(i=>`<span class="flag ${C['flag'+i+'type']}">${C['flag'+i]}</span>`).join('');
+
+  document.getElementById('page').innerHTML = `
+    <div class="memo-cover">
+      <div class="mc-left">
+        <div class="mc-eyebrow">Deal Memorandum · Phoenix</div>
+        <div class="mc-title">${or(C.name,'Your Scheme Name')}</div>
+        <div class="mc-sub">${or(C.type,'Residential')}${C.units?', '+C.units+' units':''}${C.address?' · '+C.address:''}</div>
+        <div class="mc-rec ${recCls}">${recLabel}</div>
+      </div>
+      <div class="mc-right">
+        <div class="mc-meta">
+          <div class="m"><div class="ml">Date</div><div class="mv">${or(C.date,'—')}</div></div>
+          <div class="m"><div class="ml">Prepared by</div><div class="mv">${or(C.preparedBy,'—')}</div></div>
+          <div class="m"><div class="ml">Ref</div><div class="mv">${or(C.ref,'—')}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagebody">
+
+      <div class="section">
+        <div class="eyebrow">Headline Metrics</div>
+        <div class="kpi-row">
+          <div class="kcard ok"><div class="kl">GDV</div><div class="kv">${fmm(C.gdv)}</div></div>
+          <div class="kcard ${sev(C.profitPctGdv)}"><div class="kl">Profit % GDV</div><div class="kv">${fp(C.profitPctGdv)}</div></div>
+          <div class="kcard ${sev(C.profitExFin)}"><div class="kl">Profit excl. Finance</div><div class="kv">${fp(C.profitExFin)}</div></div>
+          <div class="kcard"><div class="kl">Peak Funding</div><div class="kv">${fmm(C.peakFunding)}</div></div>
+        </div>
+        ${flags?`<div class="flag-row">${flags}</div>`:''}
+      </div>
+
+      <div class="section">
+        <div class="eyebrow">Section 1</div>
+        <h2 class="sec">Site Details</h2>
+        <div class="sec-rule"></div>
+        <table class="tbl">
+          <tbody>
+            <tr><td class="s">Address</td><td>${or(C.offerAddr,C.address)}</td></tr>
+            <tr><td class="s">Borough / LPA</td><td>${or(C.borough,'—')}</td></tr>
+            <tr><td class="s">Planning reference</td><td>${or(C.planningRef,'—')}</td></tr>
+            <tr><td class="s">Planning status</td><td>${or(C.planningStatus,'—')}</td></tr>
+            <tr><td class="s">Scheme description</td><td>${or(C.schemeDesc,'—')}</td></tr>
+            <tr><td class="s">Offer price</td><td>${fm(C.offerPrice)}</td></tr>
+            <tr><td class="s">Sales description</td><td>${or(C.saleDesc,'—')}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <div class="eyebrow">Section 2</div>
+        <h2 class="sec">Appraisal Summary</h2>
+        <div class="sec-rule"></div>
+        <table class="tbl">
+          <thead><tr><th>Category</th><th class="r">£m</th><th class="r">% GDV</th></tr></thead>
+          <tbody>
+            <tr><td class="s">GDV</td><td class="r">${gdv?gdv.toFixed(2):'—'}</td><td class="r">100.0%</td></tr>
+            ${costRow('Land & acquisition',C.landCost,C.gdv)}
+            ${costRow('Acquisition costs (SDLT + legal)',C.acqCosts,C.gdv)}
+            ${costRow('CIL / S106',C.ciilS106,C.gdv)}
+            ${costRow('Professional fees',C.profFees,C.gdv)}
+            ${costRow('Demolition & utilities',C.demolition,C.gdv)}
+            ${costRow('Construction (net)',C.build,C.gdv)}
+            ${costRow('Contingency',C.contingency,C.gdv)}
+            ${costRow('Sales & marketing',C.salesMkt,C.gdv)}
+            ${costRow('Finance',C.finance,C.gdv)}
+            <tr class="sub"><td>Total cost</td><td class="r">${parseFloat(C.totalCost)?'('+parseFloat(C.totalCost).toFixed(2)+')':'—'}</td><td class="r">${parseFloat(C.totalCost)&&gdv?(parseFloat(C.totalCost)/gdv*100).toFixed(1)+'%':'—'}</td></tr>
+            <tr class="sub" style="background:rgba(55,224,176,.06)"><td style="color:#16855a">Project profit</td><td class="r" style="color:#16855a">${parseFloat(C.profit)?parseFloat(C.profit).toFixed(2):'—'}</td><td class="r" style="color:#16855a">${fp(C.profitPctGdv)}</td></tr>
+            <tr><td class="s">Profit % GDV</td><td class="r" colspan="2">${fp(C.profitPctGdv)} (target ≥ 20%)</td></tr>
+            <tr><td class="s">Peak funding / LTV</td><td class="r" colspan="2">${fmm(C.peakFunding)} / ${fp(C.ltv)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <div class="eyebrow">Section 3</div>
+        <h2 class="sec">Rationale &amp; Key Risks</h2>
+        <div class="sec-rule"></div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:8px;font-weight:600;">Why we should proceed:</p>
+        <textarea class="edittarea" oninput="C.rationale=this.value" placeholder="Enter rationale…">${C.rationale||''}</textarea>
+        <p style="font-size:13px;color:var(--ink2);margin:14px 0 8px;font-weight:600;">Key risks &amp; mitigants:</p>
+        <textarea class="edittarea" oninput="C.risks=this.value" placeholder="Enter risks…">${C.risks||''}</textarea>
+      </div>
+
+      <div class="section">
+        <div class="eyebrow">Section 4</div>
+        <h2 class="sec">Recommendation</h2>
+        <div class="sec-rule"></div>
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:10px;">
+          <select onchange="C.recommendation=this.value;render()" style="border:1px solid var(--pb);background:var(--paper);font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:3px;color:var(--ink);">
+            <option value="proceed" ${C.recommendation==='proceed'?'selected':''}>Recommend: Proceed</option>
+            <option value="review" ${C.recommendation==='review'?'selected':''}>Recommend: Subject to review</option>
+            <option value="pass" ${C.recommendation==='pass'?'selected':''}>Recommend: Pass</option>
+          </select>
+        </p>
+        <textarea class="edittarea" oninput="C.recommendation_text=this.value" placeholder="Enter recommendation notes…">${C.recommendation_text||''}</textarea>
+      </div>
+
+      <div class="sign-row">
+        <div class="sig-block">
+          <div class="sig-label">Prepared by</div><div class="sig-line"></div>
+          <div class="sig-name"><input class="editinput" value="${C.sig1Name||''}" placeholder="Name / role" oninput="C.sig1Name=this.value"></div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-label">Reviewed by</div><div class="sig-line"></div>
+          <div class="sig-name"><input class="editinput" value="${C.sig2Name||''}" placeholder="Name / role" oninput="C.sig2Name=this.value"></div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-label">Approved by</div><div class="sig-line"></div>
+          <div class="sig-name"><input class="editinput" value="${C.sig3Name||''}" placeholder="Name / role" oninput="C.sig3Name=this.value"></div>
+        </div>
+      </div>
+
+    </div>`;
+}
+render();
+
+const FIELDS = [
+  {sec:'Scheme'},{id:'name',label:'Scheme name'},{id:'address',label:'Address'},{id:'type',label:'Type (Residential / Conversion…)'},{id:'units',label:'Units'},{id:'date',label:'Date'},{id:'ref',label:'Reference'},{id:'preparedBy',label:'Prepared by'},
+  {sec:'Site Details'},
+  {id:'offerAddr',label:'Full site address'},{id:'borough',label:'Borough / LPA'},{id:'planningRef',label:'Planning reference'},{id:'planningStatus',label:'Planning status'},{id:'schemeDesc',label:'Scheme description'},{id:'saleDesc',label:'Sales description'},{id:'offerPrice',label:'Offer price (£)'},
+  {sec:'Financials (£m)'},
+  {id:'gdv',label:'GDV'},{id:'landCost',label:'Land cost'},{id:'acqCosts',label:'Acquisition costs'},{id:'ciilS106',label:'CIL / S106'},{id:'profFees',label:'Professional fees'},{id:'demolition',label:'Demolition & utilities'},{id:'build',label:'Construction (net)'},{id:'contingency',label:'Contingency'},{id:'salesMkt',label:'Sales & marketing'},{id:'finance',label:'Finance'},
+  {id:'totalCost',label:'Total cost'},{id:'profit',label:'Project profit'},{id:'profitPctGdv',label:'Profit % GDV'},{id:'profitExFin',label:'Profit excl. finance %'},{id:'peakFunding',label:'Peak funding (£m)'},{id:'ltv',label:'LTV (%)'},{id:'ltc',label:'LTC (%)'},
+  {sec:'Flags (leave blank to hide)'},
+  {id:'flag1',label:'Flag 1 text'},{id:'flag1type',label:'Flag 1 type (ok/amber/red)'},
+  {id:'flag2',label:'Flag 2 text'},{id:'flag2type',label:'Flag 2 type'},
+  {id:'flag3',label:'Flag 3 text'},{id:'flag3type',label:'Flag 3 type'},
+  {id:'flag4',label:'Flag 4 text'},{id:'flag4type',label:'Flag 4 type'},
+];
+
+function buildPanel(){return FIELDS.map(f=>{if(f.sec)return`<div class="cfg-sec">${f.sec}</div>`;if(f.textarea)return`<div class="cfg-f"><label>${f.label}</label><textarea id="cf_${f.id}">${C[f.id]||''}</textarea></div>`;return`<div class="cfg-f"><label>${f.label}</label><input id="cf_${f.id}" value="${(C[f.id]||'').toString().replace(/"/g,'&quot;')}"></div>`;}).join('');}
+function toggleCfg(){const p=document.getElementById('cfg');const op=!p.classList.contains('open');if(op)document.getElementById('cfg-body').innerHTML=buildPanel();p.classList.toggle('open');}
+function saveCfg(){FIELDS.filter(f=>f.id).forEach(f=>{const el=document.getElementById('cf_'+f.id);if(el)C[f.id]=el.value;});localStorage.setItem(STORE,JSON.stringify(C));render();toggleCfg();}
 </script>
 </body>
 </html>

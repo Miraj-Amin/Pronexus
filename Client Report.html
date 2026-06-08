@@ -5,275 +5,306 @@
 <title>Phoenix — Client Report</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#ece5d4;--paper:#f7f3e9;--paper-2:#efe9da;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
-  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
-  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
-  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
-  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif;
-  --pw:800px;
-}
+:root{--bg:#ece5d4;--paper:#f7f3e9;--paper2:#efe9da;--pb:#d2c6ac;--ink:#26313f;--ink2:#6a6256;--sur:#0a1626;--sur2:#0d1d31;--border:#173251;--border2:#21466d;--dinк:#eef6fd;--muted:#93b4ce;--cyan:#2dd4ff;--cyan2:#1fc0e8;--amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;--sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;--serif:'Newsreader',Georgia,serif;}
 *,*::before,*::after{box-sizing:border-box;}
-body{margin:0;background:var(--bg);font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
-.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink);-webkit-font-smoothing:antialiased;}
+.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--pb);display:flex;align-items:center;gap:16px;padding:0 20px;}
 .brand{display:flex;align-items:center;gap:10px;}
 .mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
 .bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
-.bsep{color:var(--paper-border);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.bsep{color:var(--pb);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--ink2);}
 .spacer{flex:1;}
-.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
+.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--pb);background:var(--paper);color:var(--ink2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
 .tbtn:hover{border-color:#1366d6;color:#1366d6;}
+.column{display:flex;flex-direction:column;align-items:center;padding:32px 20px 72px;gap:20px;}
+.page{width:780px;max-width:calc(100vw - 40px);background:var(--paper);border:1px solid var(--pb);border-radius:3px;box-shadow:0 1px 3px rgba(20,40,70,.04),0 14px 36px rgba(20,40,70,.07);overflow:hidden;}
 
-.column{display:flex;flex-direction:column;align-items:center;padding:36px 20px 72px;gap:24px;}
-.page{width:var(--pw);max-width:calc(100vw - 40px);background:var(--paper);border:1px solid var(--paper-border);border-radius:3px;box-shadow:0 1px 2px rgba(20,40,70,.04),0 14px 36px rgba(20,40,70,.07);overflow:hidden;}
-
-/* cover */
-.cover{background:var(--surface);min-height:420px;padding:52px 60px;position:relative;display:flex;flex-direction:column;justify-content:space-between;}
+/* Cover */
+.cover{background:var(--sur);min-height:400px;padding:48px 56px;position:relative;display:flex;flex-direction:column;justify-content:space-between;}
 .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
 .cover-glow{position:absolute;top:-120px;right:-120px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,255,.16),transparent 62%);pointer-events:none;}
 .cover-top{position:relative;display:flex;align-items:center;gap:14px;}
 .cover-wm{font-family:var(--mono);font-weight:600;letter-spacing:3px;font-size:16px;color:#fff;}
 .cover-chip{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:3px 10px;border-radius:2px;}
 .cover-mid{position:relative;}
-.cover-kicker{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:#5fc6e6;text-transform:uppercase;margin-bottom:16px;}
-.cover h1{font-family:var(--serif);font-weight:500;font-size:44px;line-height:1.05;letter-spacing:-.4px;margin:0 0 12px;color:#fff;}
+.cover-kicker{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:#5fc6e6;text-transform:uppercase;margin-bottom:14px;}
+.cover h1{font-family:var(--serif);font-weight:500;font-size:42px;line-height:1.07;letter-spacing:-.4px;margin:0 0 10px;color:#fff;}
 .cover h1 em{font-style:italic;color:#7ad4f0;}
-.cover .cover-sub{font-size:15px;color:#aebfcf;max-width:440px;}
-.cover-foot{position:relative;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:40px;}
-.cf-item{display:flex;flex-direction:column;gap:3px;}
-.cf-label{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;color:#6f8497;text-transform:uppercase;}
-.cf-value{font-size:13px;color:#dce8f2;}
+.cover .cover-sub{font-size:14px;color:#aebfcf;max-width:400px;line-height:1.55;}
+.cover-foot{position:relative;padding-top:18px;border-top:1px solid rgba(255,255,255,.1);display:flex;gap:36px;}
+.cfi{display:flex;flex-direction:column;gap:3px;}
+.cfl{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;color:#6f8497;text-transform:uppercase;}
+.cfv{font-size:13px;color:#dce8f2;}
 
-/* page body */
-.pagebody{padding:52px 60px;}
-.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan-2);margin-bottom:10px;}
-h2.sec{font-family:var(--serif);font-weight:500;font-size:30px;letter-spacing:-.3px;margin:0 0 6px;}
-.sec-rule{height:2px;background:linear-gradient(90deg,var(--cyan-2),transparent);margin:14px 0 24px;border-radius:2px;}
-p{margin:9px 0;color:var(--page-ink-2);font-size:14px;}
-p strong{color:var(--page-ink);}
+.pagebody{padding:48px 56px;}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan2);margin-bottom:10px;}
+h2.sec{font-family:var(--serif);font-weight:500;font-size:28px;letter-spacing:-.3px;margin:0 0 6px;}
+.sec-rule{height:2px;background:linear-gradient(90deg,var(--cyan2),transparent);margin:12px 0 22px;border-radius:2px;}
+p{margin:8px 0;color:var(--ink2);font-size:14px;}
+p strong{color:var(--ink);}
 
-/* metric strip */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px;}
-.mc{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:13px 15px;position:relative;}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.mc{background:var(--sur);border:1px solid var(--border);padding:13px 15px;position:relative;}
 .mc::before,.mc::after{content:'';position:absolute;width:5px;height:5px;}
 .mc::before{top:-1px;left:-1px;border-top:1px solid var(--cyan);border-left:1px solid var(--cyan);}
 .mc::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan);border-right:1px solid var(--cyan);}
 .mc.ok::before,.mc.ok::after{border-color:var(--ok);}
 .mc.amber::before,.mc.amber::after{border-color:var(--amber);}
-.mc.red::before,.mc.red::after{border-color:var(--red);}
 .mc .mcl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
-.mc .mcv{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--ink);margin-top:7px;letter-spacing:-.3px;}
-.mc.ok .mcv{color:var(--ok);}.mc.amber .mcv{color:var(--amber);}.mc.red .mcv{color:var(--red);}
+.mc .mcv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--dinк);margin-top:7px;}
+.mc.ok .mcv{color:var(--ok);}.mc.amber .mcv{color:var(--amber);}
 .mc .mcs{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:4px;}
 
-/* tables */
-.tbl{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:13px;}
-.tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--page-ink-2);font-weight:600;padding:7px 10px;border-bottom:2px solid var(--page-ink);background:var(--paper-2);}
+.tbl{width:100%;border-collapse:collapse;margin-bottom:18px;}
+.tbl th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink2);font-weight:600;padding:7px 10px;border-bottom:2px solid var(--ink);background:var(--paper2);}
 .tbl th.r{text-align:right;}
-.tbl td{padding:8px 10px;border-bottom:1px solid var(--paper-border);color:var(--page-ink-2);}
-.tbl td.mono{font-family:var(--mono);}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--pb);font-size:13px;color:var(--ink2);}
 .tbl td.r{text-align:right;font-family:var(--mono);}
-.tbl tr.subtotal td{font-weight:600;color:var(--page-ink);background:var(--paper-2);}
-.tbl tr:hover td{background:rgba(0,0,0,.02);}
+.tbl td.s{font-weight:500;color:var(--ink);}
+.tbl tr.sub td{font-weight:600;color:var(--ink);background:var(--paper2);}
+.tbl tr.profit td{color:#16855a;background:rgba(55,224,176,.06);}
 
-/* cashflow SVG */
-.cf-chart{width:100%;height:200px;background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
-
-/* comps */
+.callout{display:flex;gap:12px;padding:12px 14px;border-radius:4px;margin:12px 0;border:1px solid;font-size:13px;color:var(--ink2);}
+.callout.note{background:rgba(13,159,196,.07);border-color:rgba(13,159,196,.3);}
+.callout.note::before{content:'';display:block;width:3px;border-radius:2px;background:var(--cyan2);flex:none;}
+.cf-chart{width:100%;height:180px;background:var(--sur);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
 .psf-badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 7px;border-radius:2px;}
 .psf-badge.hi{background:rgba(55,224,176,.12);color:#16855a;}
 .psf-badge.mid{background:rgba(255,186,69,.1);color:#98620a;}
-.psf-badge.lo{background:rgba(214,61,61,.08);color:#c0392b;}
+.section{margin-bottom:32px;}
 
-.callout{display:flex;gap:12px;padding:14px 16px;border-radius:6px;margin:16px 0;border:1px solid;font-size:13px;}
-.callout.note{background:rgba(13,159,196,.07);border-color:rgba(13,159,196,.3);color:var(--page-ink-2);}
-.callout.note b{color:var(--page-ink);}
-
+/* config */
+.cfg-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:300;background:var(--sur);border:1px solid var(--border);border-right:none;border-radius:4px 0 0 4px;padding:12px 6px;cursor:pointer;writing-mode:vertical-lr;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);transition:all .14s;}
+.cfg-tab:hover{color:var(--cyan);border-color:var(--cyan);}
+.cfg-panel{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--sur);border-left:1px solid var(--border2);z-index:301;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.5);}
+.cfg-panel.open{transform:translateX(0);}
+.cfg-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex:none;}
+.cfg-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dinк);}
+.cfg-x{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--sur2);color:var(--muted);cursor:pointer;font-size:16px;}
+.cfg-x:hover{border-color:var(--red);color:var(--red);}
+.cfg-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.cfg-body::-webkit-scrollbar{width:4px;}
+.cfg-body::-webkit-scrollbar-thumb{background:var(--border2);}
+.cfg-sec{font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--cyan);padding:6px 0;border-bottom:1px solid var(--border);margin-top:6px;}
+.cfg-f{display:flex;flex-direction:column;gap:4px;}
+.cfg-f label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.cfg-f input,.cfg-f textarea{background:var(--sur2);border:1px solid var(--border2);color:var(--dinк);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:3px;width:100%;}
+.cfg-f input:focus,.cfg-f textarea:focus{outline:none;border-color:var(--cyan);}
+.cfg-f textarea{resize:vertical;min-height:56px;font-family:var(--sans);font-size:12px;line-height:1.5;}
+.cfg-foot{padding:12px 16px;border-top:1px solid var(--border);flex:none;}
+.cfg-save{width:100%;padding:10px;background:var(--cyan2);border:none;color:#04141c;font-family:var(--mono);font-size:12px;font-weight:700;border-radius:3px;cursor:pointer;}
+.cfg-save:hover{background:var(--cyan);}
 @media print{
-  @page{size:A4;margin:10mm 8mm 12mm;}
-  .topbar{display:none!important;}
+  @page{size:A4;margin:12mm 10mm 14mm;}
+  .topbar,.cfg-tab,.cfg-panel{display:none!important;}
   .column{padding:0;gap:0;}
   .page{border:none;box-shadow:none;break-before:page;page-break-before:always;width:auto;max-width:none;}
-  .page.cover-page{break-before:avoid;page-break-before:avoid;}
+  .page:first-child{break-before:avoid;}
   .cover,.mc,.tbl th,.cf-chart{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  h2.sec{font-size:20pt;}
-  .pagebody{padding:36px 40px;}
 }
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="brand">
-    <div class="mark">P</div>
-    <span class="bname">PHOENIX</span><span class="bsep">|</span>
-    <span class="bdoc">Client Report</span>
-  </div>
+  <div class="brand"><div class="mark">P</div><span class="bname">PHOENIX</span><span class="bsep">|</span><span class="bdoc">Client Report</span></div>
   <div class="spacer"></div>
   <button class="tbtn" onclick="window.print()">Print / Save PDF</button>
   <a class="tbtn" href="Phoenix Hub.html">← Hub</a>
 </div>
 
-<div class="column">
+<div class="cfg-tab" onclick="toggleCfg()">⚙ Edit Data</div>
+<div class="cfg-panel" id="cfg">
+  <div class="cfg-head"><h3>Project Data</h3><div class="cfg-x" onclick="toggleCfg()">×</div></div>
+  <div class="cfg-body" id="cfg-body"></div>
+  <div class="cfg-foot"><button class="cfg-save" onclick="saveCfg()">Save &amp; Update</button></div>
+</div>
 
-<!-- COVER -->
-<div class="page cover-page">
-  <div class="cover">
-    <div class="cover-grid"></div><div class="cover-glow"></div>
-    <div class="cover-top">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.3"/></svg>
-      <span class="cover-wm">PHOENIX</span>
-      <span class="cover-chip">DEVELOPMENT APPRAISAL</span>
-    </div>
-    <div class="cover-mid">
-      <div class="cover-kicker">Development Appraisal Report</div>
-      <h1>Walnut Marches,<br><em>East Grinstead</em></h1>
-      <div class="cover-sub">Residential development — 29 units. Appraisal summary prepared for internal review and funder presentation.</div>
-    </div>
-    <div class="cover-foot">
-      <div class="cf-item"><div class="cf-label">Prepared</div><div class="cf-value">June 2026</div></div>
-      <div class="cf-item"><div class="cf-label">Reference</div><div class="cf-value">PHX-2026-001</div></div>
-      <div class="cf-item"><div class="cf-label">Version</div><div class="cf-value">Base Case</div></div>
-      <div class="cf-item"><div class="cf-label">Status</div><div class="cf-value">For Review</div></div>
+<div class="column" id="column"></div>
+
+<script>
+const STORE = 'phx_report';
+const DEFAULTS = {
+  name:'Your Scheme Name', address:'', borough:'', planningRef:'', planningStatus:'Full planning permission granted',
+  units:'', unitMix:'', netArea:'', grossArea:'', date:'', ref:'PHX-2026-001', status:'For Review', preparedBy:'', version:'Base Case',
+  gdv:'', land:'', landAcq:'', localAuth:'', profFees:'', demolition:'', build:'', contingency:'', sales:'', finance:'', totalCost:'', profit:'', profitPctGdv:'', profitExFin:'', peakFunding:'', peakMonth:'', ltv:'', ltc:'',
+  execSummary:'',
+  callout:'Appraisal supports proceeding subject to finalisation of legal and construction cost schedule.',
+  // comparables (up to 5)
+  cmp1addr:'', cmp1type:'House', cmp1beds:'', cmp1sqft:'', cmp1price:'', cmp1date:'',
+  cmp2addr:'', cmp2type:'House', cmp2beds:'', cmp2sqft:'', cmp2price:'', cmp2date:'',
+  cmp3addr:'', cmp3type:'House', cmp3beds:'', cmp3sqft:'', cmp3price:'', cmp3date:'',
+  cmp4addr:'', cmp4type:'Flat', cmp4beds:'', cmp4sqft:'', cmp4price:'', cmp4date:'',
+  cmp5addr:'', cmp5type:'Flat', cmp5beds:'', cmp5sqft:'', cmp5price:'', cmp5date:'',
+  gdvAssumptionPsf:'', avgComppPsf:''
+};
+
+let C = {...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE)||'{}')};
+const fm = n => { const v=parseFloat(n); return v?'£'+v.toFixed(2)+'m':'—'; };
+const fp = n => { const v=parseFloat(n); return v?v.toFixed(1)+'%':'—'; };
+const fk = n => { const v=parseFloat(n); return v?'£'+Math.round(v).toLocaleString('en-GB'):'—'; };
+const sev = n => { const v=parseFloat(n); return v>=20?'ok':v>=15?'amber':'red'; };
+const or = (v,fb='—') => (v||'').trim()||fb;
+
+function costRow(label, val, gdv) {
+  const v=parseFloat(val)||0, g=parseFloat(gdv)||1;
+  return v?`<tr><td>${label}</td><td class="r">(${v.toFixed(2)})</td><td class="r">${g?(v/g*100).toFixed(1)+'%':'—'}</td></tr>`:'';
+}
+
+function psfBadge(psf) {
+  const v=parseFloat(psf);
+  if(!v) return '';
+  const cls = v>=380?'hi':v>=340?'mid':'lo';
+  return `<span class="psf-badge ${cls}">£${Math.round(v)} psf</span>`;
+}
+
+function buildCashflowSVG() {
+  const gdv=parseFloat(C.gdv)||0, tc=parseFloat(C.totalCost)||0, peak=parseFloat(C.peakFunding)||0;
+  if(!gdv||!tc) return `<div class="cf-chart" style="display:grid;place-items:center;color:var(--muted);font-family:var(--mono);font-size:12px;">Enter GDV, total cost &amp; peak funding to render cashflow chart</div>`;
+  const pm = parseInt(C.peakMonth)||18, total=parseInt(C.totalMonths||24)||24;
+  const pts = Array.from({length:total+1},(_,i)=>{
+    const x=40+i*(720/total);
+    let y;
+    if(i<=pm) y=185-(i/pm)*((peak/gdv)*165);
+    else y=185-((peak/gdv)*165)*((total-i)/(total-pm));
+    return `${x},${Math.max(20,Math.min(180,y))}`;
+  }).join(' ');
+  const px=40+pm*(720/total), py=185-(peak/gdv)*165;
+  return `<svg class="cf-chart" viewBox="0 0 760 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2dd4ff" stop-opacity=".25"/><stop offset="100%" stop-color="#2dd4ff" stop-opacity="0"/></linearGradient></defs>
+    <line x1="0" y1="40" x2="760" y2="40" stroke="#173251" stroke-width="1"/>
+    <line x1="0" y1="80" x2="760" y2="80" stroke="#173251" stroke-width="1"/>
+    <line x1="0" y1="120" x2="760" y2="120" stroke="#173251" stroke-width="1"/>
+    <line x1="0" y1="160" x2="760" y2="160" stroke="#173251" stroke-width="1"/>
+    <text x="8" y="38" fill="#93b4ce" font-family="monospace" font-size="9">${fm(peak)}</text>
+    <polygon points="40,185 ${pts} ${40+total*(720/total)},185" fill="url(#cg)" stroke="none"/>
+    <polyline points="40,185 ${pts}" fill="none" stroke="#2dd4ff" stroke-width="2"/>
+    <circle cx="${px}" cy="${Math.max(20,Math.min(180,py))}" r="5" fill="#ff5a5a"/>
+    <line x1="${px}" y1="${Math.max(20,Math.min(180,py))}" x2="${px}" y2="185" stroke="#ff5a5a" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="${px+6}" y="${Math.max(30,Math.min(170,py)-6)}" fill="#ff5a5a" font-family="monospace" font-size="9">Peak ${fm(peak)} M${pm}</text>
+    <line x1="40" y1="185" x2="760" y2="185" stroke="#21466d" stroke-width="1"/>
+  </svg>`;
+}
+
+function render() {
+  const gdv = parseFloat(C.gdv)||0;
+  const comps = [1,2,3,4,5].filter(i=>C['cmp'+i+'addr']).map(i=>{
+    const price=parseFloat(C['cmp'+i+'price'])||0, sqft=parseFloat(C['cmp'+i+'sqft'])||0;
+    const psf = sqft?Math.round(price/sqft):0;
+    return `<tr><td>${or(C['cmp'+i+'addr'])}</td><td>${or(C['cmp'+i+'type'])}</td><td class="r">${or(C['cmp'+i+'beds'])}</td><td class="r">${sqft?sqft.toLocaleString():'—'}</td><td class="r">${price?'£'+price.toLocaleString('en-GB'):'—'}</td><td class="r">${psfBadge(psf)}</td><td class="r">${or(C['cmp'+i+'date'])}</td></tr>`;
+  }).join('');
+
+  document.getElementById('column').innerHTML = `
+  <!-- COVER -->
+  <div class="page">
+    <div class="cover">
+      <div class="cover-grid"></div><div class="cover-glow"></div>
+      <div class="cover-top">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.3"/></svg>
+        <span class="cover-wm">PHOENIX</span>
+        <span class="cover-chip">DEVELOPMENT APPRAISAL</span>
+      </div>
+      <div class="cover-mid">
+        <div class="cover-kicker">Development Appraisal Report</div>
+        <h1>${or(C.name,'Your Scheme Name')}${C.address?',<br><em>'+C.address+'</em>':''}</h1>
+        <div class="cover-sub">${or(C.units,'—')} unit ${or(C.unitMix,'residential')} development. Appraisal summary prepared for ${or(C.status,'internal review')}.</div>
+      </div>
+      <div class="cover-foot">
+        <div class="cfi"><div class="cfl">Prepared</div><div class="cfv">${or(C.date,'—')}</div></div>
+        <div class="cfi"><div class="cfl">Reference</div><div class="cfv">${or(C.ref,'—')}</div></div>
+        <div class="cfi"><div class="cfl">Version</div><div class="cfv">${or(C.version,'Base Case')}</div></div>
+        <div class="cfi"><div class="cfl">Status</div><div class="cfv">${or(C.status,'For Review')}</div></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- EXECUTIVE SUMMARY -->
-<div class="page">
-  <div class="pagebody">
-    <div class="eyebrow">Section 1</div>
-    <h2 class="sec">Executive Summary</h2>
-    <div class="sec-rule"></div>
-    <p><strong>Walnut Marches</strong> is a consented residential development of 29 units at Station Road, East Grinstead (RH19). Full planning permission was granted November 2025. The scheme proposes 18 houses and 11 flats, all open market, with a gross development value of <strong>£14.5 million</strong>.</p>
-    <p>The appraisal produces a project profit of <strong>£3.25 million (22.4% on GDV)</strong>, above our minimum threshold of 20%. Peak funding is estimated at <strong>£9.2 million</strong> on a 24-month programme, representing 63.4% of GDV — within lending parameters. The scheme is recommended to proceed to heads of terms with the proposed funder.</p>
-
-    <div class="metrics">
-      <div class="mc ok"><div class="mcl">GDV</div><div class="mcv">£14.5m</div><div class="mcs">29 units, 26,500 sqft net</div></div>
-      <div class="mc ok"><div class="mcl">Profit % GDV</div><div class="mcv">22.4%</div><div class="mcs">target ≥ 20%</div></div>
-      <div class="mc ok"><div class="mcl">Profit excl. Finance</div><div class="mcv">31.2%</div><div class="mcs">lender measure, ≥ 30%</div></div>
-      <div class="mc"><div class="mcl">Peak Funding</div><div class="mcv">£9.2m</div><div class="mcs">month 18 · 63.4% LTV</div></div>
+  <!-- EXECUTIVE SUMMARY -->
+  <div class="page">
+    <div class="pagebody">
+      <div class="eyebrow">Section 1</div>
+      <h2 class="sec">Executive Summary</h2>
+      <div class="sec-rule"></div>
+      <p>${or(C.execSummary,'Enter executive summary text in the project data panel.')}</p>
+      <div class="metrics">
+        <div class="mc ok"><div class="mcl">GDV</div><div class="mcv">${fm(C.gdv)}</div><div class="mcs">${or(C.units,'—')} units</div></div>
+        <div class="mc ${sev(C.profitPctGdv)}"><div class="mcl">Profit % GDV</div><div class="mcv">${fp(C.profitPctGdv)}</div><div class="mcs">target ≥ 20%</div></div>
+        <div class="mc ${sev(C.profitExFin)}"><div class="mcl">Profit excl. Finance</div><div class="mcv">${fp(C.profitExFin)}</div><div class="mcs">lender measure, ≥ 30%</div></div>
+        <div class="mc"><div class="mcl">Peak Funding</div><div class="mcv">${fm(C.peakFunding)}</div><div class="mcs">month ${or(C.peakMonth,'—')} · ${fp(C.ltv)} LTV</div></div>
+      </div>
+      ${C.callout?`<div class="callout note"><div><strong>Recommendation:</strong> ${C.callout}</div></div>`:''}
     </div>
-
-    <div class="callout note"><b>Recommendation:</b> Proceed to legal review and funder term sheet, subject to finalisation of construction cost schedule and title investigation.</div>
   </div>
-</div>
 
-<!-- COST BREAKDOWN -->
-<div class="page">
-  <div class="pagebody">
-    <div class="eyebrow">Section 2</div>
-    <h2 class="sec">Appraisal — Cost &amp; Return</h2>
-    <div class="sec-rule"></div>
-    <table class="tbl">
-      <thead>
-        <tr><th>#</th><th>Category</th><th class="r">£</th><th class="r">£ / unit</th><th class="r">% GDV</th></tr>
-      </thead>
-      <tbody>
-        <tr><td class="mono">1</td><td>Land / Purchase Price</td><td class="r">3,200,000</td><td class="r">110,345</td><td class="r">22.1%</td></tr>
-        <tr><td class="mono">2</td><td>Acquisition (SDLT + legal)</td><td class="r">208,000</td><td class="r">7,172</td><td class="r">1.4%</td></tr>
-        <tr><td class="mono">3</td><td>Local Authority (CIL / S106)</td><td class="r">145,000</td><td class="r">5,000</td><td class="r">1.0%</td></tr>
-        <tr><td class="mono">4</td><td>Professional Fees</td><td class="r">410,000</td><td class="r">14,138</td><td class="r">2.8%</td></tr>
-        <tr><td class="mono">5–6</td><td>Demolition, Utilities &amp; Site Prep</td><td class="r">120,000</td><td class="r">4,138</td><td class="r">0.8%</td></tr>
-        <tr><td class="mono">6</td><td>Net Construction (build contract)</td><td class="r">4,875,000</td><td class="r">168,103</td><td class="r">33.6%</td></tr>
-        <tr><td class="mono">10</td><td>Contingency (5%)</td><td class="r">244,000</td><td class="r">8,414</td><td class="r">1.7%</td></tr>
-        <tr><td class="mono">11</td><td>Product Spec &amp; Marketing</td><td class="r">290,000</td><td class="r">10,000</td><td class="r">2.0%</td></tr>
-        <tr><td class="mono">12</td><td>Cost of Sales (agents, legal)</td><td class="r">145,000</td><td class="r">5,000</td><td class="r">1.0%</td></tr>
-        <tr><td class="mono">14</td><td>Finance (interest on drawn loan)</td><td class="r">818,000</td><td class="r">28,207</td><td class="r">5.6%</td></tr>
-        <tr class="subtotal"><td colspan="2">Total cost</td><td class="r">10,455,000</td><td class="r">360,517</td><td class="r">72.1%</td></tr>
-        <tr class="subtotal"><td colspan="2">GDV</td><td class="r">14,500,000</td><td class="r">500,000</td><td class="r">100.0%</td></tr>
-        <tr class="subtotal" style="background:rgba(55,224,176,.06)"><td colspan="2" style="color:#16855a">Project Profit</td><td class="r" style="color:#16855a">3,245,000</td><td class="r" style="color:#16855a">111,897</td><td class="r" style="color:#16855a">22.4%</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- CASHFLOW SUMMARY -->
-<div class="page">
-  <div class="pagebody">
-    <div class="eyebrow">Section 3</div>
-    <h2 class="sec">Cashflow &amp; Peak Funding</h2>
-    <div class="sec-rule"></div>
-    <p>The cashflow runs over 24 months. Construction begins at month 1 and completes at month 18. Sales commence at month 12 and complete at month 24. Peak funding of <strong>£9.2 million</strong> occurs at month 18 — the point of maximum cost exposure before meaningful sales receipts are received.</p>
-    <svg class="cf-chart" viewBox="0 0 760 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="cfgrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#2dd4ff" stop-opacity=".25"/>
-          <stop offset="100%" stop-color="#2dd4ff" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <!-- grid lines -->
-      <line x1="0" y1="40" x2="760" y2="40" stroke="#173251" stroke-width="1"/>
-      <line x1="0" y1="80" x2="760" y2="80" stroke="#173251" stroke-width="1"/>
-      <line x1="0" y1="120" x2="760" y2="120" stroke="#173251" stroke-width="1"/>
-      <line x1="0" y1="160" x2="760" y2="160" stroke="#173251" stroke-width="1"/>
-      <!-- axis labels -->
-      <text x="8" y="38" fill="#93b4ce" font-family="monospace" font-size="9">£10m</text>
-      <text x="8" y="78" fill="#93b4ce" font-family="monospace" font-size="9">£7.5m</text>
-      <text x="8" y="118" fill="#93b4ce" font-family="monospace" font-size="9">£5m</text>
-      <text x="8" y="158" fill="#93b4ce" font-family="monospace" font-size="9">£2.5m</text>
-      <!-- month labels -->
-      <text x="45" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M3</text>
-      <text x="142" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M6</text>
-      <text x="240" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M9</text>
-      <text x="337" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M12</text>
-      <text x="434" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M15</text>
-      <text x="532" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M18</text>
-      <text x="630" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M21</text>
-      <text x="722" y="196" fill="#93b4ce" font-family="monospace" font-size="9" text-anchor="middle">M24</text>
-      <!-- balance area — peak at month 18 (~532px, value ~9.2m = 147px from top) -->
-      <polygon points="40,185 97,170 152,148 208,124 267,104 324,88 380,74 434,58 490,48 532,43 580,62 630,100 682,145 722,185"
-        fill="url(#cfgrad)" stroke="none"/>
-      <polyline points="40,185 97,170 152,148 208,124 267,104 324,88 380,74 434,58 490,48 532,43 580,62 630,100 682,145 722,185"
-        fill="none" stroke="#2dd4ff" stroke-width="2"/>
-      <!-- peak marker -->
-      <circle cx="532" cy="43" r="5" fill="#ff5a5a"/>
-      <line x1="532" y1="43" x2="532" y2="185" stroke="#ff5a5a" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="538" y="56" fill="#ff5a5a" font-family="monospace" font-size="9">Peak £9.2m</text>
-      <!-- zero line -->
-      <line x1="40" y1="185" x2="760" y2="185" stroke="#21466d" stroke-width="1"/>
-    </svg>
-    <div style="margin-top:10px;display:flex;gap:20px;font-family:var(--mono);font-size:11px;color:var(--page-ink-2);">
-      <span>● Outstanding balance</span>
-      <span style="color:#ff5a5a">● Peak funding (£9.2m, month 18)</span>
+  <!-- COST BREAKDOWN -->
+  <div class="page">
+    <div class="pagebody">
+      <div class="eyebrow">Section 2</div>
+      <h2 class="sec">Appraisal — Cost &amp; Return</h2>
+      <div class="sec-rule"></div>
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Category</th><th class="r">£m</th><th class="r">£ / unit</th><th class="r">% GDV</th></tr></thead>
+        <tbody>
+          ${[['1','Land / Purchase Price',C.land],['2','Acquisition (SDLT + legal)',C.landAcq],['3','Local Authority (CIL / S106)',C.localAuth],['4','Professional Fees',C.profFees],['5','Demolition &amp; Utilities',C.demolition],['6','Net Construction',C.build],['10','Contingency',C.contingency],['11','Sales &amp; Marketing',C.sales],['14','Finance',C.finance]].filter(r=>parseFloat(r[2])).map(([n,l,v])=>{const pv=parseFloat(v)||0,units=parseInt(C.units)||1,g=gdv||1;return`<tr><td class="s">${n}</td><td>${l}</td><td class="r">${pv.toFixed(2)}</td><td class="r">£${Math.round(pv*1e6/units).toLocaleString()}</td><td class="r">${(pv/g*100).toFixed(1)}%</td></tr>`;}).join('')}
+          <tr class="sub"><td></td><td>Total cost</td><td class="r">${parseFloat(C.totalCost)?parseFloat(C.totalCost).toFixed(2):'—'}</td><td></td><td class="r">${parseFloat(C.totalCost)&&gdv?(parseFloat(C.totalCost)/gdv*100).toFixed(1)+'%':'—'}</td></tr>
+          <tr class="profit"><td></td><td><strong>Project profit</strong></td><td class="r"><strong>${parseFloat(C.profit)?parseFloat(C.profit).toFixed(2):'—'}</strong></td><td></td><td class="r"><strong>${fp(C.profitPctGdv)}</strong></td></tr>
+          <tr><td></td><td class="s">Profit % GDV</td><td class="r" colspan="3">${fp(C.profitPctGdv)} (target ≥ 20%)</td></tr>
+          <tr><td></td><td class="s">Peak funding / LTV</td><td class="r" colspan="3">${fm(C.peakFunding)} / ${fp(C.ltv)}</td></tr>
+        </tbody>
+      </table>
     </div>
-    <table class="tbl" style="margin-top:20px;">
-      <thead><tr><th>Metric</th><th class="r">Value</th><th class="r">Target</th><th class="r">Status</th></tr></thead>
-      <tbody>
-        <tr><td>Peak loan</td><td class="r">£9,200,000</td><td class="r">—</td><td class="r">—</td></tr>
-        <tr><td>Peak loan / GDV</td><td class="r">63.4%</td><td class="r">≤ 65%</td><td class="r"><span class="psf-badge hi">PASS</span></td></tr>
-        <tr><td>Peak loan / cost</td><td class="r">88.0%</td><td class="r">≤ 90%</td><td class="r"><span class="psf-badge hi">PASS</span></td></tr>
-        <tr><td>Peak funding month</td><td class="r">Month 18</td><td class="r">—</td><td class="r">—</td></tr>
-        <tr><td>Funding balance (reconciliation)</td><td class="r">£0</td><td class="r">= £0</td><td class="r"><span class="psf-badge hi">PASS</span></td></tr>
-      </tbody>
-    </table>
   </div>
-</div>
 
-<!-- COMPARABLES -->
-<div class="page">
-  <div class="pagebody">
-    <div class="eyebrow">Section 4</div>
-    <h2 class="sec">Sales Comparables</h2>
-    <div class="sec-rule"></div>
-    <p>The GDV assumption of £549 per sq ft net is supported by recent open-market sales within a 3-mile radius of the site. Nine transactions between January and June 2025 are used as primary evidence.</p>
-    <table class="tbl">
-      <thead><tr><th>Address</th><th>Type</th><th class="r">Beds</th><th class="r">Sqft</th><th class="r">Sale Price</th><th class="r">£ psf</th><th class="r">Date</th></tr></thead>
-      <tbody>
-        <tr><td>12 Church Lane, EG</td><td>House</td><td class="r">3</td><td class="r">1,150</td><td class="r">£462,000</td><td class="r"><span class="psf-badge hi">£402</span></td><td class="r">Apr 25</td></tr>
-        <tr><td>4 Mill Lane, EG</td><td>House</td><td class="r">4</td><td class="r">1,450</td><td class="r">£598,000</td><td class="r"><span class="psf-badge hi">£412</span></td><td class="r">Feb 25</td></tr>
-        <tr><td>22 Station Road, EG</td><td>Flat</td><td class="r">2</td><td class="r">780</td><td class="r">£312,500</td><td class="r"><span class="psf-badge mid">£401</span></td><td class="r">Mar 25</td></tr>
-        <tr><td>8 Forest Way, Forest Row</td><td>House</td><td class="r">3</td><td class="r">1,220</td><td class="r">£488,000</td><td class="r"><span class="psf-badge hi">£400</span></td><td class="r">Jan 25</td></tr>
-        <tr><td>15 Lewes Road, EG</td><td>House</td><td class="r">4</td><td class="r">1,380</td><td class="r">£551,000</td><td class="r"><span class="psf-badge hi">£399</span></td><td class="r">May 25</td></tr>
-        <tr><td>7 Herontye Drive, EG</td><td>House</td><td class="r">3</td><td class="r">1,020</td><td class="r">£410,000</td><td class="r"><span class="psf-badge mid">£402</span></td><td class="r">Apr 25</td></tr>
-        <tr><td>19 Dunning Road, EG</td><td>House</td><td class="r">4</td><td class="r">1,510</td><td class="r">£615,000</td><td class="r"><span class="psf-badge hi">£407</span></td><td class="r">May 25</td></tr>
-        <tr class="subtotal"><td colspan="5">Average (9 comps)</td><td class="r">£404 psf</td><td class="r"></td></tr>
-        <tr class="subtotal" style="background:rgba(55,224,176,.06)"><td colspan="5" style="color:#16855a">GDV assumption</td><td class="r" style="color:#16855a">£549 psf</td><td class="r" style="color:#16855a">new-build premium</td></tr>
-      </tbody>
-    </table>
-    <p style="font-size:13px;margin-top:4px;color:var(--page-ink-2);">The new-build premium of approximately 36% over comparable second-hand stock is within the expected range for this location and product quality. The assumption is considered robust.</p>
+  <!-- CASHFLOW -->
+  <div class="page">
+    <div class="pagebody">
+      <div class="eyebrow">Section 3</div>
+      <h2 class="sec">Cashflow &amp; Peak Funding</h2>
+      <div class="sec-rule"></div>
+      <p>Peak funding of <strong>${fm(C.peakFunding)}</strong> occurs at month ${or(C.peakMonth,'—')} — the point of maximum cost exposure before meaningful sales receipts are received.</p>
+      ${buildCashflowSVG()}
+      <table class="tbl" style="margin-top:18px;">
+        <thead><tr><th>Metric</th><th class="r">Value</th><th class="r">Target</th><th class="r">Status</th></tr></thead>
+        <tbody>
+          <tr><td>Peak loan</td><td class="r">${fm(C.peakFunding)}</td><td class="r">—</td><td class="r">—</td></tr>
+          <tr><td>Peak loan / GDV</td><td class="r">${fp(C.ltv)}</td><td class="r">≤ 65%</td><td class="r"><span class="psf-badge ${parseFloat(C.ltv)<=65?'hi':'mid'}">${parseFloat(C.ltv)<=65?'PASS':'CHECK'}</span></td></tr>
+          <tr><td>Peak loan / cost</td><td class="r">${fp(C.ltc)}</td><td class="r">≤ 80%</td><td class="r"><span class="psf-badge ${parseFloat(C.ltc)<=80?'hi':'mid'}">${parseFloat(C.ltc)<=80?'PASS':'CHECK'}</span></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-</div>
+  <!-- COMPARABLES -->
+  <div class="page">
+    <div class="pagebody">
+      <div class="eyebrow">Section 4</div>
+      <h2 class="sec">Sales Comparables</h2>
+      <div class="sec-rule"></div>
+      <p>The GDV assumption of <strong>${C.gdvAssumptionPsf?'£'+parseFloat(C.gdvAssumptionPsf).toFixed(0)+' per sq ft':'—'}</strong> is supported by recent open-market sales in the vicinity.</p>
+      ${comps?`<table class="tbl"><thead><tr><th>Address</th><th>Type</th><th class="r">Beds</th><th class="r">Sqft</th><th class="r">Sale Price</th><th class="r">£ psf</th><th class="r">Date</th></tr></thead><tbody>${comps}<tr class="sub"><td colspan="5">Average</td><td class="r">${C.avgComppPsf?'£'+parseFloat(C.avgComppPsf).toFixed(0)+' psf':'—'}</td><td></td></tr><tr class="profit"><td colspan="5">GDV assumption</td><td class="r">${C.gdvAssumptionPsf?'£'+parseFloat(C.gdvAssumptionPsf).toFixed(0)+' psf':'—'}</td><td class="r">new-build premium</td></tr></tbody></table>`:'<p style="color:var(--ink2);font-style:italic;">Add comparables via the project data panel.</p>'}
+    </div>
+  </div>`;
+}
+render();
+
+const FIELDS = [
+  {sec:'Cover'},
+  {id:'name',label:'Scheme name'},{id:'address',label:'Location / address'},{id:'borough',label:'Borough / LPA'},{id:'planningRef',label:'Planning reference'},{id:'planningStatus',label:'Planning status'},{id:'units',label:'Total units'},{id:'unitMix',label:'Unit mix description'},{id:'netArea',label:'Net area (sqft)'},{id:'grossArea',label:'Gross area (sqft)'},{id:'date',label:'Date prepared'},{id:'ref',label:'Reference'},{id:'status',label:'Status'},{id:'preparedBy',label:'Prepared by'},{id:'version',label:'Version name'},
+  {sec:'Executive Summary'},
+  {id:'execSummary',label:'Summary text',textarea:true},{id:'callout',label:'Recommendation callout',textarea:true},
+  {sec:'Financials (£m)'},
+  {id:'gdv',label:'GDV'},{id:'land',label:'Land cost'},{id:'landAcq',label:'Acquisition costs'},{id:'localAuth',label:'Local authority (CIL / S106)'},{id:'profFees',label:'Professional fees'},{id:'demolition',label:'Demolition & utilities'},{id:'build',label:'Construction (net)'},{id:'contingency',label:'Contingency'},{id:'sales',label:'Sales & marketing'},{id:'finance',label:'Finance'},
+  {id:'totalCost',label:'Total cost'},{id:'profit',label:'Project profit'},{id:'profitPctGdv',label:'Profit % GDV'},{id:'profitExFin',label:'Profit excl. finance %'},{id:'peakFunding',label:'Peak funding (£m)'},{id:'peakMonth',label:'Peak funding month'},{id:'ltv',label:'LTV (%)'},{id:'ltc',label:'LTC (%)'},
+  {sec:'Comparables'},
+  {id:'avgComppPsf',label:'Avg comparable £ psf'},{id:'gdvAssumptionPsf',label:'GDV assumption £ psf'},
+  {id:'cmp1addr',label:'Comp 1 address'},{id:'cmp1type',label:'C1 type'},{id:'cmp1beds',label:'C1 beds'},{id:'cmp1sqft',label:'C1 sqft'},{id:'cmp1price',label:'C1 price (£)'},{id:'cmp1date',label:'C1 date'},
+  {id:'cmp2addr',label:'Comp 2 address'},{id:'cmp2type',label:'C2 type'},{id:'cmp2beds',label:'C2 beds'},{id:'cmp2sqft',label:'C2 sqft'},{id:'cmp2price',label:'C2 price (£)'},{id:'cmp2date',label:'C2 date'},
+  {id:'cmp3addr',label:'Comp 3 address'},{id:'cmp3type',label:'C3 type'},{id:'cmp3beds',label:'C3 beds'},{id:'cmp3sqft',label:'C3 sqft'},{id:'cmp3price',label:'C3 price (£)'},{id:'cmp3date',label:'C3 date'},
+  {id:'cmp4addr',label:'Comp 4 address'},{id:'cmp4type',label:'C4 type'},{id:'cmp4beds',label:'C4 beds'},{id:'cmp4sqft',label:'C4 sqft'},{id:'cmp4price',label:'C4 price (£)'},{id:'cmp4date',label:'C4 date'},
+  {id:'cmp5addr',label:'Comp 5 address'},{id:'cmp5type',label:'C5 type'},{id:'cmp5beds',label:'C5 beds'},{id:'cmp5sqft',label:'C5 sqft'},{id:'cmp5price',label:'C5 price (£)'},{id:'cmp5date',label:'C5 date'},
+];
+
+function buildPanel(){return FIELDS.map(f=>{if(f.sec)return`<div class="cfg-sec">${f.sec}</div>`;if(f.textarea)return`<div class="cfg-f"><label>${f.label}</label><textarea id="cf_${f.id}">${C[f.id]||''}</textarea></div>`;return`<div class="cfg-f"><label>${f.label}</label><input id="cf_${f.id}" value="${(C[f.id]||'').toString().replace(/"/g,'&quot;')}"></div>`;}).join('');}
+function toggleCfg(){const p=document.getElementById('cfg');const op=!p.classList.contains('open');if(op)document.getElementById('cfg-body').innerHTML=buildPanel();p.classList.toggle('open');}
+function saveCfg(){FIELDS.filter(f=>f.id).forEach(f=>{const el=document.getElementById('cf_'+f.id);if(el)C[f.id]=el.value;});localStorage.setItem(STORE,JSON.stringify(C));render();toggleCfg();}
+</script>
 </body>
 </html>
