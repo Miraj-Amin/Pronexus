@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Scenario Modeller</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ece5d4;--paper:#f7f3e9;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
+  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
+  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
+  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
+.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
+.bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
+.bsep{color:var(--paper-border);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.spacer{flex:1;}
+.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
+.tbtn:hover{border-color:#1366d6;color:#1366d6;}
+.main{padding:20px;max-width:1480px;margin:0 auto;}
+.sectitle{display:flex;align-items:center;gap:11px;margin:0 0 16px;}
+.sectitle h2{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4452;font-family:var(--mono);}
+.sectitle h2::before{content:'┌─ ';color:#b8a884;}
+.sectitle .rule{flex:1;height:1px;background:repeating-linear-gradient(90deg,#cdbfa3 0 6px,transparent 6px 12px);}
+
+/* base assumptions panel */
+.base-panel{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:18px;margin-bottom:20px;}
+.base-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;align-items:end;}
+.bf{display:flex;flex-direction:column;gap:5px;}
+.bf label{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.bf input{padding:6px 10px;border:1px solid var(--border-strong);border-radius:3px;background:var(--surface-2);color:var(--ink);font-family:var(--mono);font-size:13px;width:100%;}
+.bf input:focus{outline:none;border-color:var(--cyan);}
+.bf .bunit{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* three columns */
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.scol{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden;display:flex;flex-direction:column;}
+.scol.base-col{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(45,212,255,.2);}
+.scol.opt-col{border-color:rgba(55,224,176,.4);}
+.scol.bear-col{border-color:rgba(255,90,90,.3);}
+.col-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.col-head h3{margin:0;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);flex:1;}
+.ctag{font-family:var(--mono);font-size:9.5px;font-weight:600;padding:3px 9px;border-radius:2px;letter-spacing:.6px;text-transform:uppercase;}
+.base-col .ctag{background:rgba(45,212,255,.1);color:var(--cyan);border:1px solid rgba(45,212,255,.3);}
+.opt-col .ctag{background:rgba(55,224,176,.1);color:var(--ok);border:1px solid rgba(55,224,176,.3);}
+.bear-col .ctag{background:rgba(255,90,90,.08);color:var(--red);border:1px solid rgba(255,90,90,.25);}
+.col-levers{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+.lever{display:flex;flex-direction:column;gap:5px;}
+.lever-head{display:flex;justify-content:space-between;align-items:baseline;}
+.lever-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.lever-val{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink);}
+.lever-val.pos{color:var(--ok);}
+.lever-val.neg{color:var(--red);}
+.slider{width:100%;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:var(--border-strong);cursor:pointer;outline:none;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 6px rgba(45,212,255,.4);}
+.opt-col .slider::-webkit-slider-thumb{background:var(--ok);}
+.bear-col .slider::-webkit-slider-thumb{background:var(--red);}
+.slider:disabled{opacity:.4;cursor:default;}
+.col-kpis{padding:14px 18px;flex:1;}
+.krow{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border);}
+.krow:last-child{border-bottom:none;}
+.krow .kl{font-size:12px;color:var(--ink-2);}
+.krow .kv{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink);}
+.krow .kv.ok{color:var(--ok);}.krow .kv.amber{color:var(--amber);}.krow .kv.red{color:var(--red);}
+.krow .kdelta{font-family:var(--mono);font-size:10px;margin-left:6px;}
+.krow .kdelta.pos{color:var(--ok);}.krow .kdelta.neg{color:var(--red);}
+.col-foot{padding:14px 18px;border-top:1px solid var(--border);background:var(--surface-2);}
+.col-name-input{width:100%;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:3px;}
+.col-name-input:focus{outline:none;border-color:var(--cyan);}
+
+/* comparison table */
+.comp-table{width:100%;border-collapse:collapse;font-size:13px;}
+.comp-table th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--border-strong);background:var(--surface-2);}
+.comp-table th.r{text-align:right;}
+.comp-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--ink-2);}
+.comp-table td.r{text-align:right;font-family:var(--mono);}
+.comp-table td.v-ok{color:var(--ok);font-family:var(--mono);}
+.comp-table td.v-amber{color:var(--amber);font-family:var(--mono);}
+.comp-table td.v-red{color:var(--red);font-family:var(--mono);}
+.comp-table tr:hover td{background:rgba(45,212,255,.04);}
+.comp-table .metric-col{font-weight:500;color:var(--ink);}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:14px;}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.card-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-2);}
+
+@media(max-width:900px){.cols{grid-template-columns:1fr;}.base-grid{grid-template-columns:1fr 1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">P</div>
+    <span class="bname">PHOENIX</span><span class="bsep">|</span>
+    <span class="bdoc">Scenario Modeller</span>
+  </div>
+  <div class="spacer"></div>
+  <a class="tbtn" href="../Phoenix Hub.html">← Hub</a>
+</div>
+
+<div class="main">
+  <!-- BASE ASSUMPTIONS -->
+  <div class="sectitle"><h2>Base Scheme</h2><div class="rule"></div></div>
+  <div class="base-panel">
+    <div class="base-grid">
+      <div class="bf"><label>GDV (£m)</label><input id="b_gdv" value="14.5" oninput="calc()"><div class="bunit">Gross development value</div></div>
+      <div class="bf"><label>Land (£m)</label><input id="b_land" value="3.2" oninput="calc()"><div class="bunit">Offer / purchase price</div></div>
+      <div class="bf"><label>Build cost (£m)</label><input id="b_build" value="6.37" oninput="calc()"><div class="bunit">Constr. + fees + cont.</div></div>
+      <div class="bf"><label>Other costs (£m)</label><input id="b_other" value="0.84" oninput="calc()"><div class="bunit">Sales, acq., after-sales</div></div>
+      <div class="bf"><label>Finance rate (%)</label><input id="b_rate" value="9.0" oninput="calc()"><div class="bunit">All-in pa rate</div></div>
+      <div class="bf"><label>Loan (% GDV)</label><input id="b_ltv" value="65" oninput="calc()"><div class="bunit">Loan to GDV</div></div>
+    </div>
+  </div>
+
+  <!-- THREE SCENARIOS -->
+  <div class="sectitle"><h2>Scenarios</h2><div class="rule"></div></div>
+  <div class="cols" id="scenarios">
+    <!-- rendered by JS -->
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="sectitle" style="margin-top:20px;"><h2>Side-by-Side Comparison</h2><div class="rule"></div></div>
+  <div class="card">
+    <div class="card-head"><h3>Key Metrics</h3></div>
+    <div style="overflow-x:auto"><table class="comp-table" id="comp-table"></table></div>
+  </div>
+</div>
+
+<script>
+const SCENARIOS=[
+  {id:'base',label:'Base',tag:'Base',cls:'base-col',levers:{gdv:0,build:0,rate:0,land:0,months:24},locked:true,name:'Base Case'},
+  {id:'opt',label:'Optimistic',tag:'Upside',cls:'opt-col',levers:{gdv:5,build:-5,rate:0,land:0,months:-2},locked:false,name:'Optimistic'},
+  {id:'bear',label:'Bear',tag:'Downside',cls:'bear-col',levers:{gdv:-8,build:8,rate:1.5,land:0,months:4},locked:false,name:'Bear Case'},
+];
+
+function base(){return{gdv:+document.getElementById('b_gdv').value||14.5,land:+document.getElementById('b_land').value||3.2,build:+document.getElementById('b_build').value||6.37,other:+document.getElementById('b_other').value||0.84,rate:+document.getElementById('b_rate').value||9.0,ltv:+document.getElementById('b_ltv').value||65,months:24};}
+
+function compute(b,levers){
+  const gdv=b.gdv*(1+levers.gdv/100);
+  const build=b.build*(1+levers.build/100);
+  const land=b.land*(1+levers.land/100);
+  const other=b.other;
+  const months=(b.months||24)+levers.months;
+  const rate=b.rate+levers.rate;
+  const loan=gdv*b.ltv/100;
+  const fin=loan*(rate/100)*(months/12)*0.55;
+  const totalCost=land+build+other+fin;
+  const profit=gdv-totalCost;
+  const margGDV=profit/gdv*100;
+  const margExFin=profit/(totalCost-fin)*100;
+  const ltc=loan/totalCost*100;
+  return{gdv,land,build,other,fin,totalCost,profit,margGDV,margExFin,loan,ltc,months,rate};
+}
+
+function sc(n){return n>=0?'pos':'neg';}
+function fmtM(n){return n.toFixed(1)+'%';}
+function fmtV(n){return(n>=0?'+':'')+n.toFixed(1)+'%';}
+function fmt(n){return'£'+Math.abs(n).toFixed(2)+'m';}
+function sev(m){return m>=20?'ok':m>=15?'amber':'red';}
+
+function renderScenario(s,b,baseResult){
+  const r=compute(b,s.levers);
+  const col=document.createElement('div');
+  col.className='scol '+s.cls;
+  const locked=s.id==='base';
+  col.innerHTML=`
+    <div class="col-head">
+      <h3 id="n_${s.id}">${s.name}</h3>
+      <span class="ctag">${s.tag}</span>
+    </div>
+    <div class="col-levers">
+      ${['gdv','build','land','rate','months'].map(k=>{
+        const labels={gdv:'GDV shift',build:'Build cost shift',land:'Land price shift',rate:'Rate shift (pp)',months:'Length shift (mths)'};
+        const ranges={gdv:[-20,20,1],build:[-20,20,1],land:[-20,20,1],rate:[-3,3,0.25],months:[-6,12,1]};
+        const units={gdv:'%',build:'%',land:'%',rate:'pp',months:'m'};
+        const v=s.levers[k];
+        const vc=v>0?'neg':(v<0&&k!=='rate'&&k!=='months')?'pos':'';
+        return `<div class="lever">
+          <div class="lever-head">
+            <span class="lever-label">${labels[k]}</span>
+            <span class="lever-val ${vc}" id="lv_${s.id}_${k}">${v>0?'+':''}${k==='rate'?v.toFixed(2):v}${units[k]}</span>
+          </div>
+          <input type="range" class="slider" min="${ranges[k][0]}" max="${ranges[k][1]}" step="${ranges[k][2]}" value="${v}" ${locked?'disabled':''} data-sc="${s.id}" data-key="${k}" oninput="updateLever(this)">
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="col-kpis">
+      ${[
+        {l:'Profit',v:fmt(r.profit),sev_:'',delta:baseResult?fmt(r.profit-baseResult.profit):'',ds:r.profit>baseResult?.profit?'pos':'neg'},
+        {l:'Profit % GDV',v:fmtM(r.margGDV),sev_:sev(r.margGDV),delta:baseResult?fmtV(r.margGDV-baseResult.margGDV):'',ds:sc(r.margGDV-(baseResult?.margGDV||0))},
+        {l:'Profit % Cost (ex-fin)',v:fmtM(r.margExFin),sev_:r.margExFin>=30?'ok':r.margExFin>=25?'amber':'red',delta:baseResult?fmtV(r.margExFin-baseResult.margExFin):'',ds:sc(r.margExFin-(baseResult?.margExFin||0))},
+        {l:'Peak Loan / GDV',v:fmtM(b.ltv),sev_:'',delta:'',ds:''},
+        {l:'Finance cost',v:fmt(r.fin),sev_:'',delta:baseResult?fmt(r.fin-baseResult.fin):'',ds:r.fin>baseResult?.fin?'neg':'pos'},
+        {l:'Total Cost',v:fmt(r.totalCost),sev_:'',delta:baseResult?fmt(r.totalCost-baseResult.totalCost):'',ds:r.totalCost>baseResult?.totalCost?'neg':'pos'},
+        {l:'Project months',v:r.months+'m',sev_:'',delta:'',ds:''},
+      ].map(row=>`
+        <div class="krow">
+          <span class="kl">${row.l}</span>
+          <span>
+            <span class="kv ${row.sev_}">${row.v}</span>
+            ${row.delta&&!locked?`<span class="kdelta ${row.ds}">${row.delta}</span>`:''}
+          </span>
+        </div>`).join('')}
+    </div>
+    ${!locked?`<div class="col-foot"><input class="col-name-input" value="${s.name}" placeholder="Scenario name…" oninput="s_${s.id}_name=this.value"></div>`:''}
+  `;
+  return col;
+}
+
+function updateLever(inp){
+  const sc_id=inp.dataset.sc,key=inp.dataset.key,val=parseFloat(inp.value);
+  const s=SCENARIOS.find(x=>x.id===sc_id);if(!s)return;
+  s.levers[key]=val;
+  const units={gdv:'%',build:'%',land:'%',rate:'pp',months:'m'};
+  const vc=val>0?'neg':(val<0&&key!=='rate'&&key!=='months')?'pos':'';
+  const el=document.getElementById(`lv_${sc_id}_${key}`);
+  if(el){el.textContent=(val>0?'+':'')+(key==='rate'?val.toFixed(2):val)+units[key];el.className='lever-val '+vc;}
+  calc();
+}
+
+function calc(){
+  const b=base();
+  const container=document.getElementById('scenarios');
+  container.innerHTML='';
+  const baseR=compute(b,SCENARIOS[0].levers);
+  SCENARIOS.forEach((s,i)=>{
+    container.appendChild(renderScenario(s,b,i===0?null:baseR));
+  });
+  renderTable(b,baseR);
+}
+
+function renderTable(b,baseR){
+  const metrics=[
+    {l:'GDV',key:'gdv',fmt:v=>'£'+v.toFixed(2)+'m',sev_:()=>''},
+    {l:'Total Cost',key:'totalCost',fmt:v=>'£'+v.toFixed(2)+'m',sev_:()=>''},
+    {l:'Project Profit',key:'profit',fmt:v=>'£'+v.toFixed(2)+'m',sev_:v=>v>0?'v-ok':'v-red'},
+    {l:'Profit % GDV',key:'margGDV',fmt:v=>v.toFixed(1)+'%',sev_:v=>v>=20?'v-ok':v>=15?'v-amber':'v-red'},
+    {l:'Profit % Cost (ex-fin)',key:'margExFin',fmt:v=>v.toFixed(1)+'%',sev_:v=>v>=30?'v-ok':v>=25?'v-amber':'v-red'},
+    {l:'Finance cost',key:'fin',fmt:v=>'£'+v.toFixed(2)+'m',sev_:()=>''},
+    {l:'Loan to Cost',key:'ltc',fmt:v=>v.toFixed(1)+'%',sev_:v=>v<=80?'v-ok':v<=90?'v-amber':'v-red'},
+  ];
+  const results=SCENARIOS.map(s=>compute(b,s.levers));
+  const header='<thead><tr><th>Metric</th>'+SCENARIOS.map(s=>`<th class="r">${s.name}</th>`).join('')+'<th class="r">∆ Opt–Bear</th></tr></thead>';
+  const body='<tbody>'+metrics.map(m=>{
+    const vals=results.map(r=>r[m.key]);
+    const delta=vals[1]-vals[2];
+    const dStr=(delta>0?'+':'')+m.fmt(delta);
+    return `<tr><td class="metric-col">${m.l}</td>`+
+      vals.map(v=>`<td class="r ${m.sev_(v)}">${m.fmt(v)}</td>`).join('')+
+      `<td class="r">${dStr}</td></tr>`;
+  }).join('')+'</tbody>';
+  document.getElementById('comp-table').innerHTML=header+body;
+}
+calc();
+</script>
+</body>
+</html>

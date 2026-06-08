@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Comparable Sales Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ece5d4;--paper:#f7f3e9;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
+  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
+  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
+  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.topbar{height:52px;background:rgba(247,243,233,.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;flex:none;}
+.brand{display:flex;align-items:center;gap:10px;}
+.mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
+.bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
+.bsep{color:var(--paper-border);margin:0 2px;}.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.spacer{flex:1;}
+.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
+.tbtn:hover{border-color:#1366d6;color:#1366d6;}
+
+.body{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:360px;flex:none;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border);overflow:hidden;}
+.sb-head{padding:14px 16px;border-bottom:1px solid var(--border);}
+.sb-title{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-2);margin-bottom:10px;}
+.sb-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sbstat{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:9px 12px;}
+.sbstat .l{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.sbstat .v{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--ink);margin-top:4px;}
+.filter-row{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border);}
+.fbtn{border:1px solid var(--border);background:var(--surface-2);color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:2px;cursor:pointer;transition:all .12s;}
+.fbtn:hover{border-color:var(--cyan);color:var(--cyan);}
+.fbtn.act{background:rgba(45,212,255,.1);border-color:var(--cyan);color:var(--cyan);}
+.comp-list{flex:1;overflow-y:auto;padding:8px;}
+.comp-list::-webkit-scrollbar{width:6px;}
+.comp-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px;}
+.comp-item{background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:all .14s;border-left:2px solid transparent;}
+.comp-item:hover{border-color:var(--cyan);border-left-color:var(--cyan);}
+.comp-item.active{border-color:var(--cyan);border-left-color:var(--cyan);background:rgba(45,212,255,.07);}
+.comp-item .ci-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.ci-addr{font-size:12px;font-weight:500;color:var(--ink);line-height:1.35;}
+.ci-price{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--cyan);white-space:nowrap;}
+.ci-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.ci-chip{font-family:var(--mono);font-size:9.5px;background:var(--surface-3);border:1px solid var(--border);border-radius:2px;padding:2px 6px;color:var(--muted);}
+.ci-chip.highlight{color:var(--ok);border-color:rgba(55,224,176,.35);background:rgba(55,224,176,.07);}
+.site-item{background:rgba(45,212,255,.06);border:1px solid rgba(45,212,255,.3);border-radius:5px;padding:11px 13px;margin-bottom:7px;}
+.site-item .ci-addr{color:var(--cyan);}
+
+#map{flex:1;}
+/* leaflet popup custom */
+.leaflet-popup-content-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.leaflet-popup-tip{background:var(--surface);}
+.leaflet-popup-content{margin:0;padding:12px 14px;color:var(--ink-2);font-family:var(--sans);font-size:12px;}
+.popup-addr{font-weight:600;color:var(--ink);font-family:var(--mono);font-size:13px;margin-bottom:6px;}
+.popup-price{color:var(--cyan);font-family:var(--mono);font-size:16px;font-weight:600;}
+.popup-psf{color:var(--ok);font-family:var(--mono);font-size:12px;margin-top:2px;}
+.popup-meta{margin-top:6px;display:flex;gap:10px;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">P</div>
+    <span class="bname">PHOENIX</span><span class="bsep">|</span>
+    <span class="bdoc">Comparable Sales Map</span>
+  </div>
+  <div class="spacer"></div>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--page-ink-2);">Walnut Marches — East Grinstead</span>
+  <a class="tbtn" href="../Phoenix Hub.html">← Hub</a>
+</div>
+
+<div class="body">
+  <div class="sidebar">
+    <div class="sb-head">
+      <div class="sb-title">Sales Evidence</div>
+      <div class="sb-stats" id="sb-stats"></div>
+    </div>
+    <div class="filter-row" id="filter-row">
+      <button class="fbtn act" onclick="filterBeds('all',this)">All</button>
+      <button class="fbtn" onclick="filterBeds(2,this)">2 bed</button>
+      <button class="fbtn" onclick="filterBeds(3,this)">3 bed</button>
+      <button class="fbtn" onclick="filterBeds(4,this)">4 bed</button>
+    </div>
+    <div class="comp-list" id="comp-list"></div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SITE={lat:51.1302,lng:0.0038,label:'Subject Site — Walnut Marches'};
+const COMPS=[
+  {id:1,addr:'12 Church Lane',town:'East Grinstead',lat:51.1315,lng:0.0052,beds:3,sqft:1150,price:462000,date:'Apr 2025',type:'House'},
+  {id:2,addr:'4 Mill Lane',town:'East Grinstead',lat:51.1285,lng:-0.0014,beds:4,sqft:1450,price:598000,date:'Feb 2025',type:'House'},
+  {id:3,addr:'22 Station Road',town:'East Grinstead',lat:51.1328,lng:0.0071,beds:2,sqft:780,price:312500,date:'Mar 2025',type:'Flat'},
+  {id:4,addr:'8 Forest Way',town:'Forest Row',lat:51.1062,lng:-0.0326,beds:3,sqft:1220,price:488000,date:'Jan 2025',type:'House'},
+  {id:5,addr:'15 Lewes Road',town:'East Grinstead',lat:51.1257,lng:0.0195,beds:4,sqft:1380,price:551000,date:'May 2025',type:'House'},
+  {id:6,addr:'7 Herontye Drive',town:'East Grinstead',lat:51.1341,lng:-0.0083,beds:3,sqft:1020,price:410000,date:'Apr 2025',type:'House'},
+  {id:7,addr:'3 Imberhorne Lane',town:'East Grinstead',lat:51.1198,lng:0.0071,beds:2,sqft:820,price:328000,date:'Mar 2025',type:'Flat'},
+  {id:8,addr:'19 Dunning Road',town:'East Grinstead',lat:51.1373,lng:0.0108,beds:4,sqft:1510,price:615000,date:'May 2025',type:'House'},
+  {id:9,addr:'6 Ashplats Wood',town:'East Grinstead',lat:51.1222,lng:0.0142,beds:3,sqft:1180,price:471000,date:'Jun 2025',type:'House'},
+];
+
+let bedFilter='all';
+let markers={};
+let activeId=null;
+
+const map=L.map('map').setView([SITE.lat,SITE.lng],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(map);
+
+function psfColor(psf){return psf>=420?'#37e0b0':psf>=380?'#ffba45':'#ff5a5a';}
+
+function makeIcon(psf,isActive){
+  const c=psfColor(psf);
+  return L.divIcon({
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:${c};border:2px solid #fff;box-shadow:0 0 8px ${c}88;"></div>`,
+    className:'',iconSize:[12,12],iconAnchor:[6,6],
+  });
+}
+function makeSiteIcon(){
+  return L.divIcon({
+    html:`<div style="width:16px;height:16px;border-radius:3px;background:#2dd4ff;border:2px solid #fff;box-shadow:0 0 12px #2dd4ff88;transform:rotate(45deg)"></div>`,
+    className:'',iconSize:[16,16],iconAnchor:[8,8],
+  });
+}
+
+// Site marker
+L.marker([SITE.lat,SITE.lng],{icon:makeSiteIcon()}).addTo(map)
+  .bindPopup(`<div class="popup-addr">${SITE.label}</div><div style="color:var(--cyan);font-family:var(--mono);font-size:11px;">Subject site</div>`);
+
+function psf(c){return Math.round(c.price/c.sqft);}
+
+function renderAll(){
+  const filtered=bedFilter==='all'?COMPS:COMPS.filter(c=>c.beds===bedFilter);
+  // remove old markers
+  Object.values(markers).forEach(m=>map.removeLayer(m));markers={};
+  filtered.forEach(c=>{
+    const p=psf(c);
+    const marker=L.marker([c.lat,c.lng],{icon:makeIcon(p,activeId===c.id)}).addTo(map);
+    marker.bindPopup(`
+      <div class="popup-addr">${c.addr}, ${c.town}</div>
+      <div class="popup-price">£${c.price.toLocaleString()}</div>
+      <div class="popup-psf">£${p} psf</div>
+      <div class="popup-meta"><span>${c.beds} bed ${c.type}</span><span>${c.sqft.toLocaleString()} sqft</span><span>${c.date}</span></div>
+    `);
+    marker.on('click',()=>{setActive(c.id);});
+    markers[c.id]=marker;
+  });
+  renderList(filtered);
+  renderStats(filtered);
+}
+
+function renderList(comps){
+  const list=document.getElementById('comp-list');
+  list.innerHTML=`<div class="site-item"><div class="ci-top"><div class="ci-addr">▣ Subject Site — Walnut Marches</div></div><div class="ci-meta"><span class="ci-chip highlight">29 units</span><span class="ci-chip highlight">East Grinstead</span></div></div>`+
+    comps.map(c=>{
+      const p=psf(c);
+      return `<div class="comp-item ${activeId===c.id?'active':''}" id="ci_${c.id}" onclick="setActive(${c.id})">
+        <div class="ci-top">
+          <div class="ci-addr">${c.addr}, ${c.town}</div>
+          <div class="ci-price">£${(c.price/1000).toFixed(0)}k</div>
+        </div>
+        <div class="ci-meta">
+          <span class="ci-chip">${c.beds} bed</span>
+          <span class="ci-chip">${c.sqft.toLocaleString()} sqft</span>
+          <span class="ci-chip highlight">£${p} psf</span>
+          <span class="ci-chip">${c.date}</span>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function renderStats(comps){
+  if(!comps.length){document.getElementById('sb-stats').innerHTML='';return;}
+  const avg=Math.round(comps.reduce((s,c)=>s+psf(c),0)/comps.length);
+  const avgPrice=Math.round(comps.reduce((s,c)=>s+c.price,0)/comps.length);
+  const hi=Math.max(...comps.map(c=>psf(c)));
+  const lo=Math.min(...comps.map(c=>psf(c)));
+  document.getElementById('sb-stats').innerHTML=`
+    <div class="sbstat"><div class="l">Avg £psf</div><div class="v">£${avg}</div></div>
+    <div class="sbstat"><div class="l">Range psf</div><div class="v">£${lo}–${hi}</div></div>
+    <div class="sbstat"><div class="l">Avg price</div><div class="v">£${(avgPrice/1000).toFixed(0)}k</div></div>
+    <div class="sbstat"><div class="l">Comps</div><div class="v">${comps.length}</div></div>`;
+}
+
+function setActive(id){
+  activeId=id;
+  const c=COMPS.find(x=>x.id===id);
+  if(c&&markers[id]){markers[id].openPopup();map.panTo([c.lat,c.lng]);}
+  document.querySelectorAll('.comp-item').forEach(el=>el.classList.remove('active'));
+  const el=document.getElementById('ci_'+id);if(el){el.classList.add('active');el.scrollIntoView({block:'nearest'});}
+}
+
+function filterBeds(v,btn){
+  bedFilter=v;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');renderAll();
+}
+renderAll();
+</script>
+</body>
+</html>

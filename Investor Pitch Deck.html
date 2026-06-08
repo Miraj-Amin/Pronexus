@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Investor Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+deck-stage:not(:defined){visibility:hidden}
+*,*::before,*::after{box-sizing:border-box;}
+:root{
+  --navy:#0d1f33;--navy2:#14304d;--navy3:#1a3d60;
+  --cyan:#2dd4ff;--cyan2:#1fc0e8;--ok:#37e0b0;--amber:#ffba45;--red:#ff5a5a;
+  --ink:#eef6fd;--ink2:#c4ddf1;--muted:#93b4ce;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --serif:'Newsreader',Georgia,serif;
+}
+section{font-family:var(--sans);background:var(--navy);color:var(--ink);position:relative;overflow:hidden;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(45,212,255,.18),transparent 62%);}
+.glow-tl{top:-200px;left:-200px;width:600px;height:600px;}
+.glow-tr{top:-150px;right:-150px;width:500px;height:500px;}
+.glow-br{bottom:-200px;right:-200px;width:600px;height:600px;}
+.glow-bl{bottom:-150px;left:-150px;width:400px;height:400px;}
+.pad{padding:80px 100px;position:relative;z-index:1;height:100%;display:flex;flex-direction:column;}
+
+/* --- slide 1: cover --- */
+.s1-top{display:flex;align-items:center;gap:14px;}
+.s1-wm{font-family:var(--mono);font-weight:600;letter-spacing:4px;font-size:22px;color:#fff;}
+.s1-chip{margin-left:auto;font-family:var(--mono);font-size:12px;letter-spacing:2px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:5px 14px;border-radius:2px;}
+.s1-mid{margin-top:auto;padding-bottom:20px;}
+.s1-kicker{font-family:var(--mono);font-size:14px;letter-spacing:5px;color:#5fc6e6;text-transform:uppercase;margin-bottom:24px;}
+.s1-h1{font-family:var(--serif);font-size:96px;font-weight:500;line-height:1.0;letter-spacing:-.8px;margin:0 0 20px;color:#fff;}
+.s1-h1 em{font-style:italic;color:#7ad4f0;}
+.s1-sub{font-size:22px;color:#aebfcf;max-width:700px;line-height:1.5;}
+.s1-foot{display:flex;gap:60px;padding-top:32px;border-top:1px solid rgba(255,255,255,.1);margin-top:auto;}
+.s1-f{display:flex;flex-direction:column;gap:5px;}
+.s1-fl{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;}
+.s1-fv{font-size:17px;color:#dce8f2;}
+
+/* --- shared components --- */
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;}
+.slide-title{font-family:var(--serif);font-weight:500;font-size:62px;line-height:1.05;letter-spacing:-.5px;margin:0 0 8px;}
+.sec-rule{height:2px;width:120px;background:var(--cyan);margin-bottom:36px;border-radius:2px;}
+
+/* kpi cards */
+.kpi-grid{display:grid;gap:16px;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:linear-gradient(180deg,#0d1d31,#0a1626);border:1px solid #173251;padding:24px 28px;position:relative;}
+.kpi::before,.kpi::after{content:'';position:absolute;width:9px;height:9px;border-color:var(--cyan);opacity:.5;}
+.kpi::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid;}
+.kpi::after{bottom:-1px;right:-1px;border-bottom:1px solid;border-right:1px solid;}
+.kpi.ok::before,.kpi.ok::after{border-color:var(--ok);}
+.kpi.amber::before,.kpi.amber::after{border-color:var(--amber);}
+.kpi .kl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.kpi .kdot{width:8px;height:8px;border-radius:50%;background:var(--muted);}
+.kpi.ok .kdot{background:var(--ok);box-shadow:0 0 8px var(--ok);}
+.kpi.amber .kdot{background:var(--amber);box-shadow:0 0 8px var(--amber);}
+.kpi.red .kdot{background:var(--red);box-shadow:0 0 8px var(--red);}
+.kpi.ok .kv{color:var(--ok);}
+.kpi.amber .kv{color:var(--amber);}
+.kpi.red .kv{color:var(--red);}
+.kpi .kv{font-family:var(--mono);font-size:48px;font-weight:500;letter-spacing:-.8px;margin-top:14px;color:var(--ink);line-height:1;}
+.kpi .ks{font-size:14px;color:var(--muted);margin-top:10px;font-family:var(--mono);}
+.kpi .ktarget{position:absolute;top:18px;right:18px;font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid #21466d;padding:2px 8px;}
+
+/* two-column layout */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;}
+.two-col-60{display:grid;grid-template-columns:1.5fr 1fr;gap:40px;flex:1;}
+.col-content{display:flex;flex-direction:column;gap:16px;}
+
+/* data table */
+.dtbl{width:100%;border-collapse:collapse;font-size:16px;}
+.dtbl th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;padding:10px 14px;border-bottom:1px solid #21466d;text-align:left;}
+.dtbl th.r{text-align:right;}
+.dtbl td{padding:12px 14px;border-bottom:1px solid #173251;color:var(--ink2);}
+.dtbl td.r{text-align:right;font-family:var(--mono);}
+.dtbl td.strong{font-weight:600;color:var(--ink);}
+.dtbl tr.total td{font-weight:700;color:var(--ok);border-top:1px solid #21466d;font-family:var(--mono);}
+
+/* waterfall row */
+.wf{display:flex;flex-direction:column;gap:4px;}
+.wf-row{display:grid;grid-template-columns:1fr 160px;padding:10px 14px;border-radius:2px;}
+.wf-row .wl{font-size:16px;color:var(--ink2);display:flex;align-items:center;gap:10px;}
+.wf-row .wv{font-family:var(--mono);font-size:16px;text-align:right;}
+.wf-row.add .wv{color:var(--ok);}
+.wf-row.sub .wv{color:var(--ink);}
+.wf-row.result{background:rgba(45,212,255,.07);border:1px solid #173251;}
+.wf-row.result .wl{color:var(--cyan);font-weight:600;}
+.wf-row.result .wv{color:var(--cyan);font-weight:700;}
+
+/* bars */
+.bar-group{display:flex;flex-direction:column;gap:10px;}
+.bar-item{display:grid;grid-template-columns:200px 1fr 120px;align-items:center;gap:14px;}
+.bi-label{font-size:15px;color:var(--ink2);}
+.bi-track{height:14px;background:rgba(45,212,255,.06);border:1px solid #173251;border-radius:0;overflow:hidden;}
+.bi-fill{height:100%;}
+.bi-val{font-family:var(--mono);font-size:15px;color:var(--ink);text-align:right;}
+
+/* scenario comparison */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.sc-card{border:1px solid #173251;border-radius:4px;padding:24px 26px;position:relative;}
+.sc-card.base{border-color:rgba(45,212,255,.4);}
+.sc-card.opt{border-color:rgba(55,224,176,.35);}
+.sc-card.bear{border-color:rgba(255,90,90,.3);}
+.sc-tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:2px;display:inline-block;margin-bottom:14px;}
+.base .sc-tag{background:rgba(45,212,255,.1);color:var(--cyan);border:1px solid rgba(45,212,255,.3);}
+.opt .sc-tag{background:rgba(55,224,176,.1);color:var(--ok);border:1px solid rgba(55,224,176,.3);}
+.bear .sc-tag{background:rgba(255,90,90,.08);color:var(--red);border:1px solid rgba(255,90,90,.25);}
+.sc-metric{margin-bottom:12px;}
+.sc-ml{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.sc-mv{font-family:var(--mono);font-size:32px;font-weight:500;color:var(--ink);letter-spacing:-.4px;margin-top:4px;}
+.sc-mv.ok{color:var(--ok);}.sc-mv.amber{color:var(--amber);}.sc-mv.red{color:var(--red);}
+
+/* next steps */
+.steps-list{display:flex;flex-direction:column;gap:0;}
+.step-item{display:grid;grid-template-columns:60px 1fr;gap:20px;padding:22px 0;border-bottom:1px solid #173251;}
+.step-item:last-child{border-bottom:none;}
+.step-n{width:40px;height:40px;border-radius:50%;background:rgba(45,212,255,.1);border:1px solid rgba(45,212,255,.35);display:grid;place-items:center;color:var(--cyan);font-family:var(--mono);font-size:18px;font-weight:600;}
+.step-body h4{margin:0 0 4px;font-size:20px;font-weight:600;color:var(--ink);}
+.step-body p{margin:0;font-size:16px;color:var(--muted);line-height:1.5;}
+
+/* slide number */
+.slide-num{position:absolute;bottom:40px;right:60px;font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.25);letter-spacing:2px;}
+</style>
+</head>
+<body>
+<deck-stage width="1920" height="1080">
+
+<!-- SLIDE 1: COVER -->
+<section data-screen-label="01 Cover">
+  <div class="grid-bg"></div>
+  <div class="glow glow-tr"></div>
+  <div class="glow glow-bl"></div>
+  <div class="pad">
+    <div class="s1-top">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.5"/></svg>
+      <span class="s1-wm">PHOENIX</span>
+      <span class="s1-chip">INVESTOR PRESENTATION</span>
+    </div>
+    <div class="s1-mid">
+      <div class="s1-kicker">Development Opportunity</div>
+      <h1 class="s1-h1">Walnut Marches,<br><em>East Grinstead</em></h1>
+      <div class="s1-sub">29-unit residential development — full planning consent — targeting 22.4% profit on GDV with £3.25m project profit.</div>
+    </div>
+    <div class="s1-foot">
+      <div class="s1-f"><div class="s1-fl">GDV</div><div class="s1-fv">£14.5 million</div></div>
+      <div class="s1-f"><div class="s1-fl">Profit % GDV</div><div class="s1-fv">22.4%</div></div>
+      <div class="s1-f"><div class="s1-fl">Peak Funding</div><div class="s1-fv">£9.2 million</div></div>
+      <div class="s1-f"><div class="s1-fl">Programme</div><div class="s1-fv">24 months</div></div>
+      <div class="s1-f"><div class="s1-fl">Date</div><div class="s1-fv">June 2026</div></div>
+    </div>
+  </div>
+  <div class="slide-num">01 / 07</div>
+</section>
+
+<!-- SLIDE 2: THE OPPORTUNITY -->
+<section data-screen-label="02 Opportunity">
+  <div class="grid-bg"></div>
+  <div class="glow glow-tl" style="opacity:.6"></div>
+  <div class="pad">
+    <div class="eyebrow">The Opportunity</div>
+    <div class="slide-title">Site &amp; Planning</div>
+    <div class="sec-rule"></div>
+    <div class="two-col-60">
+      <div class="col-content">
+        <table class="dtbl">
+          <tbody>
+            <tr><td class="strong">Address</td><td class="r">Station Road, East Grinstead, RH19</td></tr>
+            <tr><td class="strong">LPA</td><td class="r">Mid Sussex District Council</td></tr>
+            <tr><td class="strong">Planning ref</td><td class="r">DM/2025/1234</td></tr>
+            <tr><td class="strong">Planning status</td><td class="r" style="color:var(--ok)">Full permission — Nov 2025</td></tr>
+            <tr><td class="strong">Scheme</td><td class="r">29 units — 18 houses, 11 flats</td></tr>
+            <tr><td class="strong">Net saleable area</td><td class="r">26,500 sqft</td></tr>
+            <tr><td class="strong">Gross area</td><td class="r">33,125 sqft</td></tr>
+            <tr><td class="strong">Offer price</td><td class="r">£3.20 million</td></tr>
+            <tr><td class="strong">Asking price</td><td class="r">£3.60 million (11% below ask)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-content">
+        <div style="background:rgba(45,212,255,.04);border:1px dashed #173251;flex:1;display:grid;place-items:center;color:var(--muted);font-family:var(--mono);font-size:14px;min-height:400px;text-align:center;line-height:1.8;">site plan /<br>aerial photo</div>
+        <div style="background:#0d1d31;border:1px solid #173251;padding:18px 20px;border-radius:4px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Location highlights</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink2);">
+            <div>✓ &nbsp;32 min London Victoria (Southern Rail)</div>
+            <div>✓ &nbsp;Town centre — 0.4 miles walk</div>
+            <div>✓ &nbsp;Outstanding Ofsted schools within 1 mile</div>
+            <div>✓ &nbsp;Active buyer market — sub-3% unsold stock</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">02 / 07</div>
+</section>
+
+<!-- SLIDE 3: FINANCIAL SUMMARY -->
+<section data-screen-label="03 Financials">
+  <div class="grid-bg"></div>
+  <div class="glow glow-br" style="opacity:.5"></div>
+  <div class="pad">
+    <div class="eyebrow">Financial Summary</div>
+    <div class="slide-title">Appraisal Overview</div>
+    <div class="sec-rule"></div>
+    <div class="two-col">
+      <div class="col-content">
+        <table class="dtbl">
+          <thead><tr><th>Cost Category</th><th class="r">£m</th><th class="r">% GDV</th></tr></thead>
+          <tbody>
+            <tr><td>Land &amp; acquisition</td><td class="r">3.41</td><td class="r">23.5%</td></tr>
+            <tr><td>Construction (net)</td><td class="r">4.88</td><td class="r">33.6%</td></tr>
+            <tr><td>Professional fees</td><td class="r">0.59</td><td class="r">4.1%</td></tr>
+            <tr><td>Contingency</td><td class="r">0.24</td><td class="r">1.7%</td></tr>
+            <tr><td>Sales &amp; marketing</td><td class="r">0.29</td><td class="r">2.0%</td></tr>
+            <tr><td>Finance</td><td class="r">0.82</td><td class="r">5.6%</td></tr>
+            <tr><td>Other (CIL, after-sales)</td><td class="r">0.27</td><td class="r">1.9%</td></tr>
+            <tr class="total"><td>Total cost</td><td class="r">10.50</td><td class="r">72.4%</td></tr>
+            <tr class="total" style="background:rgba(55,224,176,.08)"><td style="color:var(--ok)">Project profit</td><td class="r" style="color:var(--ok)">4.00</td><td class="r" style="color:var(--ok)">27.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-content" style="gap:14px;">
+        <div class="kpi-grid kpi-grid-3" style="grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="kpi ok"><div class="kl"><span class="kdot"></span>Profit % GDV</div><div class="kv" style="font-size:40px;">22.4%</div><div class="ks">≥ 20% target</div></div>
+          <div class="kpi ok"><div class="kl"><span class="kdot"></span>Profit % Cost</div><div class="kv" style="font-size:40px;">38.1%</div><div class="ks">excl. finance</div></div>
+          <div class="kpi"><div class="kl"><span class="kdot"></span>GDV</div><div class="kv" style="font-size:40px;">£14.5m</div><div class="ks">29 units</div></div>
+          <div class="kpi"><div class="kl"><span class="kdot"></span>Peak Funding</div><div class="kv" style="font-size:40px;">£9.2m</div><div class="ks">63.4% LTV</div></div>
+        </div>
+        <div style="background:#0d1d31;border:1px solid rgba(55,224,176,.35);border-left:3px solid var(--ok);padding:18px 20px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--ok);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">All validation rules pass</div>
+          <div style="font-size:15px;color:var(--ink2);">Margin above 20% threshold. Lender margin 31.2% above 30% floor. Funding waterfall reconciles to zero.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">03 / 07</div>
+</section>
+
+<!-- SLIDE 4: RETURN PROFILE -->
+<section data-screen-label="04 Returns">
+  <div class="grid-bg"></div>
+  <div class="glow glow-tl" style="opacity:.5"></div>
+  <div class="pad">
+    <div class="eyebrow">Investor Returns</div>
+    <div class="slide-title">Return on Equity</div>
+    <div class="sec-rule"></div>
+    <div class="kpi-grid kpi-grid-4" style="margin-bottom:40px;">
+      <div class="kpi ok"><div class="kl"><span class="kdot"></span>Project Profit</div><div class="kv">£3.25m</div><div class="ks">GDV − total cost</div></div>
+      <div class="kpi ok"><div class="kl"><span class="kdot"></span>Return on Equity</div><div class="kv">2.17×</div><div class="ks">£1.5m equity in</div></div>
+      <div class="kpi ok"><div class="kl"><span class="kdot"></span>Equity IRR (est.)</div><div class="kv">34%</div><div class="ks">24-month programme</div></div>
+      <div class="kpi"><div class="kl"><span class="kdot"></span>Equity Required</div><div class="kv">£1.5m</div><div class="ks">Day-one commitment</div></div>
+    </div>
+    <div class="wf">
+      <div style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Sources &amp; Uses</div>
+      <div class="wf-row add"><div class="wl">GDV (gross sales proceeds)</div><div class="wv">+£14,500,000</div></div>
+      <div class="wf-row sub"><div class="wl">Less: total cost</div><div class="wv">−£10,455,000</div></div>
+      <div class="wf-row sub"><div class="wl">Less: peak loan repayment</div><div class="wv">−£9,200,000</div></div>
+      <div class="wf-row add"><div class="wl">Equity returned</div><div class="wv">+£1,500,000</div></div>
+      <div class="wf-row result"><div class="wl">Net investor return</div><div class="wv">£3,253,000</div></div>
+    </div>
+  </div>
+  <div class="slide-num">04 / 07</div>
+</section>
+
+<!-- SLIDE 5: SENSITIVITY -->
+<section data-screen-label="05 Sensitivity">
+  <div class="grid-bg"></div>
+  <div class="glow glow-br" style="opacity:.4"></div>
+  <div class="pad">
+    <div class="eyebrow">Risk Analysis</div>
+    <div class="slide-title">Sensitivity &amp; Downside</div>
+    <div class="sec-rule"></div>
+    <div class="two-col">
+      <div class="col-content">
+        <div style="font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px;">Margin % GDV — sale price × build cost</div>
+        <table style="border-collapse:separate;border-spacing:4px;font-family:var(--mono);font-size:13px;width:100%;">
+          <tr><td style="color:var(--muted);font-size:11px;text-align:center"></td>
+            <th style="color:var(--muted);font-size:11px;padding:4px 6px;text-align:center">-10%</th>
+            <th style="color:var(--muted);font-size:11px;padding:4px 6px;text-align:center">-5%</th>
+            <th style="color:var(--muted);font-size:11px;padding:4px 6px;text-align:center">Base</th>
+            <th style="color:var(--muted);font-size:11px;padding:4px 6px;text-align:center">+5%</th>
+            <th style="color:var(--muted);font-size:11px;padding:4px 6px;text-align:center">+10%</th>
+          </tr>
+          <tr><th style="color:var(--muted);font-size:11px;text-align:right;padding:4px 8px">-10%</th><td style="padding:7px 6px;text-align:center;background:#ff7070;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">8.2%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">13.1%</td><td style="padding:7px 6px;text-align:center;background:#ffce74;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">17.8%</td><td style="padding:7px 6px;text-align:center;background:#a8e6b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">22.4%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">26.8%</td></tr>
+          <tr><th style="color:var(--muted);font-size:11px;text-align:right;padding:4px 8px">-5%</th><td style="padding:7px 6px;text-align:center;background:#ff7070;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">10.5%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">15.3%</td><td style="padding:7px 6px;text-align:center;background:#a8e6b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">20.0%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">24.5%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">28.9%</td></tr>
+          <tr><th style="color:var(--muted);font-size:11px;text-align:right;padding:4px 8px">Base</th><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">12.8%</td><td style="padding:7px 6px;text-align:center;background:#a8e6b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">17.6%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600;outline:2px solid #2dd4ff;outline-offset:-2px">22.4%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">26.9%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">31.3%</td></tr>
+          <tr><th style="color:var(--muted);font-size:11px;text-align:right;padding:4px 8px">+5%</th><td style="padding:7px 6px;text-align:center;background:#ff7070;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">9.3%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">14.1%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">18.8%</td><td style="padding:7px 6px;text-align:center;background:#a8e6b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">23.2%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">27.6%</td></tr>
+          <tr><th style="color:var(--muted);font-size:11px;text-align:right;padding:4px 8px">+10%</th><td style="padding:7px 6px;text-align:center;background:#ff7070;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">5.8%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">10.6%</td><td style="padding:7px 6px;text-align:center;background:#ffba45;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">15.3%</td><td style="padding:7px 6px;text-align:center;background:#a8e6b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">19.8%</td><td style="padding:7px 6px;text-align:center;background:#37e0b0;color:rgba(5,12,24,.9);border-radius:2px;font-weight:600">24.2%</td></tr>
+        </table>
+        <div style="display:flex;gap:18px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);">
+          <span style="color:#ff5a5a">■ Below 15%</span><span style="color:#ffba45">■ 15–20%</span><span style="color:#37e0b0">■ 20%+</span><span style="color:#2dd4ff">■ Base case</span>
+        </div>
+      </div>
+      <div class="col-content">
+        <div class="sc-grid" style="grid-template-columns:1fr;gap:14px;">
+          <div class="sc-card base">
+            <span class="sc-tag">Base Case</span>
+            <div class="sc-metric"><div class="sc-ml">Profit % GDV</div><div class="sc-mv ok" style="font-size:36px;">22.4%</div></div>
+            <div style="font-size:14px;color:var(--muted)">GDV and costs as modelled. Programme 24 months.</div>
+          </div>
+          <div class="sc-card opt">
+            <span class="sc-tag">Upside +5% GDV</span>
+            <div class="sc-metric"><div class="sc-ml">Profit % GDV</div><div class="sc-mv ok" style="font-size:36px;">26.9%</div></div>
+            <div style="font-size:14px;color:var(--muted)">Sales values 5% above assumption. Profit £3.91m.</div>
+          </div>
+          <div class="sc-card bear">
+            <span class="sc-tag">Bear -8% GDV / +8% Cost</span>
+            <div class="sc-metric"><div class="sc-ml">Profit % GDV</div><div class="sc-mv amber" style="font-size:36px;">15.1%</div></div>
+            <div style="font-size:14px;color:var(--muted)">Scheme remains profitable. Equity returned in full.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">05 / 07</div>
+</section>
+
+<!-- SLIDE 6: DEAL STRUCTURE -->
+<section data-screen-label="06 Deal Structure">
+  <div class="grid-bg"></div>
+  <div class="glow glow-tl" style="opacity:.5"></div>
+  <div class="pad">
+    <div class="eyebrow">Investment Structure</div>
+    <div class="slide-title">Proposed Terms</div>
+    <div class="sec-rule"></div>
+    <div class="two-col">
+      <div class="col-content">
+        <table class="dtbl">
+          <thead><tr><th>Term</th><th class="r">Detail</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Total equity required</td><td class="r">£1,500,000</td></tr>
+            <tr><td class="strong">Investor equity</td><td class="r">£1,200,000 (80%)</td></tr>
+            <tr><td class="strong">Developer equity</td><td class="r">£300,000 (20%)</td></tr>
+            <tr><td class="strong">Profit split (after pref)</td><td class="r">60% investor / 40% developer</td></tr>
+            <tr><td class="strong">Preferred return</td><td class="r">10% pa on invested equity</td></tr>
+            <tr><td class="strong">Senior debt (proposed)</td><td class="r">£9,200,000 at 9% all-in</td></tr>
+            <tr><td class="strong">Investment period</td><td class="r">24 months from exchange</td></tr>
+            <tr><td class="strong">Security</td><td class="r">First legal charge on site</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-content" style="gap:14px;">
+        <div style="background:#0d1d31;border:1px solid #173251;border-radius:4px;padding:24px 26px;">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:14px;">Investor return summary</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--ink2)">Capital returned</span><span style="font-family:var(--mono);color:var(--ink)">£1,200,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--ink2)">Preferred return (10%)</span><span style="font-family:var(--mono);color:var(--ink)">~£240,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--ink2)">Profit share (60%)</span><span style="font-family:var(--mono);color:var(--ok)">~£1,742,000</span></div>
+            <div style="border-top:1px solid #21466d;padding-top:12px;display:flex;justify-content:space-between;"><span style="font-weight:600;color:var(--ink)">Total proceeds</span><span style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--ok)">~£3,182,000</span></div>
+          </div>
+        </div>
+        <div style="background:rgba(45,212,255,.05);border:1px solid rgba(45,212,255,.25);border-left:3px solid var(--cyan);padding:18px 20px;">
+          <div style="font-size:15px;color:var(--ink2);">This equates to a <strong style="color:var(--cyan)">2.65× equity multiple</strong> and an estimated IRR of <strong style="color:var(--cyan)">~38%</strong> over the 24-month programme.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 07</div>
+</section>
+
+<!-- SLIDE 7: NEXT STEPS -->
+<section data-screen-label="07 Next Steps">
+  <div class="grid-bg"></div>
+  <div class="glow glow-br" style="opacity:.5"></div>
+  <div class="pad">
+    <div class="eyebrow">Moving Forward</div>
+    <div class="slide-title">Next Steps</div>
+    <div class="sec-rule"></div>
+    <div class="two-col-60">
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-n">1</div>
+          <div class="step-body"><h4>Heads of Terms</h4><p>Agree investment HoTs — equity split, preferred return, exit mechanism. Target: within 2 weeks.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">2</div>
+          <div class="step-body"><h4>Legal &amp; Structuring</h4><p>Instruct solicitors to prepare SPV documentation and investment agreement. Title investigation to run in parallel.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">3</div>
+          <div class="step-body"><h4>Funding Mandate</h4><p>Submit appraisal and planning docs to proposed senior lender; term sheet expected within 3 weeks of mandate.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">4</div>
+          <div class="step-body"><h4>Exchange &amp; Drawdown</h4><p>Target exchange Q3 2026. Equity drawdown day 1; debt facility available from construction start.</p></div>
+        </div>
+      </div>
+      <div class="col-content" style="justify-content:center;">
+        <div style="background:#0d1d31;border:1px solid #173251;border-radius:6px;padding:32px;text-align:center;">
+          <div style="font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:20px;">Contact</div>
+          <div style="font-family:var(--serif);font-size:28px;color:var(--ink);margin-bottom:8px;">Phoenix Development</div>
+          <div style="font-family:var(--mono);font-size:15px;color:var(--cyan);margin-bottom:24px;">deals@phoenixdev.co.uk</div>
+          <div style="height:1px;background:#173251;margin-bottom:20px;"></div>
+          <div style="font-size:14px;color:var(--muted);line-height:1.7;">This presentation is prepared for discussion purposes only and does not constitute a formal offer to invest. All figures are appraisal estimates.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">07 / 07</div>
+</section>
+
+</deck-stage>
+<script src="deck-stage.js"></script>
+</body>
+</html>

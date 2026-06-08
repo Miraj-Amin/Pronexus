@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Quick Yield Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ece5d4;--paper:#f7f3e9;--paper-border:#d2c6ac;--page-ink:#26313f;--page-ink-2:#6a6256;
+  --surface:#0a1626;--surface-2:#0d1d31;--surface-3:#102842;--border:#173251;--border-strong:#21466d;
+  --ink:#eef6fd;--ink-2:#c4ddf1;--muted:#93b4ce;--cyan:#2dd4ff;--cyan-2:#1fc0e8;
+  --amber:#ffba45;--red:#ff5a5a;--ok:#37e0b0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;}
+body{margin:0;background:var(--bg);font-family:var(--sans);font-size:14px;color:var(--page-ink);-webkit-font-smoothing:antialiased;}
+.topbar{position:sticky;top:0;z-index:50;height:52px;background:rgba(247,243,233,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--paper-border);display:flex;align-items:center;gap:16px;padding:0 20px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.mark{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,#1366d6,#2dd4ff);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;font-family:var(--mono);}
+.bname{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;}
+.bsep{color:var(--paper-border);margin:0 2px;}
+.bdoc{font-family:var(--mono);font-size:11px;color:var(--page-ink-2);}
+.spacer{flex:1;}
+.tbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--paper-border);background:var(--paper);color:var(--page-ink-2);font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:3px;cursor:pointer;transition:all .12s;text-decoration:none;}
+.tbtn:hover{border-color:#1366d6;color:#1366d6;}
+
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px;padding:20px;max-width:1280px;margin:0 auto;}
+.inputs{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:0;position:sticky;top:72px;align-self:start;overflow:hidden;}
+.inp-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.inp-head h2{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-2);}
+.reset-btn{border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:3px;cursor:pointer;transition:all .12s;}
+.reset-btn:hover{border-color:var(--red);color:var(--red);}
+.inp-body{padding:16px 18px;display:flex;flex-direction:column;gap:18px;}
+.grp{}
+.grp-label{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:4px 0;}
+.field label{font-size:12px;color:var(--ink-2);}
+.field-right{display:flex;align-items:center;gap:6px;}
+.inp{width:88px;padding:5px 8px;border:1px solid var(--border-strong);border-radius:3px;background:var(--surface-2);color:var(--ink);font-family:var(--mono);font-size:13px;text-align:right;transition:border-color .12s;}
+.inp:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(45,212,255,.1);}
+.unit{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:24px;}
+.derived-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
+.derived-row .dl{font-size:11.5px;color:var(--muted);}
+.derived-row .dv{font-family:var(--mono);font-size:12px;color:var(--ink-2);}
+
+/* results panel */
+.results{display:flex;flex-direction:column;gap:16px;}
+.sectitle{display:flex;align-items:center;gap:11px;margin:0 0 14px;}
+.sectitle h2{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4452;font-family:var(--mono);}
+.sectitle h2::before{content:'┌─ ';color:#b8a884;}
+.sectitle .rule{flex:1;height:1px;background:repeating-linear-gradient(90deg,#cdbfa3 0 6px,transparent 6px 12px);}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.kpi{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--border);border-radius:0;padding:14px 16px;position:relative;}
+.kpi::before,.kpi::after{content:'';position:absolute;width:6px;height:6px;border-color:var(--cyan);opacity:.5;}
+.kpi::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid;}
+.kpi::after{bottom:-1px;right:-1px;border-bottom:1px solid;border-right:1px solid;}
+.kpi.ok::before,.kpi.ok::after{border-color:var(--ok);}
+.kpi.amber::before,.kpi.amber::after{border-color:var(--amber);}
+.kpi.red::before,.kpi.red::after{border-color:var(--red);}
+.kpi .kl{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);display:flex;align-items:center;gap:7px;}
+.kpi .kdot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.kpi.ok .kdot{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.kpi.amber .kdot{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.kpi.red .kdot{background:var(--red);box-shadow:0 0 6px var(--red);}
+.kpi .kv{font-family:var(--mono);font-size:26px;font-weight:500;letter-spacing:-.5px;margin-top:9px;color:var(--ink);line-height:1;}
+.kpi.ok .kv{color:var(--ok);}
+.kpi.amber .kv{color:var(--amber);}
+.kpi.red .kv{color:var(--red);}
+.kpi .ks{font-size:10px;color:var(--muted);margin-top:7px;font-family:var(--mono);}
+.kpi .target{position:absolute;top:12px;right:12px;font-size:9px;font-family:var(--mono);color:var(--muted);border:1px solid var(--border-strong);padding:1px 5px;}
+
+/* cost breakdown */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.card-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-head h3{margin:0;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-2);}
+.card-body{padding:16px 18px;}
+.brow{display:grid;grid-template-columns:180px 1fr 80px 50px;align-items:center;gap:12px;padding:5px 0;}
+.brow .bl{font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px;}
+.brow .bsw{width:9px;height:9px;border-radius:2px;flex:none;}
+.brow .bar{height:9px;background:rgba(45,212,255,.06);border:1px solid var(--border);overflow:hidden;}
+.brow .bfill{height:100%;transition:width .3s;}
+.brow .bamt{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--ink);}
+.brow .bpct{font-family:var(--mono);font-size:10.5px;text-align:right;color:var(--muted);}
+.btotal{border-top:1px solid var(--border-strong);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;}
+.btotal .bl{font-weight:600;color:var(--ink);}
+.btotal .bamt{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--cyan);}
+
+/* sensitivity */
+.heat{border-collapse:separate;border-spacing:2px;font-family:var(--mono);font-size:9.5px;width:100%;}
+.heat th{font-size:9px;color:var(--muted);padding:3px 6px;text-align:center;}
+.heat td{padding:5px 4px;text-align:center;border-radius:2px;font-weight:600;font-size:9px;color:rgba(5,12,24,.9);}
+.heat .rlabel{text-align:right;color:var(--muted);padding-right:10px;font-size:9px;background:none!important;}
+.heat .base{outline:2px solid var(--cyan);outline-offset:-1px;}
+.heat-legend{display:flex;gap:16px;margin-top:10px;font-size:10px;color:var(--muted);font-family:var(--mono);align-items:center;}
+.heat-grad{height:8px;width:100px;border-radius:2px;background:linear-gradient(90deg,#ff5a5a,#ffba45,#37e0b0);}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.inputs{position:static;}.kpis{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">P</div>
+    <span class="bname">PHOENIX</span><span class="bsep">|</span>
+    <span class="bdoc">Quick Yield Calculator</span>
+  </div>
+  <div class="spacer"></div>
+  <a class="tbtn" href="../Phoenix Hub.html">← Hub</a>
+</div>
+
+<div class="layout">
+  <!-- INPUTS -->
+  <div class="inputs">
+    <div class="inp-head">
+      <h2>Assumptions</h2>
+      <button class="reset-btn" onclick="resetInputs()">Reset</button>
+    </div>
+    <div class="inp-body">
+      <div class="grp">
+        <div class="grp-label">Income</div>
+        <div class="field"><label>GDV</label><div class="field-right"><input class="inp" id="gdv" value="14.50" oninput="calc()"><span class="unit">£m</span></div></div>
+      </div>
+      <div class="grp">
+        <div class="grp-label">Land &amp; Acquisition</div>
+        <div class="field"><label>Land / offer price</label><div class="field-right"><input class="inp" id="land" value="3.20" oninput="calc()"><span class="unit">£m</span></div></div>
+        <div class="field"><label>SDLT + legal (% land)</label><div class="field-right"><input class="inp" id="acqPct" value="6.5" oninput="calc()"><span class="unit">%</span></div></div>
+        <div class="derived-row"><span class="dl">Acquisition costs</span><span class="dv" id="d_acq">—</span></div>
+      </div>
+      <div class="grp">
+        <div class="grp-label">Construction</div>
+        <div class="field"><label>Build cost (£/sqft)</label><div class="field-right"><input class="inp" id="psf" value="195" oninput="calc()"><span class="unit">£</span></div></div>
+        <div class="field"><label>Gross area (sqft)</label><div class="field-right"><input class="inp" id="sqft" value="32500" oninput="calc()"><span class="unit">sqft</span></div></div>
+        <div class="derived-row"><span class="dl">Construction total</span><span class="dv" id="d_build">—</span></div>
+      </div>
+      <div class="grp">
+        <div class="grp-label">Professional &amp; Other</div>
+        <div class="field"><label>Prof. fees (% build)</label><div class="field-right"><input class="inp" id="profPct" value="12" oninput="calc()"><span class="unit">%</span></div></div>
+        <div class="field"><label>Contingency (% build)</label><div class="field-right"><input class="inp" id="contPct" value="5" oninput="calc()"><span class="unit">%</span></div></div>
+        <div class="field"><label>Sales &amp; marketing (% GDV)</label><div class="field-right"><input class="inp" id="salesPct" value="3" oninput="calc()"><span class="unit">%</span></div></div>
+      </div>
+      <div class="grp">
+        <div class="grp-label">Finance</div>
+        <div class="field"><label>Loan-to-GDV</label><div class="field-right"><input class="inp" id="ltv" value="65" oninput="calc()"><span class="unit">%</span></div></div>
+        <div class="field"><label>All-in rate (pa)</label><div class="field-right"><input class="inp" id="rate" value="9.0" oninput="calc()"><span class="unit">%</span></div></div>
+        <div class="field"><label>Loan period</label><div class="field-right"><input class="inp" id="months" value="24" oninput="calc()"><span class="unit">mths</span></div></div>
+        <div class="derived-row"><span class="dl">Finance estimate</span><span class="dv" id="d_fin">—</span></div>
+      </div>
+      <div class="grp">
+        <div class="grp-label">Equity</div>
+        <div class="field"><label>Equity in</label><div class="field-right"><input class="inp" id="equity" value="1.50" oninput="calc()"><span class="unit">£m</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results">
+    <div class="sectitle"><h2>Headline Metrics</h2><div class="rule"></div></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="sectitle" style="margin-top:8px;"><h2>Cost Breakdown</h2><div class="rule"></div></div>
+    <div class="card">
+      <div class="card-head"><h3>Cost Stack</h3><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="cost-sub">—</span></div>
+      <div class="card-body" id="breakdown"></div>
+    </div>
+
+    <div class="sectitle" style="margin-top:8px;"><h2>Sensitivity — Margin % GDV</h2><div class="rule"></div></div>
+    <div class="card">
+      <div class="card-head"><h3>GDV Move × Cost Move</h3><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">base = 0%</span></div>
+      <div class="card-body">
+        <div style="overflow-x:auto;"><table class="heat" id="heat"></table></div>
+        <div class="heat-legend"><span>Margin scale:</span><div class="heat-grad"></div><span style="margin-left:4px;">Low → High</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS={gdv:14.5,land:3.2,acqPct:6.5,psf:195,sqft:32500,profPct:12,contPct:5,salesPct:3,ltv:65,rate:9.0,months:24,equity:1.5};
+const COLORS=['#2dd4ff','#38bdf8','#3b82f6','#6366f1','#22d3ee','#a78bfa'];
+function g(id){return parseFloat(document.getElementById(id).value)||0;}
+function fmt(n,decimals=2){return n>=1000?'£'+(n/1000).toFixed(1)+'bn':'£'+n.toFixed(decimals)+'m';}
+function fmtM(n){return n.toFixed(1)+'%';}
+
+function calc(){
+  const gdv=g('gdv'),land=g('land'),acqPct=g('acqPct'),psf=g('psf'),sqft=g('sqft');
+  const profPct=g('profPct'),contPct=g('contPct'),salesPct=g('salesPct');
+  const ltv=g('ltv'),rate=g('rate'),months=g('months'),equity=g('equity');
+
+  const acq=land*acqPct/100;
+  const build=(psf*sqft)/1e6;
+  const prof=build*profPct/100;
+  const cont=build*contPct/100;
+  const sales=gdv*salesPct/100;
+  const grossLoan=gdv*ltv/100;
+  const fin=grossLoan*(rate/100)*(months/12)*0.55; // ~55% avg drawn factor
+  const totalCost=land+acq+build+prof+cont+sales+fin;
+  const profit=gdv-totalCost;
+  const margGDV=profit/gdv*100;
+  const margCostExFin=profit/(totalCost-fin)*100;
+  const ltcPct=grossLoan/totalCost*100;
+  const roe=profit/equity;
+
+  document.getElementById('d_acq').textContent=fmt(acq);
+  document.getElementById('d_build').textContent=fmt(build);
+  document.getElementById('d_fin').textContent=fmt(fin);
+
+  // KPI sev helpers
+  function ms(m){return m>=20?'ok':m>=15?'amber':'red';}
+  function ls(l){return l<=65?'ok':l<=80?'amber':'red';}
+
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi ${profit>0?'ok':'red'}">
+      <div class="kl"><span class="kdot"></span>Project Profit</div>
+      <div class="kv">${fmt(profit,2)}</div>
+      <div class="ks">GDV − total cost</div>
+    </div>
+    <div class="kpi ${ms(margGDV)}">
+      <div class="target">≥20%</div>
+      <div class="kl"><span class="kdot"></span>Profit % GDV</div>
+      <div class="kv">${fmtM(margGDV)}</div>
+      <div class="ks">Margin on value</div>
+    </div>
+    <div class="kpi ${margCostExFin>=30?'ok':margCostExFin>=25?'amber':'red'}">
+      <div class="target">≥30%</div>
+      <div class="kl"><span class="kdot"></span>Profit % Cost (ex-fin)</div>
+      <div class="kv">${fmtM(margCostExFin)}</div>
+      <div class="ks">Lender measure</div>
+    </div>
+    <div class="kpi">
+      <div class="kl"><span class="kdot"></span>Peak Loan</div>
+      <div class="kv">${fmt(grossLoan,2)}</div>
+      <div class="ks">GDV × LTV</div>
+    </div>
+    <div class="kpi ${ls(ltcPct)}">
+      <div class="target">≤80%</div>
+      <div class="kl"><span class="kdot"></span>Loan to Cost</div>
+      <div class="kv">${fmtM(ltcPct)}</div>
+      <div class="ks">${fmtM(ltv)} LTV × GDV</div>
+    </div>
+    <div class="kpi ${roe>=1.5?'ok':roe>=1?'amber':'red'}">
+      <div class="kl"><span class="kdot"></span>Return on Equity</div>
+      <div class="kv">${roe.toFixed(2)}×</div>
+      <div class="ks">${fmt(equity)} committed</div>
+    </div>`;
+
+  // Breakdown
+  const cats=[
+    {label:'Land / Purchase',amt:land,color:'#2dd4ff'},
+    {label:'Acquisition (SDLT + legal)',amt:acq,color:'#38bdf8'},
+    {label:'Net Construction',amt:build,color:'#3b82f6'},
+    {label:'Professional Fees',amt:prof,color:'#6366f1'},
+    {label:'Contingency',amt:cont,color:'#a78bfa'},
+    {label:'Sales & Marketing',amt:sales,color:'#22d3ee'},
+    {label:'Finance',amt:fin,color:'#818cf8'},
+  ];
+  document.getElementById('cost-sub').textContent=fmt(totalCost)+' total';
+  const maxAmt=Math.max(...cats.map(c=>c.amt));
+  document.getElementById('breakdown').innerHTML=
+    cats.map(c=>`
+      <div class="brow">
+        <div class="bl"><div class="bsw" style="background:${c.color}"></div>${c.label}</div>
+        <div class="bar"><div class="bfill" style="width:${Math.max(2,c.amt/maxAmt*100)}%;background:${c.color}22;border-right:2px solid ${c.color}"></div></div>
+        <div class="bamt">${fmt(c.amt)}</div>
+        <div class="bpct">${(c.amt/totalCost*100).toFixed(1)}%</div>
+      </div>`).join('')+
+    `<div class="btotal"><div class="bl">Total Cost</div><div class="bamt">${fmt(totalCost)}</div></div>`;
+
+  // Sensitivity heatmap
+  const GDVD=[-10,-5,0,5,10];
+  const COSTD=[-10,-5,0,5,10];
+  let rows='<tr><td></td>'+GDVD.map(d=>`<th>${d>0?'+':''}${d}%<br>GDV</th>`).join('')+'</tr>';
+  COSTD.forEach(cd=>{
+    rows+=`<tr><th class="rlabel">${cd>0?'+':''}${cd}%<br>cost</th>`;
+    GDVD.forEach(gd=>{
+      const adjGDV=gdv*(1+gd/100);
+      const adjCost=totalCost*(1+cd/100);
+      const m=(adjGDV-adjCost)/adjGDV*100;
+      const t=m>=22?'#37e0b0':m>=18?'#a8e6b0':m>=14?'#ffce74':m>=10?'#ffba45':'#ff7070';
+      const isBase=gd===0&&cd===0;
+      rows+=`<td style="background:${t}" class="${isBase?'base':''}">${m.toFixed(1)}%</td>`;
+    });
+    rows+='</tr>';
+  });
+  document.getElementById('heat').innerHTML=rows;
+}
+
+function resetInputs(){
+  Object.entries(DEFAULTS).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v;});
+  calc();
+}
+calc();
+</script>
+</body>
+</html>

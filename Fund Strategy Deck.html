@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phoenix — Fund Strategy</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+deck-stage:not(:defined){visibility:hidden}
+*,*::before,*::after{box-sizing:border-box;}
+:root{
+  --navy:#0d1f33;--navy2:#14304d;--navy3:#1a3d60;
+  --cyan:#2dd4ff;--cyan2:#1fc0e8;--ok:#37e0b0;--amber:#ffba45;--red:#ff5a5a;
+  --ink:#eef6fd;--ink2:#c4ddf1;--muted:#93b4ce;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --serif:'Newsreader',Georgia,serif;
+}
+section{font-family:var(--sans);background:var(--navy);color:var(--ink);position:relative;overflow:hidden;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(45,212,255,.18),transparent 62%);}
+.pad{padding:80px 100px;position:relative;z-index:1;height:100%;display:flex;flex-direction:column;}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;}
+.slide-title{font-family:var(--serif);font-weight:500;font-size:62px;line-height:1.05;letter-spacing:-.5px;margin:0 0 8px;}
+.sec-rule{height:2px;width:120px;background:var(--cyan);margin-bottom:36px;border-radius:2px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;}
+.two-col-60{display:grid;grid-template-columns:1.5fr 1fr;gap:40px;flex:1;}
+.slide-num{position:absolute;bottom:40px;right:60px;font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.25);letter-spacing:2px;}
+
+/* typography helpers */
+.body-lg{font-size:18px;color:var(--ink2);line-height:1.65;}
+.body-sm{font-size:15px;color:var(--muted);line-height:1.6;}
+
+/* kpi cards */
+.kpi-grid{display:grid;gap:16px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+.kpi{background:linear-gradient(180deg,#0d1d31,#0a1626);border:1px solid #173251;padding:24px 28px;position:relative;}
+.kpi::before,.kpi::after{content:'';position:absolute;width:9px;height:9px;border-color:var(--cyan);opacity:.5;}
+.kpi::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid;}
+.kpi::after{bottom:-1px;right:-1px;border-bottom:1px solid;border-right:1px solid;}
+.kpi.ok::before,.kpi.ok::after{border-color:var(--ok);}
+.kpi.amber::before,.kpi.amber::after{border-color:var(--amber);}
+.kpi .kl{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.kpi .kv{font-family:var(--mono);font-size:48px;font-weight:500;letter-spacing:-.8px;margin-top:14px;color:var(--ink);line-height:1;}
+.kpi.ok .kv{color:var(--ok);}
+.kpi.amber .kv{color:var(--amber);}
+.kpi .ks{font-size:14px;color:var(--muted);margin-top:10px;font-family:var(--mono);}
+
+/* data table */
+.dtbl{width:100%;border-collapse:collapse;}
+.dtbl th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;padding:10px 14px;border-bottom:1px solid #21466d;text-align:left;}
+.dtbl th.r{text-align:right;}
+.dtbl td{padding:13px 14px;border-bottom:1px solid #173251;color:var(--ink2);font-size:16px;}
+.dtbl td.r{text-align:right;font-family:var(--mono);}
+.dtbl td.strong{font-weight:600;color:var(--ink);}
+.dtbl td.ok{color:var(--ok);font-family:var(--mono);}
+.dtbl td.amber{color:var(--amber);font-family:var(--mono);}
+.dtbl tr.total td{font-weight:700;background:rgba(45,212,255,.05);border-top:1px solid #21466d;font-family:var(--mono);color:var(--cyan);}
+
+/* pillar cards */
+.pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;flex:1;}
+.pillar{background:#0d1d31;border:1px solid #173251;border-radius:4px;padding:26px 28px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;}
+.pillar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.pillar.c1::before{background:var(--cyan);}
+.pillar.c2::before{background:var(--ok);}
+.pillar.c3::before{background:var(--amber);}
+.pillar-num{font-family:var(--mono);font-size:60px;font-weight:500;line-height:1;color:rgba(45,212,255,.12);position:absolute;top:16px;right:20px;}
+.pillar.c2 .pillar-num{color:rgba(55,224,176,.12);}
+.pillar.c3 .pillar-num{color:rgba(255,186,69,.12);}
+.pillar-title{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--ink);line-height:1.2;}
+.pillar p{font-size:15px;color:var(--muted);line-height:1.6;margin:0;}
+.pillar-stats{display:flex;gap:20px;padding-top:12px;border-top:1px solid #173251;margin-top:auto;}
+.ps .pl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.ps .pv{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--ink);margin-top:3px;}
+
+/* portfolio bar */
+.port-bar{display:flex;height:28px;border-radius:3px;overflow:hidden;gap:2px;margin:16px 0;}
+.pb-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:600;color:rgba(5,12,24,.85);transition:flex .4s;}
+
+/* area tags */
+.area-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.05);border:1px solid #173251;color:var(--muted);padding:4px 10px;border-radius:2px;}
+.area-chip::before{content:'●';font-size:8px;}
+
+/* team cards */
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.team-card{background:#0d1d31;border:1px solid #173251;border-radius:4px;padding:20px 22px;}
+.tc-init{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:18px;font-weight:600;margin-bottom:12px;background:rgba(45,212,255,.1);color:var(--cyan);}
+.tc-name{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.tc-role{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.tc-exp{font-size:13px;color:var(--muted);line-height:1.55;}
+
+/* process steps */
+.process{display:grid;grid-template-columns:repeat(6,1fr);gap:0;position:relative;margin:30px 0;}
+.process::before{content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,var(--cyan),rgba(45,212,255,.2));}
+.proc-step{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;}
+.proc-dot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:600;border:1px solid;position:relative;z-index:1;background:var(--navy);}
+.proc-dot.done{background:var(--ok);border-color:var(--ok);color:#04141c;box-shadow:0 0 12px rgba(55,224,176,.4);}
+.proc-dot.active{background:var(--amber);border-color:var(--amber);color:#04141c;box-shadow:0 0 12px rgba(255,186,69,.4);}
+.proc-dot.future{border-color:#21466d;color:var(--muted);}
+.proc-label{font-size:13px;font-weight:500;color:var(--ink2);}
+.proc-sub{font-family:var(--mono);font-size:10px;color:var(--muted);}
+
+/* info card */
+.info-card{background:#0d1d31;border:1px solid #173251;border-radius:4px;padding:20px 22px;}
+.info-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid #173251;font-size:15px;}
+.info-row:last-child{border-bottom:none;}
+.ir-l{color:var(--ink2);}
+.ir-v{font-family:var(--mono);font-weight:500;color:var(--ink);}
+.ir-v.ok{color:var(--ok);}
+
+/* callout */
+.callout{display:flex;gap:14px;padding:18px 20px;border-radius:4px;border:1px solid;font-size:15px;}
+.callout.ok{background:rgba(55,224,176,.06);border-color:rgba(55,224,176,.3);color:var(--ink2);}
+.callout.ok::before{content:'';display:block;width:3px;border-radius:2px;background:var(--ok);flex:none;}
+</style>
+</head>
+<body>
+<deck-stage width="1920" height="1080">
+
+<!-- SLIDE 1: COVER -->
+<section data-screen-label="01 Cover">
+  <div class="grid-bg"></div>
+  <div class="glow" style="top:-200px;right:-200px;width:700px;height:700px;"></div>
+  <div class="glow" style="bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(109,75,214,.16),transparent 62%)"></div>
+  <div class="pad" style="justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.5"/></svg>
+      <span style="font-family:var(--mono);font-weight:600;letter-spacing:4px;font-size:20px;">PHOENIX</span>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:4px 12px;border-radius:2px;">CONFIDENTIAL</span>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:14px;letter-spacing:5px;color:#5fc6e6;text-transform:uppercase;margin-bottom:24px;">Strategy &amp; Fund Overview</div>
+      <div style="font-family:var(--serif);font-size:100px;font-weight:500;line-height:.95;color:#fff;letter-spacing:-.8px;margin:0 0 20px;">Phoenix<br><span style="font-style:italic;color:#7ad4f0;">Development</span><br>Fund I</div>
+      <div style="font-size:22px;color:#9fb2c4;max-width:680px;line-height:1.5;margin-bottom:48px;">Residential development in the South East — targeting 20%+ margins on consented schemes in undersupplied commuter markets.</div>
+      <div style="display:flex;gap:60px;padding-top:32px;border-top:1px solid rgba(255,255,255,.1);">
+        <div><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;">Fund size</div><div style="font-size:18px;color:#dce8f2;margin-top:5px;">£25 million</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;">Target return</div><div style="font-size:18px;color:#dce8f2;margin-top:5px;">2.2× equity / 32% IRR</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;">Fund term</div><div style="font-size:18px;color:#dce8f2;margin-top:5px;">5 years</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;">Date</div><div style="font-size:18px;color:#dce8f2;margin-top:5px;">June 2026</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">01 / 08</div>
+</section>
+
+<!-- SLIDE 2: MARKET OPPORTUNITY -->
+<section data-screen-label="02 Market">
+  <div class="grid-bg"></div>
+  <div class="glow" style="top:-150px;left:-150px;width:500px;height:500px;opacity:.6;"></div>
+  <div class="pad">
+    <div class="eyebrow">The Opportunity</div>
+    <div class="slide-title">Market Context</div>
+    <div class="sec-rule"></div>
+    <div class="two-col-60">
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="kpi-grid g2" style="gap:14px;">
+          <div class="kpi"><div class="kl">UK housing shortfall</div><div class="kv" style="font-size:36px;">4.3m</div><div class="ks">homes, DLUHC 2025</div></div>
+          <div class="kpi"><div class="kl">South East deficit</div><div class="kv" style="font-size:36px;">380k</div><div class="ks">units needed by 2030</div></div>
+          <div class="kpi ok"><div class="kl">Phoenix target margin</div><div class="kv" style="font-size:36px;">22%+</div><div class="ks">avg achieved to date</div></div>
+          <div class="kpi"><div class="kl">Planning permissions</div><div class="kv" style="font-size:36px;">-18%</div><div class="ks">YoY nationally</div></div>
+        </div>
+        <div class="callout ok">
+          <div>Constrained planning supply combined with sustained demand from London commuters creates a durable pricing environment. Consented land remains scarce — and Phoenix buys with planning in place, eliminating the largest risk in the market.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">Target geographies</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div class="area-chip" style="color:var(--cyan)">West Sussex — primary</div>
+          <div class="area-chip" style="color:var(--cyan)">East Sussex — primary</div>
+          <div class="area-chip">Kent — secondary</div>
+          <div class="area-chip">Surrey — secondary</div>
+          <div class="area-chip">Hampshire — opportunistic</div>
+        </div>
+        <div style="margin-top:8px;background:#0d1d31;border:1px solid #173251;border-radius:4px;padding:18px 20px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;">Why commuter belt</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink2);">
+            <div>→ &nbsp;Rail connectivity preserves demand through cycles</div>
+            <div>→ &nbsp;Planning constraint limits competing supply</div>
+            <div>→ &nbsp;Land values below London — higher margins achievable</div>
+            <div>→ &nbsp;Deep agent and landowner relationships already in place</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">02 / 08</div>
+</section>
+
+<!-- SLIDE 3: STRATEGY -->
+<section data-screen-label="03 Strategy">
+  <div class="grid-bg"></div>
+  <div class="glow" style="bottom:-180px;right:-180px;width:560px;height:560px;opacity:.5;"></div>
+  <div class="pad">
+    <div class="eyebrow">Investment Strategy</div>
+    <div class="slide-title">Three Pillars</div>
+    <div class="sec-rule"></div>
+    <div class="pillar-grid">
+      <div class="pillar c1">
+        <div class="pillar-num">01</div>
+        <div class="pillar-title">Buy Consented,<br>Build Fast</div>
+        <p>We only acquire sites with full planning permission in place. No speculative planning risk. Target scheme size 10–80 units; construction period 18–30 months.</p>
+        <div class="pillar-stats">
+          <div class="ps"><div class="pl">Min units</div><div class="pv">10</div></div>
+          <div class="ps"><div class="pl">Max GDV</div><div class="pv">£35m</div></div>
+          <div class="ps"><div class="pl">PP only</div><div class="pv">100%</div></div>
+        </div>
+      </div>
+      <div class="pillar c2">
+        <div class="pillar-num">02</div>
+        <div class="pillar-title">Margin-First<br>Underwriting</div>
+        <p>Every acquisition is stress-tested to a minimum 20% profit on GDV and 30% profit on cost (ex-finance). Sensitivity tested to −10% GDV / +10% build cost before IC approval.</p>
+        <div class="pillar-stats">
+          <div class="ps"><div class="pl">Min margin</div><div class="pv" style="color:var(--ok)">20%</div></div>
+          <div class="ps"><div class="pl">Bear margin</div><div class="pv">≥15%</div></div>
+          <div class="ps"><div class="pl">Max LTV</div><div class="pv">65%</div></div>
+        </div>
+      </div>
+      <div class="pillar c3">
+        <div class="pillar-num">03</div>
+        <div class="pillar-title">South East<br>Specialist</div>
+        <p>Deep market knowledge, established contractor and agent relationships and a data-driven comparables database. We know these markets — pricing assumptions are evidence-led, not aspirational.</p>
+        <div class="pillar-stats">
+          <div class="ps"><div class="pl">Schemes done</div><div class="pv">14</div></div>
+          <div class="ps"><div class="pl">Avg margin</div><div class="pv" style="color:var(--amber)">22.3%</div></div>
+          <div class="ps"><div class="pl">Track rec.</div><div class="pv">8 yr</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">03 / 08</div>
+</section>
+
+<!-- SLIDE 4: TRACK RECORD -->
+<section data-screen-label="04 Track Record">
+  <div class="grid-bg"></div>
+  <div class="glow" style="top:-150px;right:-150px;width:500px;height:500px;opacity:.5;"></div>
+  <div class="pad">
+    <div class="eyebrow">Proven Performance</div>
+    <div class="slide-title">Track Record</div>
+    <div class="sec-rule"></div>
+    <div class="two-col">
+      <div>
+        <table class="dtbl">
+          <thead><tr><th>Scheme</th><th class="r">GDV</th><th class="r">Units</th><th class="r">Margin</th><th class="r">Status</th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Quarry Fields, Crawley</td><td class="r">£24.2m</td><td class="r">52</td><td class="r ok">25.3%</td><td class="r" style="color:var(--ok);font-family:var(--mono);font-size:13px;">Complete</td></tr>
+            <tr><td class="strong">Station Quarter, Three Bridges</td><td class="r">£31.5m</td><td class="r">64</td><td class="r ok">21.8%</td><td class="r" style="color:var(--amber);font-family:var(--mono);font-size:13px;">Legals</td></tr>
+            <tr><td class="strong">Walnut Marches, E. Grinstead</td><td class="r">£14.5m</td><td class="r">29</td><td class="r ok">22.4%</td><td class="r" style="color:var(--amber);font-family:var(--mono);font-size:13px;">In Appraisal</td></tr>
+            <tr><td class="strong">Cedar Rise, Haywards Heath</td><td class="r">£7.8m</td><td class="r">14</td><td class="r amber">18.1%</td><td class="r" style="color:var(--amber);font-family:var(--mono);font-size:13px;">Under Offer</td></tr>
+            <tr><td class="strong">Fairfield Lane, Burgess Hill</td><td class="r">£6.4m</td><td class="r">12</td><td class="r" style="color:var(--muted);font-family:var(--mono);font-size:13px;">—</td><td class="r" style="color:var(--muted);font-family:var(--mono);font-size:13px;">Sourcing</td></tr>
+            <tr class="total"><td>Portfolio total</td><td class="r">£110m</td><td class="r">223</td><td class="r">22.3%</td><td class="r">avg margin</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:16px;">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;">Portfolio by stage</div>
+          <div class="port-bar">
+            <div class="pb-seg" style="flex:2;background:var(--ok)">Complete</div>
+            <div class="pb-seg" style="flex:.5;background:#21466d"></div>
+            <div class="pb-seg" style="flex:1.5;background:var(--amber)">Live</div>
+            <div class="pb-seg" style="flex:.5;background:#21466d"></div>
+            <div class="pb-seg" style="flex:.5;background:var(--muted)">Pipeline</div>
+          </div>
+          <div style="display:flex;gap:20px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+            <span style="color:var(--ok)">■ Complete</span>
+            <span style="color:var(--amber)">■ Active / appraisal</span>
+            <span style="color:var(--muted)">■ Sourcing</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="kpi-grid g2" style="gap:12px;">
+          <div class="kpi ok" style="padding:18px 20px;"><div class="kl">Realised IRR</div><div class="kv" style="font-size:36px;">34%</div><div class="ks">completed schemes</div></div>
+          <div class="kpi ok" style="padding:18px 20px;"><div class="kl">Equity MOIC</div><div class="kv" style="font-size:36px;">2.1×</div><div class="ks">avg across portfolio</div></div>
+          <div class="kpi" style="padding:18px 20px;"><div class="kl">Capital deployed</div><div class="kv" style="font-size:36px;">£68m</div><div class="ks">since inception</div></div>
+          <div class="kpi ok" style="padding:18px 20px;"><div class="kl">Zero capital loss</div><div class="kv" style="font-size:28px;margin-top:10px;">14 / 14</div><div class="ks">schemes profitable</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">04 / 08</div>
+</section>
+
+<!-- SLIDE 5: FUND STRUCTURE -->
+<section data-screen-label="05 Fund Structure">
+  <div class="grid-bg"></div>
+  <div class="glow" style="bottom:-150px;left:-150px;width:500px;height:500px;opacity:.5;"></div>
+  <div class="pad">
+    <div class="eyebrow">Fund I</div>
+    <div class="slide-title">Structure &amp; Terms</div>
+    <div class="sec-rule"></div>
+    <div class="two-col">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="info-card">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">Fund overview</div>
+          <div class="info-row"><span class="ir-l">Fund vehicle</span><span class="ir-v">English LP (FCA registered)</span></div>
+          <div class="info-row"><span class="ir-l">Fund size</span><span class="ir-v">£25 million LP equity</span></div>
+          <div class="info-row"><span class="ir-l">Min. commitment</span><span class="ir-v">£250,000</span></div>
+          <div class="info-row"><span class="ir-l">Investment period</span><span class="ir-v">3 years</span></div>
+          <div class="info-row"><span class="ir-l">Fund term</span><span class="ir-v">5 years (+ 2 × 1yr extension)</span></div>
+          <div class="info-row"><span class="ir-l">Preferred return</span><span class="ir-v ok">8% pa, compounding</span></div>
+          <div class="info-row"><span class="ir-l">Profit share</span><span class="ir-v">80% LP / 20% GP (above pref)</span></div>
+          <div class="info-row"><span class="ir-l">Management fee</span><span class="ir-v">1.5% pa on committed capital</span></div>
+          <div class="info-row"><span class="ir-l">Carry</span><span class="ir-v">20% (above 8% hurdle)</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="info-card">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">Return targets</div>
+          <div class="info-row"><span class="ir-l">Target net IRR</span><span class="ir-v ok">28–32%</span></div>
+          <div class="info-row"><span class="ir-l">Target net MOIC</span><span class="ir-v ok">2.0–2.3×</span></div>
+          <div class="info-row"><span class="ir-l">Preferred return</span><span class="ir-v">8% pa</span></div>
+          <div class="info-row"><span class="ir-l">DPI target (yr 3)</span><span class="ir-v">0.8×</span></div>
+        </div>
+        <div class="info-card">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;">Portfolio construction</div>
+          <div class="info-row"><span class="ir-l">Target schemes</span><span class="ir-v">8–12 simultaneous</span></div>
+          <div class="info-row"><span class="ir-l">Max single scheme</span><span class="ir-v">25% of fund equity</span></div>
+          <div class="info-row"><span class="ir-l">Leverage (scheme level)</span><span class="ir-v">≤ 65% LTV</span></div>
+          <div class="info-row"><span class="ir-l">Total VaR on fund</span><span class="ir-v">≤ 10% equity at risk</span></div>
+        </div>
+        <div class="callout ok" style="flex:1;align-items:flex-start;">
+          <div>Distributions flow quarterly from scheme sales. The fund is structured to return capital and preferred return before carry is realised.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">05 / 08</div>
+</section>
+
+<!-- SLIDE 6: DEAL PROCESS -->
+<section data-screen-label="06 Process">
+  <div class="grid-bg"></div>
+  <div class="glow" style="top:-150px;right:-200px;width:560px;height:560px;opacity:.5;"></div>
+  <div class="pad">
+    <div class="eyebrow">How We Work</div>
+    <div class="slide-title">Investment Process</div>
+    <div class="sec-rule"></div>
+    <div class="process">
+      <div class="proc-step">
+        <div class="proc-dot done">1</div>
+        <div class="proc-label">Sourcing</div>
+        <div class="proc-sub">Agent network &amp; off-market</div>
+      </div>
+      <div class="proc-step">
+        <div class="proc-dot done">2</div>
+        <div class="proc-label">Initial Appraisal</div>
+        <div class="proc-sub">Quick yield check — 48hr</div>
+      </div>
+      <div class="proc-step">
+        <div class="proc-dot done">3</div>
+        <div class="proc-label">Due Diligence</div>
+        <div class="proc-sub">Legal, technical, planning</div>
+      </div>
+      <div class="proc-step">
+        <div class="proc-dot active">4</div>
+        <div class="proc-label">IC Approval</div>
+        <div class="proc-sub">Full appraisal + sensitivity</div>
+      </div>
+      <div class="proc-step">
+        <div class="proc-dot future">5</div>
+        <div class="proc-label">Exchange</div>
+        <div class="proc-sub">Legal completion + facility</div>
+      </div>
+      <div class="proc-step">
+        <div class="proc-dot future">6</div>
+        <div class="proc-label">Build &amp; Sell</div>
+        <div class="proc-sub">Active monitoring &amp; sales</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;">
+      <div class="info-card">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Origination</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.6;">60% off-market via agent and landowner relationships. 40% marketed. Average 4–6 sites reviewed per month — 1 in 12 progresses to IC.</div>
+      </div>
+      <div class="info-card">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Appraisal discipline</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.6;">Every deal is run through Phoenix's proprietary appraisal model. IC pack includes base, optimistic and bear case with sensitivity heatmaps. No exceptions.</div>
+      </div>
+      <div class="info-card">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Asset management</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.6;">Monthly project update decks circulated to LP council. Monitoring surveyor on all debt facilities. Quarterly portfolio valuations.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 08</div>
+</section>
+
+<!-- SLIDE 7: TEAM -->
+<section data-screen-label="07 Team">
+  <div class="grid-bg"></div>
+  <div class="glow" style="bottom:-150px;right:-150px;width:500px;height:500px;opacity:.5;"></div>
+  <div class="pad">
+    <div class="eyebrow">The Team</div>
+    <div class="slide-title">People</div>
+    <div class="sec-rule"></div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="tc-init">JA</div>
+        <div class="tc-name">James Ashford</div>
+        <div class="tc-role">Founder &amp; CEO</div>
+        <div class="tc-exp">20 years in residential development. Formerly partner at Berkeley Homes. Oversaw £400m+ of completions across the South East.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-init" style="color:var(--ok);background:rgba(55,224,176,.1);">SL</div>
+        <div class="tc-name">Sarah Lim</div>
+        <div class="tc-role">Development Director</div>
+        <div class="tc-exp">Leads all site acquisition, planning strategy and appraisal underwriting. Former Head of Land at Crest Nicholson. MRICS.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-init" style="color:var(--amber);background:rgba(255,186,69,.1);">RP</div>
+        <div class="tc-name">Rob Patterson</div>
+        <div class="tc-role">Finance Director</div>
+        <div class="tc-exp">Oversees all debt facilities, LP reporting and fund-level cashflow. Formerly senior associate at Barclays Real Estate. ACA.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-init" style="color:#a78bfa;background:rgba(167,139,250,.1);">MH</div>
+        <div class="tc-name">Mia Hewitt</div>
+        <div class="tc-role">Construction Director</div>
+        <div class="tc-exp">End-to-end delivery across 12 completed schemes. Contractor procurement, programme management and NHBC sign-off. 15 years site experience.</div>
+      </div>
+    </div>
+    <div style="margin-top:28px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+      <div class="info-card" style="padding:14px 16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Combined experience</div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:500;color:var(--ok);">65 years</div>
+      </div>
+      <div class="info-card" style="padding:14px 16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Schemes delivered</div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:500;color:var(--ok);">85+</div>
+      </div>
+      <div class="info-card" style="padding:14px 16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">GDV delivered</div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:500;color:var(--ok);">£650m+</div>
+      </div>
+      <div class="info-card" style="padding:14px 16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Units delivered</div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:500;color:var(--ok);">1,800+</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">07 / 08</div>
+</section>
+
+<!-- SLIDE 8: CTA -->
+<section data-screen-label="08 Contact">
+  <div class="grid-bg"></div>
+  <div class="glow" style="top:-200px;right:-200px;width:600px;height:600px;"></div>
+  <div class="glow" style="bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(55,224,176,.14),transparent 62%)"></div>
+  <div class="pad" style="justify-content:center;align-items:center;text-align:center;gap:0;">
+    <div style="font-family:var(--mono);font-size:14px;letter-spacing:5px;text-transform:uppercase;color:var(--cyan);margin-bottom:24px;">Next Steps</div>
+    <div style="font-family:var(--serif);font-size:80px;font-weight:500;line-height:1.0;color:#fff;margin-bottom:16px;">Let's talk.</div>
+    <div style="font-size:20px;color:#9fb2c4;max-width:600px;margin:0 auto 48px;line-height:1.55;">We have capacity for 2–3 further LP commitments in Fund I. Minimum commitment £250k. Interested LPs should contact us directly to receive the full Information Memorandum.</div>
+    <div style="display:flex;gap:40px;justify-content:center;margin-bottom:48px;">
+      <div style="text-align:center;"><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;margin-bottom:6px;">Email</div><div style="font-size:18px;color:var(--cyan);">invest@phoenixdev.co.uk</div></div>
+      <div style="text-align:center;"><div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#6f8497;text-transform:uppercase;margin-bottom:6px;">Phone</div><div style="font-size:18px;color:#dce8f2;">+44 20 7000 0000</div></div>
+    </div>
+    <div style="max-width:680px;font-size:12px;color:#4a5a6a;line-height:1.6;">This presentation has been prepared for informational purposes only and does not constitute an offer or solicitation to invest. Past performance is not a reliable indicator of future results. All investment involves risk. Phoenix Development is authorised and regulated by the FCA.</div>
+  </div>
+  <div class="slide-num">08 / 08</div>
+</section>
+
+</deck-stage>
+<script src="deck-stage.js"></script>
+</body>
+</html>
