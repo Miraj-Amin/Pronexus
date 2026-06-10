@@ -108,6 +108,7 @@ function Workspace({ session }) {
   const [showVersion, setShowVersion] = React.useState(false);
   const [showCompare, setShowCompare] = React.useState(false);
   const [showGenerate, setShowGenerate] = React.useState(false);
+  const [showMenu, setShowMenu] = React.useState(false);
   const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
