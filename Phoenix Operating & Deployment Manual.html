@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phoenix — Operating &amp; Deployment Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#13243a; --ink-2:#33445c; --muted:#647488; --faint:#8a98a8;
+  --paper:#ffffff; --wash:#f5f7fa; --line:#e2e8f0; --line-2:#eef2f6;
+  --navy:#0d1f33; --navy-2:#14304d;
+  --accent:#0e9fc4; --accent-deep:#0b7f9e; --accent-wash:#e8f6fb;
+  --investor:#6d4bd6; --bank:#0e9fc4; --owner:#c79014; --adj:#cf5a82;
+  --red:#c0392b; --red-wash:#fbeceb; --amber:#b97e0a; --amber-wash:#fdf4e3; --ok:#1f8a5b; --ok-wash:#e8f6ef;
+  --mono:'IBM Plex Mono',ui-monospace,monospace; --sans:'IBM Plex Sans',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif;
+  --page-w:830px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--wash);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+
+/* ---------- screen layout: sticky nav + page column ---------- */
+.layout{display:grid;grid-template-columns:264px 1fr;gap:0;max-width:1240px;margin:0 auto;}
+.sidenav{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:30px 22px 40px;border-right:1px solid var(--line);background:var(--paper);}
+.sidenav .brandmark{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sidenav .brandmark .wm{font-family:var(--mono);font-weight:600;letter-spacing:1.5px;font-size:14px;color:var(--ink);}
+.sidenav .doclabel{font-size:11px;color:var(--faint);letter-spacing:.4px;margin:0 0 22px 34px;}
+.sidenav nav{display:flex;flex-direction:column;gap:1px;}
+.sidenav nav a{display:flex;gap:9px;padding:5px 9px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-size:12.7px;line-height:1.4;transition:background .12s,color .12s;}
+.sidenav nav a:hover{background:var(--wash);color:var(--ink);}
+.sidenav nav a.sub{padding-left:30px;font-size:12px;color:var(--muted);}
+.sidenav nav a .n{font-family:var(--mono);font-size:11px;color:var(--accent-deep);min-width:20px;font-weight:500;}
+.sidenav nav a.sub .n{color:var(--faint);min-width:26px;}
+.printbtn{margin-top:24px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink-2);font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:all .14s;}
+.printbtn:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-wash);}
+
+.column{padding:40px 0 80px;display:flex;flex-direction:column;align-items:center;gap:30px;}
+.page{width:var(--page-w);max-width:calc(100vw - 300px);background:var(--paper);border:1px solid var(--line);border-radius:3px;box-shadow:0 1px 2px rgba(20,40,70,.04),0 14px 36px rgba(20,40,70,.06);padding:64px 72px;}
+
+/* ---------- cover ---------- */
+.cover{background:var(--navy);color:#eaf2f8;border:none;padding:0;overflow:hidden;position:relative;display:flex;flex-direction:column;min-height:1000px;}
+.cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:46px 46px;}
+.cover-glow{position:absolute;top:-160px;right:-160px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,255,.20),transparent 62%);}
+.cover-inner{position:relative;padding:70px 72px;display:flex;flex-direction:column;height:100%;flex:1;}
+.cover-top{display:flex;align-items:center;gap:13px;}
+.cover-top .wm{font-family:var(--mono);font-weight:600;letter-spacing:3px;font-size:18px;}
+.cover-top .tagchip{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:#8fd9ee;border:1px solid rgba(143,217,238,.4);padding:4px 11px;border-radius:2px;}
+.cover-mid{margin-top:auto;}
+.cover-kicker{font-family:var(--mono);font-size:13px;letter-spacing:4px;color:#5fc6e6;text-transform:uppercase;margin-bottom:22px;}
+.cover h1{font-family:var(--serif);font-weight:500;font-size:62px;line-height:1.02;letter-spacing:-.5px;margin:0 0 18px;color:#fff;}
+.cover h1 em{font-style:italic;color:#7ad4f0;}
+.cover .sub{font-size:18px;color:#aebfcf;max-width:520px;line-height:1.5;}
+.cover-foot{margin-top:64px;padding-top:26px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:48px;}
+.cover-foot .f{display:flex;flex-direction:column;gap:4px;}
+.cover-foot .f .l{font-family:var(--mono);font-size:10px;letter-spacing:1.4px;color:#6f8497;text-transform:uppercase;}
+.cover-foot .f .v{font-size:14px;color:#dce8f2;}
+
+/* ---------- typography ---------- */
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent-deep);margin-bottom:14px;}
+h2.sec{font-family:var(--serif);font-weight:500;font-size:34px;letter-spacing:-.4px;line-height:1.1;margin:0 0 8px;color:var(--ink);}
+.sec-rule{height:2px;background:linear-gradient(90deg,var(--accent),transparent);margin:18px 0 26px;border-radius:2px;}
+h3.sub{font-size:18px;font-weight:600;letter-spacing:-.1px;color:var(--ink);margin:34px 0 6px;display:flex;align-items:baseline;gap:11px;}
+h3.sub .num{font-family:var(--mono);font-size:13px;color:var(--accent-deep);font-weight:500;}
+h4.subsub{font-size:14.5px;font-weight:600;color:var(--ink);margin:22px 0 4px;}
+p{margin:9px 0;color:var(--ink-2);}
+p.lead{font-size:16.5px;color:var(--ink-2);line-height:1.6;}
+strong{color:var(--ink);font-weight:600;}
+a.inline{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--accent-wash);}
+ul,ol{margin:10px 0;padding-left:22px;color:var(--ink-2);}
+li{margin:5px 0;padding-left:4px;}
+li::marker{color:var(--accent);}
+.mono{font-family:var(--mono);font-size:.92em;}
+code{font-family:var(--mono);font-size:12.5px;background:var(--wash);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--navy-2);}
+
+/* ---------- table of contents ---------- */
+.toc-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:8px;}
+.toc-head h2{font-family:var(--serif);font-weight:500;font-size:30px;margin:0;}
+.toc-head .meta{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--muted);}
+.toc{display:flex;flex-direction:column;}
+.toc a{display:flex;align-items:baseline;gap:14px;text-decoration:none;color:var(--ink-2);padding:9px 0;border-bottom:1px solid var(--line-2);transition:color .12s;}
+.toc a:hover{color:var(--accent-deep);}
+.toc a .tn{font-family:var(--mono);font-size:13px;color:var(--accent-deep);min-width:34px;font-weight:500;}
+.toc a .tt{font-size:15px;font-weight:500;color:var(--ink);}
+.toc a .tnav{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-4px);}
+.toc a .tp{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.toc a.lvl2{padding:5px 0 5px 0;border-bottom:none;}
+.toc a.lvl2 .tn{min-width:46px;font-size:12px;color:var(--faint);padding-left:14px;}
+.toc a.lvl2 .tt{font-size:13.5px;font-weight:400;color:var(--ink-2);}
+
+/* ---------- components inside body ---------- */
+.callout{display:flex;gap:14px;padding:16px 18px;border-radius:8px;margin:18px 0;border:1px solid var(--line);background:var(--wash);}
+.callout .ic{flex:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14px;}
+.callout .ct{font-size:13.5px;line-height:1.55;color:var(--ink-2);}
+.callout .ct b{color:var(--ink);}
+.callout.note{background:var(--accent-wash);border-color:#c4e8f2;}
+.callout.note .ic{background:var(--accent);color:#fff;}
+.callout.warn{background:var(--amber-wash);border-color:#f1dca8;}
+.callout.warn .ic{background:var(--amber);color:#fff;}
+.callout.danger{background:var(--red-wash);border-color:#f1c9c4;}
+.callout.danger .ic{background:var(--red);color:#fff;}
+.callout.tip{background:var(--ok-wash);border-color:#bfe6d2;}
+.callout.tip .ic{background:var(--ok);color:#fff;}
+
+.codeblock{background:var(--navy);border-radius:8px;padding:18px 20px;margin:16px 0;overflow-x:auto;}
+.codeblock pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.7;color:#cfe6f2;white-space:pre;}
+.codeblock .cm{color:#6f93a8;}
+.codeblock .kw{color:#7ad4f0;}
+.codeblock .st{color:#bfe3a8;}
+
+.steps{counter-reset:st;margin:18px 0;display:flex;flex-direction:column;gap:0;}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line-2);}
+.step:last-child{border-bottom:none;}
+.step .sn{counter-increment:st;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-family:var(--mono);font-size:13px;font-weight:600;display:grid;place-items:center;}
+.step .sn::before{content:counter(st);}
+.step .sb{padding-top:2px;}
+.step .sb b{color:var(--ink);}
+
+.kvtable{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;}
+.kvtable th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 12px;border-bottom:2px solid var(--line);}
+.kvtable td{padding:9px 12px;border-bottom:1px solid var(--line-2);color:var(--ink-2);vertical-align:top;}
+.kvtable td:first-child{font-weight:500;color:var(--ink);white-space:nowrap;}
+.kvtable .mono{color:var(--navy-2);}
+.kvtable tr:hover td{background:var(--wash);}
+
+.ragtag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;letter-spacing:.3px;}
+.ragtag.red{background:var(--red-wash);color:var(--red);}
+.ragtag.amber{background:var(--amber-wash);color:var(--amber);}
+.ragtag.ok{background:var(--ok-wash);color:var(--ok);}
+.ragtag::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.vbadge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
+.vbadge::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
+.vbadge.investor{color:var(--investor);background:color-mix(in srgb,var(--investor) 11%,#fff);border:1px solid color-mix(in srgb,var(--investor) 30%,#fff);}
+.vbadge.bank{color:var(--bank);background:color-mix(in srgb,var(--bank) 11%,#fff);border:1px solid color-mix(in srgb,var(--bank) 30%,#fff);}
+.vbadge.owner{color:var(--owner);background:color-mix(in srgb,var(--owner) 12%,#fff);border:1px solid color-mix(in srgb,var(--owner) 32%,#fff);}
+.vbadge.adj{color:var(--adj);background:color-mix(in srgb,var(--adj) 11%,#fff);border:1px solid color-mix(in srgb,var(--adj) 30%,#fff);}
+
+.vcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0;}
+.vcard{border:1px solid var(--line);border-radius:9px;padding:16px 18px;background:var(--paper);position:relative;overflow:hidden;}
+.vcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c);}
+.vcard.investor{--c:var(--investor);}.vcard.bank{--c:var(--bank);}.vcard.owner{--c:var(--owner);}.vcard.adj{--c:var(--adj);}
+.vcard h5{margin:10px 0 6px;font-size:15px;color:var(--ink);}
+.vcard p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+.vcard .leads{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--ink-2);line-height:1.6;}
+.vcard .leads span{color:var(--c);font-weight:600;}
+
+.flow{display:flex;align-items:stretch;gap:0;margin:20px 0;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+.flow .fstep{flex:1;padding:15px 14px;border-right:1px solid var(--line);background:var(--paper);}
+.flow .fstep:last-child{border-right:none;}
+.flow .fstep .fn{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--accent-deep);text-transform:uppercase;margin-bottom:6px;}
+.flow .fstep .ft{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.flow .fstep .fd{font-size:11.5px;color:var(--muted);line-height:1.45;}
+
+.endmark{text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--faint);margin-top:40px;padding-top:24px;border-top:1px solid var(--line);}
+
+/* glossary */
+.gloss{display:flex;flex-direction:column;gap:0;margin-top:16px;}
+.gloss .g{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:12px 0;border-bottom:1px solid var(--line-2);}
+.gloss .g dt{font-weight:600;color:var(--ink);font-size:14px;}
+.gloss .g dd{margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.55;}
+
+/* ---------- print ---------- */
+@media print{
+  @page{size:A4;margin:18mm 16mm 20mm;}
+  body{background:#fff;font-size:10.5pt;}
+  .sidenav,.printbtn{display:none!important;}
+  .layout{display:block;max-width:none;}
+  .column{display:block;padding:0;}
+  .page{width:auto;max-width:none;border:none;box-shadow:none;border-radius:0;padding:0;margin:0;break-before:page;page-break-before:always;}
+  .page.cover{break-before:avoid;page-break-before:avoid;min-height:auto;height:248mm;}
+  .page:first-child{break-before:avoid;page-break-before:always;}
+  h2.sec{font-size:24pt;}
+  .cover,.cover *,.callout,.callout *,.codeblock,.codeblock *,.vbadge,.ragtag,.vcard::before,.sec-rule,.step .sn{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .callout,.vcard,.flow,.kvtable,.codeblock,.step,.toc a{break-inside:avoid;page-break-inside:avoid;}
+  h2.sec,h3.sub{break-after:avoid;page-break-after:avoid;}
+}
+@media (max-width:1080px){
+  .layout{grid-template-columns:1fr;}
+  .sidenav{display:none;}
+  .page{max-width:calc(100vw - 36px);padding:40px 28px;}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidenav">
+    <div class="brandmark">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.3" fill="#0e9fc4"/><circle cx="5" cy="17" r="2.3" fill="#13243a"/><circle cx="19" cy="17" r="2.3" fill="#13243a"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#9fb2c4" stroke-width="1.3"/></svg>
+      <span class="wm">PHOENIX</span>
+    </div>
+    <div class="doclabel">Operating &amp; Deployment Manual</div>
+    <nav>
+      <a href="#s1"><span class="n">1</span><span>Introduction</span></a>
+      <a href="#s2"><span class="n">2</span><span>Core concepts</span></a>
+      <a href="#s3"><span class="n">3</span><span>Getting started</span></a>
+      <a class="sub" href="#s3-menu"><span class="n">3.4</span><span>The Menu</span></a>
+      <a href="#s4"><span class="n">4</span><span>Building an appraisal</span></a>
+      <a href="#s5"><span class="n">5</span><span>Reading the dashboard</span></a>
+      <a href="#s6"><span class="n">6</span><span>The cashflow</span></a>
+      <a href="#s7"><span class="n">7</span><span>Versions</span></a>
+      <a class="sub" href="#s7-compare"><span class="n">7.5</span><span>Comparing versions</span></a>
+      <a href="#s8"><span class="n">8</span><span>Presentation mode</span></a>
+      <a href="#s9"><span class="n">9</span><span>Collaboration &amp; review</span></a>
+      <a href="#s10"><span class="n">10</span><span>Exporting</span></a>
+      <a class="sub" href="#s10-gendocs"><span class="n">10.2</span><span>Generate documents</span></a>
+      <a href="#s10b"><span class="n">11</span><span>Tools suite</span></a>
+      <a href="#s11"><span class="n">12</span><span>Deployment &amp; admin</span></a>
+      <a href="#s12"><span class="n">13</span><span>Troubleshooting</span></a>
+      <a href="#s13"><span class="n">14</span><span>Glossary</span></a>
+      <a href="#s14"><span class="n">A</span><span>Appendix: rules &amp; thresholds</span></a>
+    </nav>
+    <button class="printbtn" onclick="window.print()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6V2h8v4M4 12H3a1 1 0 01-1-1V8a1 1 0 011-1h10a1 1 0 011 1v3a1 1 0 01-1 1h-1M4 10h8v4H4z" stroke="currentColor" stroke-width="1.2"/></svg>
+      Print / Save as PDF
+    </button>
+  </aside>
+
+  <main class="column">
+
+    <!-- ============ COVER ============ -->
+    <section class="page cover">
+      <div class="cover-grid"></div>
+      <div class="cover-glow"></div>
+      <div class="cover-inner">
+        <div class="cover-top">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" fill="#2dd4ff"/><circle cx="5" cy="17" r="2.4" fill="#9fb2c4"/><circle cx="19" cy="17" r="2.4" fill="#9fb2c4"/><path d="M12 7L5.5 15.2M12 7l6.5 8.2M6.8 17h10.4" stroke="#56768f" stroke-width="1.3"/></svg>
+          <span class="wm">PHOENIX</span>
+          <span class="tagchip">DEVELOPMENT APPRAISAL</span>
+        </div>
+        <div class="cover-mid">
+          <div class="cover-kicker">Operating &amp; Deployment Manual</div>
+          <h1>The appraisal tool,<br/><em>end to end.</em></h1>
+          <div class="sub">How to build a scheme appraisal, read its numbers, prepare investor, bank and vendor versions, and deploy the tool for your team.</div>
+        </div>
+        <div class="cover-foot">
+          <div class="f"><span class="l">Document</span><span class="v">User &amp; Administrator Guide</span></div>
+          <div class="f"><span class="l">Edition</span><span class="v">Rev. 2.0 — June 2026</span></div>
+          <div class="f"><span class="l">Applies to</span><span class="v">Phoenix web application</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TOC ============ -->
+    <section class="page" id="toc">
+      <div class="toc-head"><h2>Contents</h2><span class="meta">REV 2.0</span></div>
+      <div class="toc">
+        <a href="#s1"><span class="tn">1</span><span class="tt">Introduction</span><span class="tnav"></span><span class="tp">03</span></a>
+        <a href="#s2"><span class="tn">2</span><span class="tt">Core concepts</span><span class="tnav"></span><span class="tp">04</span></a>
+        <a class="lvl2" href="#s2"><span class="tn">2.1</span><span class="tt">The appraisal model</span></a>
+        <a class="lvl2" href="#s2"><span class="tn">2.2</span><span class="tt">The 14-category cost taxonomy</span></a>
+        <a class="lvl2" href="#s2"><span class="tn">2.3</span><span class="tt">Versions &amp; the red-flag system</span></a>
+        <a href="#s3"><span class="tn">3</span><span class="tt">Getting started</span><span class="tnav"></span><span class="tp">06</span></a>
+        <a class="lvl2" href="#s3-menu"><span class="tn">3.4</span><span class="tt">The Menu — project navigation</span></a>
+        <a href="#s4"><span class="tn">4</span><span class="tt">Building an appraisal — the Input screen</span><span class="tnav"></span><span class="tp">07</span></a>
+        <a href="#s5"><span class="tn">5</span><span class="tt">Reading the results — the Dashboard</span><span class="tnav"></span><span class="tp">10</span></a>
+        <a href="#s6"><span class="tn">6</span><span class="tt">The cashflow</span><span class="tnav"></span><span class="tp">12</span></a>
+        <a href="#s7"><span class="tn">7</span><span class="tt">Versions — investor, bank, owner, adjusted</span><span class="tnav"></span><span class="tp">13</span></a>
+        <a class="lvl2" href="#s7-compare"><span class="tn">7.5</span><span class="tt">Comparing versions side by side</span></a>
+        <a href="#s8"><span class="tn">8</span><span class="tt">Presentation mode</span><span class="tnav"></span><span class="tp">15</span></a>
+        <a href="#s9"><span class="tn">9</span><span class="tt">Collaboration &amp; review</span><span class="tnav"></span><span class="tp">17</span></a>
+        <a href="#s10"><span class="tn">10</span><span class="tt">Exporting</span><span class="tnav"></span><span class="tp">18</span></a>
+        <a class="lvl2" href="#s10"><span class="tn">10.1</span><span class="tt">PDF appraisal pack</span></a>
+        <a class="lvl2" href="#s10-gendocs"><span class="tn">10.2</span><span class="tt">Generate documents from live data</span></a>
+        <a href="#s10b"><span class="tn">11</span><span class="tt">Tools suite — the 10 standalone tools</span><span class="tnav"></span><span class="tp">19</span></a>
+        <a href="#s11"><span class="tn">12</span><span class="tt">Deployment &amp; administration</span><span class="tnav"></span><span class="tp">19</span></a>
+        <a class="lvl2" href="#s11"><span class="tn">11.1</span><span class="tt">How the tool is built</span></a>
+        <a class="lvl2" href="#s11"><span class="tn">11.2</span><span class="tt">Database setup (Supabase)</span></a>
+        <a class="lvl2" href="#s11"><span class="tn">11.3</span><span class="tt">Publishing the site</span></a>
+        <a class="lvl2" href="#s11"><span class="tn">11.4</span><span class="tt">Authentication &amp; security</span></a>
+        <a href="#s12"><span class="tn">13</span><span class="tt">Troubleshooting</span><span class="tnav"></span><span class="tp">23</span></a>
+        <a href="#s13"><span class="tn">14</span><span class="tt">Glossary</span><span class="tnav"></span><span class="tp">23</span></a>
+        <a href="#s14"><span class="tn">A</span><span class="tt">Appendix — KPI thresholds &amp; red-flag rules</span><span class="tnav"></span><span class="tp">24</span></a>
+      </div>
+    </section>
+
+    <!-- ============ 1. INTRODUCTION ============ -->
+    <section class="page" id="s1">
+      <div class="eyebrow">Section 1</div>
+      <h2 class="sec">Introduction</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">Phoenix is a development-appraisal tool for residential schemes. It replaces the appraisal spreadsheet with a structured, multi-user web application: you enter a scheme once, and the tool computes the full cost stack, cashflow, peak funding and return metrics, validates them against lending rules, and presents them tailored to whoever is reading.</p>
+
+      <h3 class="sub"><span class="num">1.1</span> What it does</h3>
+      <ul>
+        <li><strong>Models the whole scheme</strong> — land, construction, professional fees, finance and sales across a canonical 14-category cost taxonomy.</li>
+        <li><strong>Runs a monthly cashflow</strong> that compounds interest on the outstanding balance and finds your peak funding requirement.</li>
+        <li><strong>Validates automatically</strong> against a fixed set of red-flag rules (margin, gearing, funding reconciliation, schedule consistency).</li>
+        <li><strong>Produces audience versions</strong> — one scheme can be presented to an investor, a bank/valuer or the current owner, each emphasising different numbers.</li>
+        <li><strong>Keeps a shared, audited record</strong> — every figure change is logged, snapshots can be saved and restored, and the team can comment in place.</li>
+      </ul>
+
+      <h3 class="sub"><span class="num">1.2</span> Who it is for</h3>
+      <p>The tool is built for a development team running several schemes at once: the appraiser building the numbers, the principals reviewing margin and risk, and anyone preparing the pack that goes to a funder or vendor. It is a <strong>shared workspace</strong> — everyone who signs in sees and edits the same schemes, live.</p>
+
+      <h3 class="sub"><span class="num">1.3</span> How this manual is organised</h3>
+      <p>Sections 2&ndash;10 are the <strong>user guide</strong>: how to build, read, version, present and review an appraisal. Section 11 onward is the <strong>administrator guide</strong>: how the tool is built, how to connect its database, and how to publish it for your team. The appendix lists every KPI threshold and red-flag rule the engine applies.</p>
+
+      <div class="callout note"><div class="ic">i</div><div class="ct"><b>Worked example throughout.</b> Screens in this manual reference <b>Walnut Marches</b>, the demo scheme that ships with the tool — 29 units at East Grinstead, roughly &pound;14.5m GDV. Two further demo schemes, Cedar Rise and Quarry Fields, are also seeded so the Portfolio is populated on first run.</div></div>
+    </section>
+
+    <!-- ============ 2. CORE CONCEPTS ============ -->
+    <section class="page" id="s2">
+      <div class="eyebrow">Section 2</div>
+      <h2 class="sec">Core concepts</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">Five ideas underpin everything in the tool. Understanding them makes every screen self-explanatory.</p>
+
+      <h3 class="sub"><span class="num">2.1</span> The appraisal model</h3>
+      <p>Each scheme is a single object that holds its site details, assumptions, income (sales) and the full cost stack. Every figure on every screen is <strong>derived</strong> from that object — change an input and the cost totals, cashflow, peak funding, ratios, flags and sensitivity grids all recompute instantly. Nothing is stored twice.</p>
+      <div class="flow">
+        <div class="fstep"><div class="fn">Income</div><div class="ft">GDV</div><div class="fd">Net area &times; &pound;psf, per phase</div></div>
+        <div class="fstep"><div class="fn">Cost stack</div><div class="ft">Total cost</div><div class="fd">14 categories resolved</div></div>
+        <div class="fstep"><div class="fn">Cashflow</div><div class="ft">Peak funding</div><div class="fd">Monthly, interest-compounded</div></div>
+        <div class="fstep"><div class="fn">Result</div><div class="ft">Profit &amp; ratios</div><div class="fd">Margin, gearing, ROE</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">2.2</span> The 14-category cost taxonomy</h3>
+      <p>Costs are always organised into the same fourteen categories, in the same order, across the input, dashboard and cashflow. This is the canonical structure — it never changes, so figures are comparable between schemes and versions.</p>
+      <table class="kvtable">
+        <thead><tr><th>#</th><th>Category</th><th>#</th><th>Category</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td>Land / Purchase Price</td><td class="mono">8</td><td>Developers' Consultants / Warranties</td></tr>
+          <tr><td class="mono">2</td><td>Acquisition-Related</td><td class="mono">9</td><td>Development Management</td></tr>
+          <tr><td class="mono">3</td><td>Local Authority</td><td class="mono">10</td><td>Contingencies</td></tr>
+          <tr><td class="mono">4</td><td>Developers' Professional</td><td class="mono">11</td><td>Product Spec &amp; Marketing</td></tr>
+          <tr><td class="mono">5</td><td>Demolition &amp; Utilities</td><td class="mono">12</td><td>Cost of Sales</td></tr>
+          <tr><td class="mono">6</td><td>Net Construction</td><td class="mono">13</td><td>After Sales</td></tr>
+          <tr><td class="mono">7</td><td>Contractors' Professional Fees</td><td class="mono">14</td><td>Finance</td></tr>
+        </tbody>
+      </table>
+      <p>Within each category, individual cost lines are resolved on a <strong>basis</strong> — a fixed amount, a percentage of construction, GDV, land or loan, a per-unit rate, an SDLT calculation, or the computed interest figure from the cashflow.</p>
+
+      <h3 class="sub"><span class="num">2.3</span> Versions &amp; the red-flag system</h3>
+      <p>A scheme can have <strong>versions</strong> — linked variants for different audiences or assumptions (covered fully in Section 7). And every scheme is continuously checked against a fixed <strong>red-flag rule set</strong> — margin floors, gearing caps, funding reconciliation and schedule consistency — surfaced as a coloured validation bar wherever you are working. The full rule list is in the Appendix.</p>
+      <div class="callout tip"><div class="ic">✓</div><div class="ct"><b>Everything saves automatically.</b> Edits are written to the shared database as you type — optimistically, so the screen updates instantly and the save follows. There is no save button.</div></div>
+    </section>
+
+    <!-- ============ 3. GETTING STARTED ============ -->
+    <section class="page" id="s3">
+      <div class="eyebrow">Section 3</div>
+      <h2 class="sec">Getting started</h2>
+      <div class="sec-rule"></div>
+
+      <h3 class="sub"><span class="num">3.1</span> Signing in</h3>
+      <p>Open the application URL. You will see a sign-in screen. The workspace uses email sign-in with open sign-up and no email-confirmation step, so creating an account logs you straight in.</p>
+      <div class="steps">
+        <div class="step"><div class="sn"></div><div class="sb"><b>Enter your email and a password.</b> If you are new, this creates your account; if you have one, it signs you in.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>You land on the Portfolio.</b> Everyone on the team shares the same schemes — what you see, your colleagues see.</div></div>
+      </div>
+      <div class="callout note"><div class="ic">i</div><div class="ct">The <b>first</b> person to open an empty workspace auto-seeds the three demo schemes (Walnut Marches, Cedar Rise, Quarry Fields). This happens once; the workspace never re-seeds.</div></div>
+
+      <h3 class="sub"><span class="num">3.2</span> The Portfolio</h3>
+      <p>The Portfolio is your home screen. At the top, a rollup bar summarises the whole book across all base schemes (linked versions are intentionally excluded so figures are not double-counted):</p>
+      <table class="kvtable">
+        <thead><tr><th>Rollup figure</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td>Total GDV</td><td>Sum of gross development value across all base schemes</td></tr>
+          <tr><td>Aggregate Profit</td><td>Combined project profit &mdash; a quick read on the book&rsquo;s economics</td></tr>
+          <tr><td>Peak Capital at Risk</td><td>Sum of peak funding requirements &mdash; the maximum debt exposure across the portfolio</td></tr>
+          <tr><td>Risk Profile</td><td>Proportional bar split by Low / Elevated / High, with a count of schemes in each band</td></tr>
+        </tbody>
+      </table>
+      <p>Below the rollup, each scheme is a card showing its headline KPIs and a risk gauge score (0&ndash;100). Each card also carries:</p>
+      <ul>
+        <li><strong>Risk traffic-light</strong> &mdash; <span class="ragtag ok">Low</span> <span class="ragtag amber">Elevated</span> <span class="ragtag red">High</span> rolls the scheme&rsquo;s red-flags and margin into one indicator.</li>
+        <li><strong>Status chip</strong> &mdash; Draft / In Appraisal / Approved, set in the Input &rsquo;Site details&rsquo; section.</li>
+        <li><strong>Linked versions</strong> &mdash; if a scheme has versions, a collapsible row shows each one with its type badge, label and profit figure. Click any row to open that version directly.</li>
+        <li><strong>Open, duplicate or delete</strong> from the card actions. Deleting a base scheme removes it for the whole team &mdash; confirm carefully.</li>
+      </ul>
+
+      <h3 class="sub"><span class="num">3.3</span> Creating a scheme</h3>
+      <p>Click <strong>New Project</strong>, give it a name, and the tool clones a locked master template — the full canonical cost scaffold at &pound;0, with default percentages and rates already in place. You start structured but empty, and fill in the amounts.</p>
+      <div class="callout tip"><div class="ic">✓</div><div class="ct"><b>Why a template?</b> Cloning the master means every new scheme carries the same cost lines, bases and default rates — so appraisals stay consistent and comparable across your whole portfolio.</div></div>
+
+      <h3 class="sub" id="s3-menu"><span class="num">3.4</span> The Menu &mdash; project navigation</h3>
+      <p>Every open project has a <strong>Menu button</strong> (&#9776;) in the top-right of the topbar. Clicking it opens a slide-out panel from the right edge, giving access to all major functions without leaving the current screen.</p>
+      <table class="kvtable">
+        <thead><tr><th>Item</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Version switcher</td><td>Shows all linked versions of the scheme — switch, create, or compare without going back to the portfolio</td></tr>
+          <tr><td>Review</td><td>Opens the History / Activity / Comments drawer (same as the old Review button). Badge shows open comment count.</td></tr>
+          <tr><td>PDF Pack</td><td>Opens the print-ready lender appraisal pack</td></tr>
+          <tr><td>Generate &mdash; Investor Pitch Deck</td><td>Exports project data and opens the Investor Pitch Deck tool in a new tab, pre-populated</td></tr>
+          <tr><td>Generate &mdash; Client Report</td><td>Opens the Client Report tool pre-populated with the live scheme</td></tr>
+          <tr><td>Generate &mdash; Deal Memo</td><td>Opens the Deal Memo tool pre-populated with the live scheme</td></tr>
+          <tr><td>Generate &mdash; Project Update Deck</td><td>Opens the Project Update Deck pre-populated with the live scheme</td></tr>
+          <tr><td>&larr; Phoenix Hub</td><td>Returns to the Hub landing page</td></tr>
+          <tr><td>Sign out</td><td>Signs the current user out</td></tr>
+        </tbody>
+      </table>
+      <p>Clicking anywhere on the backdrop (outside the panel) closes the menu. The scheme reference is shown inside the menu for quick confirmation you are on the right project.</p>
+      <div class="callout note"><div class="ic">i</div><div class="ct"><b>Badge on the Menu button.</b> If there are open comments on the active scheme, the Menu button shows a count badge — so outstanding review items are visible even when the drawer is closed.</div></div>
+    </section>
+
+    <!-- ============ 4. INPUT ============ -->
+    <section class="page" id="s4">
+      <div class="eyebrow">Section 4</div>
+      <h2 class="sec">Building an appraisal</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">The Input screen is where a scheme is built. It is organised into collapsible sections that follow the canonical order. Each section shows its running subtotal in the header.</p>
+
+      <h3 class="sub"><span class="num">4.1</span> Locking sections</h3>
+      <p>Every section has a <strong>lock</strong>. Sections are locked by default, which makes their fields read-only — this prevents accidental edits to figures that are already signed off. Click the lock to switch a section to <em>Editing</em>; click again to re-lock. The lock state is remembered per section on your device.</p>
+
+      <h3 class="sub"><span class="num">4.2</span> Site details</h3>
+      <p>The scheme's identity: name, address, borough, planning reference, client reference and main contact, plus the commercial frame — <strong>asking price</strong>, <strong>offer price</strong>, start date, project length and construction period (in months). The offer price feeds the land cost and SDLT calculations.</p>
+
+      <h3 class="sub"><span class="num">4.3</span> Assumptions</h3>
+      <p>The scheme-wide rates the engine applies:</p>
+      <table class="kvtable">
+        <thead><tr><th>Assumption</th><th>What it drives</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td>VAT (new-build / conversion / refurb)</td><td>VAT added to construction by type</td><td class="mono">0% / 5% / 20%</td></tr>
+          <tr><td>Gross area allowance</td><td>Uplift from net to gross floor area for build cost</td><td class="mono">25%</td></tr>
+          <tr><td>Loan to GDV</td><td>Sizes the gross development facility</td><td class="mono">65%</td></tr>
+          <tr><td>Base rate + margin</td><td>The all-in finance rate on drawn debt</td><td class="mono">3.75% + 5.25%</td></tr>
+          <tr><td>Equity</td><td>Day-one cash committed before debt</td><td class="mono">scheme-set</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub"><span class="num">4.4</span> The cost stack</h3>
+      <p>The heart of the appraisal. Each of the fourteen categories lists its cost lines. For every line you control whether it is <strong>included</strong>, its <strong>amount or rate</strong>, and the <strong>months</strong> over which it is spread. Lines marked as information-only contribute structure without a figure until you fill them.</p>
+      <p>You rarely type a total — you set the <em>basis</em> and the engine resolves the pound figure. A construction line is rate &times; gross area; an agent fee is a percentage of phase GDV; bank charges are a percentage of the loan; SDLT is computed from the offer price through the stamp-duty matrix; and interest is computed by the cashflow and fed back in.</p>
+      <div class="callout note"><div class="ic">i</div><div class="ct"><b>Finance is circular by design.</b> Interest depends on the cashflow, which depends on every other cost — so the engine runs the cashflow first, then injects the resulting interest into the Finance category. You never enter interest manually.</div></div>
+
+      <h3 class="sub"><span class="num">4.5</span> The Sales Programme</h3>
+      <p>Income is set per phase: <strong>units</strong>, <strong>net saleable area</strong> (sq ft), <strong>sale &pound;psf</strong> and <strong>build rate &pound;psf</strong>, plus the <strong>sale-start and sale-end months</strong>. GDV is net area &times; &pound;psf; the sale window tells the cashflow when revenue arrives. A phase with value but no sale months set will raise a flag, because its income cannot be placed on the cashflow.</p>
+
+      <h3 class="sub"><span class="num">4.6</span> Schedule of units &amp; comparables</h3>
+      <p>The <strong>schedule of units</strong> lists individual plots (type, beds, area, price). The engine checks the schedule's unit count and total value against the phase figures — a mismatch is a red-flag, catching the classic spreadsheet error of a stale unit schedule. <strong>Comparables</strong> record evidenced local sales (address, price, area, date) that justify your &pound;psf, and appear in the dashboard and the vendor presentation.</p>
+    </section>
+
+    <!-- ============ 5. DASHBOARD ============ -->
+    <section class="page" id="s5">
+      <div class="eyebrow">Section 5</div>
+      <h2 class="sec">Reading the dashboard</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">The Dashboard is the read-out of the model. It leads with KPI cards, then breaks down cost, funding, cashflow and sensitivity. A red-flag bar runs across the top wherever rules are breached.</p>
+
+      <h3 class="sub"><span class="num">5.1</span> KPI cards &amp; traffic lights</h3>
+      <p>The headline metrics, each coloured by how it scores against its target:</p>
+      <table class="kvtable">
+        <thead><tr><th>Metric</th><th>Meaning</th><th>Healthy</th></tr></thead>
+        <tbody>
+          <tr><td>GDV</td><td>Gross development value (all sales)</td><td class="mono">—</td></tr>
+          <tr><td>Total cost</td><td>Every category including finance</td><td class="mono">—</td></tr>
+          <tr><td>Profit</td><td>GDV minus total cost</td><td><span class="ragtag ok">positive</span></td></tr>
+          <tr><td>Profit % GDV</td><td>Margin on value</td><td><span class="ragtag ok">&ge; 20%</span></td></tr>
+          <tr><td>Profit excl. finance</td><td>Lender's margin measure</td><td><span class="ragtag ok">&ge; 30%</span></td></tr>
+          <tr><td>Peak funding</td><td>Maximum debt exposure &amp; the month it occurs</td><td class="mono">—</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub"><span class="num">5.2</span> Funding waterfall</h3>
+      <p>The sources-and-uses reconciliation: total cost, less peak funding, cost of sales, exit fee, after-sales and equity, leaving a <strong>balance to fund from sales income</strong> that should reconcile to zero. A balance materially away from zero is a red-flag — the funding stack doesn't close.</p>
+
+      <h3 class="sub"><span class="num">5.3</span> Cashflow &amp; peak funding</h3>
+      <p>A month-by-month chart of the outstanding balance, with the <strong>peak</strong> marked. This is the single most important number for a lender: the largest amount of debt the scheme needs at any one time, and when.</p>
+
+      <h3 class="sub"><span class="num">5.4</span> Sensitivity heatmaps</h3>
+      <p>Grids showing how the scheme responds to movements in <strong>sale &pound;psf</strong> (columns) against <strong>cost</strong> (rows). Three views are available:</p>
+      <ul>
+        <li><strong>Profit</strong> — upside and downside to the bottom line.</li>
+        <li><strong>Equity</strong> — how far profit erodes the equity at risk.</li>
+        <li><strong>Debt</strong> — the lender-stress view: how recoverable the facility is under adverse moves.</li>
+      </ul>
+
+      <h3 class="sub"><span class="num">5.5</span> The red-flag bar</h3>
+      <p>Validation runs continuously. Breaches appear as <span class="ragtag red">red</span> (hard breach) or <span class="ragtag amber">amber</span> (warning/tolerance) chips with the specific figure, on both the Input and Dashboard. Section 14 lists every rule.</p>
+    </section>
+
+    <!-- ============ 6. CASHFLOW ============ -->
+    <section class="page" id="s6">
+      <div class="eyebrow">Section 6</div>
+      <h2 class="sec">The cashflow</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">The cashflow turns the cost stack and sales programme into a monthly statement and computes the scheme's interest and peak funding.</p>
+
+      <h3 class="sub"><span class="num">6.1</span> How it is built</h3>
+      <p>For each month the engine sums category expenditure, adds interest on any outstanding balance, and subtracts sales income and equity drawn. By default each cost line is spread evenly over its month range, income is spread across each phase's sale window, and equity is drawn fully in month one. The running balance is tracked across the whole project length, and its maximum is your <strong>peak funding</strong>.</p>
+
+      <h3 class="sub"><span class="num">6.2</span> Editing the cashflow directly</h3>
+      <p>The default even-spread is a starting point. Any category-month cell — and the income and equity rows — can be <strong>overridden</strong> with a manual figure when you know the real timing (a deposit drawn early, a CIL payment in a specific month, phased equity). Overridden cells are marked, and the interest and peak recompute around your edits. Clearing the overrides returns to the automatic spread.</p>
+      <div class="callout warn"><div class="ic">!</div><div class="ct"><b>Overrides are deliberate.</b> Because manual cells replace the automatic spread, remember to revisit them if you later change the underlying cost — the override holds the figure you typed, not a percentage.</div></div>
+    </section>
+
+    <!-- ============ 7. VERSIONS ============ -->
+    <section class="page" id="s7">
+      <div class="eyebrow">Section 7</div>
+      <h2 class="sec">Versions</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">A single scheme rarely tells one story. Versions let you keep several linked variants of the same scheme — one per audience, or per set of assumptions — and switch or compare between them.</p>
+
+      <h3 class="sub"><span class="num">7.1</span> The version types</h3>
+      <div class="vcards">
+        <div class="vcard investor"><span class="vbadge investor">Investor</span><h5>For the investor</h5><p>The return story for a prospective equity partner.</p><div class="leads">Leads with <span>profit, profit % GDV, return on equity, equity required</span>.</div></div>
+        <div class="vcard bank"><span class="vbadge bank">Bank / Valuer</span><h5>For the bank or valuer</h5><p>Security, exposure and stress for the funder.</p><div class="leads">Leads with <span>peak funding, loan-to-GDV, loan-to-cost, profit excl. finance</span>.</div></div>
+        <div class="vcard owner"><span class="vbadge owner">Owner / Seller</span><h5>For the current owner</h5><p>The offer, evidenced — with your margin withheld.</p><div class="leads">Leads with <span>asking vs offer vs supportable price</span>.</div></div>
+        <div class="vcard adj"><span class="vbadge adj">Adjusted</span><h5>Adjusted assumptions</h5><p>A scenario on revised inputs, read against the base.</p><div class="leads">Adjust <span>rate, build cost, sales, purchase, length</span>.</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">7.2</span> Creating a version</h3>
+      <p>From a scheme, open the version switcher in the header and choose <strong>New version</strong>. Pick the type — Investor, Bank / Valuer, Owner / Seller, Adjusted assumptions, or Internal — give it a label, and the tool clones the current scheme as a linked version under the same parent.</p>
+
+      <h3 class="sub"><span class="num">7.3</span> Adjusted-assumptions levers</h3>
+      <p>When you choose <strong>Adjusted assumptions</strong>, the create dialog reveals five levers. Set any of them and the new version is created with those inputs shifted — ideal for the &ldquo;what if rates move&rdquo; or &ldquo;what if build costs rise&rdquo; conversations.</p>
+      <table class="kvtable">
+        <thead><tr><th>Lever</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Interest rate</td><td>Shifts the base rate up or down (basis points)</td></tr>
+          <tr><td>Construction price</td><td>Scales build &pound;psf across phases</td></tr>
+          <tr><td>Sales values</td><td>Scales sale &pound;psf across phases</td></tr>
+          <tr><td>Purchase price</td><td>Resets the offer price (re-runs land &amp; SDLT)</td></tr>
+          <tr><td>Project length</td><td>Stretches or compresses the programme</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub"><span class="num">7.4</span> Switching &amp; comparing</h3>
+      <p>The header <strong>switcher</strong> shows the active version and lets you jump between linked versions in one click. <strong>Compare</strong> puts any two versions side by side — GDV, cost, profit, margin, peak funding and gearing — with the delta between them, so you can see exactly what a different audience framing or assumption set does to the numbers.</p>
+      <div class="callout note"><div class="ic">i</div><div class="ct">Versions are <b>live</b>, not frozen copies — each is a real scheme you can keep editing. To freeze a moment in time instead, use a <b>snapshot</b> (Section 9).</div></div>
+
+      <h3 class="sub" id="s7-compare"><span class="num">7.5</span> Comparing versions side by side</h3>
+      <p>Open the version switcher in the header (or in the Menu panel) and choose <strong>Compare</strong>. An overlay appears showing any two versions of the same scheme side by side across 12 key metrics:</p>
+      <table class="kvtable">
+        <thead><tr><th>Column A</th><th>Column B</th></tr></thead>
+        <tbody>
+          <tr><td>GDV</td><td>Interest rate</td></tr>
+          <tr><td>Total cost</td><td>Offer price</td></tr>
+          <tr><td>Project profit</td><td>Programme (months)</td></tr>
+          <tr><td>Profit % GDV</td><td>Average build &pound;psf</td></tr>
+          <tr><td>Profit excl. finance</td><td>Average sale &pound;psf</td></tr>
+          <tr><td>Peak funding</td><td>Risk level</td></tr>
+        </tbody>
+      </table>
+      <p>Each row shows the value for both selected versions, with a <strong>delta chip</strong> indicating direction and magnitude &mdash; money figures show &plusmn;&pound;m, percentages show &plusmn;pp, months show &plusmn;mo. Use the dropdowns at the top of each column to swap either version without closing the panel. Click <strong>Open [version]</strong> to switch directly to the right-hand version.</p>
+      <div class="callout tip"><div class="ic">&#x2713;</div><div class="ct"><b>Quick workflow.</b> Create an Adjusted assumptions version with +100bp interest and +5% build cost, then use Compare to show exactly what rate and cost movement does to margin and peak funding &mdash; in one screen, no spreadsheet needed.</div></div>
+    </section>
+
+    <!-- ============ 8. PRESENTATION ============ -->
+    <section class="page" id="s8">
+      <div class="eyebrow">Section 8</div>
+      <h2 class="sec">Presentation mode</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">Presentation mode turns the working dashboard into a clean, audience-facing summary. Crucially, it <strong>adapts to the version's type</strong> — an investor version and a bank version of the same scheme present different numbers, in a different order, under a different badge.</p>
+
+      <p>Open any scheme or version and toggle <strong>Presentation</strong> in the top bar. The summary re-frames itself for the audience:</p>
+
+      <h3 class="sub"><span class="num">8.1</span> Investor summary <span class="vbadge investor" style="margin-left:auto;font-size:9px;">Investor</span></h3>
+      <p>Leads with the return profile — project profit, profit % GDV and % cost, <strong>return on equity</strong> and the day-one equity required — followed by the profit sensitivity grid and a sources-and-uses view. The story is upside and the multiple on cash in.</p>
+
+      <h3 class="sub"><span class="num">8.2</span> Bank / valuer summary <span class="vbadge bank" style="margin-left:auto;font-size:9px;">Bank</span></h3>
+      <p>Leads with security and exposure — <strong>peak funding</strong>, peak loan-to-GDV, loan-to-cost and profit excluding finance — then the funding waterfall reconciling to zero and the <strong>lender-stress (debt) heatmap</strong> by default. The story is &ldquo;you will be repaid, even if things move against us.&rdquo;</p>
+
+      <h3 class="sub"><span class="num">8.3</span> Owner / seller summary <span class="vbadge owner" style="margin-left:auto;font-size:9px;">Owner</span></h3>
+      <p>Leads with the <strong>offer position</strong> — a bar chart of the agent's asking price, your offer, and a <strong>supportable price</strong>: the figure the scheme can bear while still hitting a viable 20% margin, solved automatically. A scheme summary table and the sales comparables back it up. <strong>Your cost stack and profit margin are deliberately withheld</strong> — the vendor sees a well-evidenced offer, not your economics.</p>
+      <div class="callout warn"><div class="ic">!</div><div class="ct"><b>Mind which version you present.</b> The Owner / Seller view hides your margin by design — but only on an Owner-type version. Always confirm the active version's badge before sharing your screen or exporting.</div></div>
+
+      <p style="margin-top:18px;">The base, adjusted and internal types keep the full internal headline set, for your own review.</p>
+    </section>
+
+    <!-- ============ 9. COLLABORATION ============ -->
+    <section class="page" id="s9">
+      <div class="eyebrow">Section 9</div>
+      <h2 class="sec">Collaboration &amp; review</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">Because the workspace is shared, the tool keeps a complete record of who changed what — and lets the team review in place. Open the <strong>Review</strong> panel from the top bar; it has three tabs.</p>
+
+      <h3 class="sub"><span class="num">9.1</span> History — snapshots</h3>
+      <p>A <strong>snapshot</strong> is a full, labelled copy of a scheme at a point in time. Save one before a significant change, or to mark a scenario you might return to. For any snapshot you can <strong>compare it to the current figures</strong> (a field-by-field diff) or <strong>restore</strong> it, rolling the scheme back. Restores are themselves logged, and you can snapshot the present first.</p>
+
+      <h3 class="sub"><span class="num">9.2</span> Activity — the audit trail</h3>
+      <p>Every change to any figure is captured automatically — one row per changed field, showing the old value, the new value, who made it and when. No action is needed; edits are diffed and logged a moment after you make them. This is the scheme's full history of record.</p>
+
+      <h3 class="sub"><span class="num">9.3</span> Comments</h3>
+      <p>Discuss a scheme without leaving it. Post a comment on the <strong>whole scheme</strong> or <strong>pin it to a specific cost line</strong>. Comments can be resolved and reopened, and the panel shows the open count so nothing is missed. Use them for queries on an assumption, sign-off notes, or flagging a line for a colleague.</p>
+      <div class="callout tip"><div class="ic">✓</div><div class="ct"><b>Snapshot vs. version.</b> A <b>version</b> is a live variant you keep working on; a <b>snapshot</b> is a frozen record you compare against or restore. Use versions for audiences and scenarios, snapshots for &ldquo;this is where we were on Tuesday.&rdquo;</div></div>
+    </section>
+
+    <!-- ============ 10. EXPORTING ============ -->
+    <section class="page" id="s10">
+      <div class="eyebrow">Section 10</div>
+      <h2 class="sec">Exporting</h2>
+      <div class="sec-rule"></div>
+
+      <h3 class="sub"><span class="num">10.1</span> PDF appraisal pack</h3>
+      <p class="lead">When a scheme is ready to leave the tool, export it as a four-page print-ready pack — cover, appraisal summary, funding &amp; cashflow, and sensitivity &amp; evidence.</p>
+      <div class="steps">
+        <div class="step"><div class="sn"></div><div class="sb"><b>Select the version you want to send.</b> The pack reflects the active scheme — make sure the right audience version is open.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Open the PDF Pack</b> from the Menu (&#9776;) in the top-right of the topbar.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Click &ldquo;Save as PDF&rdquo;</b> in the pack toolbar, or use <code>Cmd/Ctrl + P</code>. The pack is laid out one section per A4 page with backgrounds preserved.</div></div>
+      </div>
+      <div class="callout note"><div class="ic">i</div><div class="ct">For a faithful export, set the print dialog to <b>A4</b>, margins <b>Default</b>, and ensure <b>Background graphics</b> is enabled so the charts and coloured elements render.</div></div>
+
+      <h3 class="sub" id="s10-gendocs"><span class="num">10.2</span> Generate documents from live data</h3>
+      <p>Four linked documents can be generated directly from the active project via the <strong>Menu &rsaquo; Generate from project</strong> section. Each document opens in a new browser tab, pre-populated with the scheme&rsquo;s figures &mdash; GDV, costs, profit, peak funding, programme, address and references &mdash; read from <code>localStorage</code> at the moment of generation.</p>
+      <table class="kvtable">
+        <thead><tr><th>Document</th><th>What it produces</th><th>Audience</th></tr></thead>
+        <tbody>
+          <tr><td>Investor Pitch Deck</td><td>7-slide presentation with returns profile, financials, sensitivity and deal structure</td><td>Equity investors / LP</td></tr>
+          <tr><td>Client Report</td><td>Multi-page printable appraisal report &mdash; executive summary, cost breakdown, cashflow, comparables</td><td>Client / advisor</td></tr>
+          <tr><td>Deal Memo</td><td>One-page decision memo with site details, appraisal summary, rationale, risks and recommendation</td><td>Internal / board</td></tr>
+          <tr><td>Project Update Deck</td><td>5-slide monthly progress deck &mdash; programme, budget vs actuals, sales progress, actions</td><td>Stakeholders / funder</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><div class="ic">!</div><div class="ct"><b>Data is a point-in-time snapshot.</b> Each document captures figures at the moment you click Generate. If you subsequently change the appraisal, re-generate the document to refresh it &mdash; the open tab will not auto-update.</div></div>
+      <div class="callout tip"><div class="ic">&#x2713;</div><div class="ct"><b>Version-aware.</b> Always confirm which version is active before generating &mdash; the data reflects whichever scheme is currently open, including audience-specific versions (e.g. an Investor version with different emphasis from a Bank version).</div></div>
+    </section>
+
+    <!-- ============ 11. TOOLS SUITE ============ -->
+    <section class="page" id="s10b">
+      <div class="eyebrow">Section 11</div>
+      <h2 class="sec">Tools suite</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">Alongside the core Appraisal Tool, Phoenix includes ten standalone tools accessible from the Hub. Each opens in its own browser tab and can be used independently or pre-populated from the Appraisal Tool via Generate.</p>
+
+      <h3 class="sub"><span class="num">11.1</span> Deal Analysis</h3>
+      <div class="flow">
+        <div class="fstep"><div class="fn">Quick Yield Calc</div><div class="ft">Fast GDV / yield calculator</div><div class="fd">Enter GDV, land, build and finance to get profit, margin, loan-to-GDV and ROE instantly. Includes a live sensitivity heatmap.</div></div>
+        <div class="fstep"><div class="fn">Scenario Modeller</div><div class="ft">Bear / base / bull</div><div class="fd">Three scenarios side by side. Adjust GDV, build cost, finance rate and programme per scenario with live levers &mdash; all KPIs update in real time.</div></div>
+        <div class="fstep"><div class="fn">Comps Map</div><div class="ft">Comparable sales map</div><div class="fd">Interactive map of evidenced comparable sales with &pound;psf analysis and filters by bed count. Supports your sales value assumptions.</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">11.2</span> Deal Management</h3>
+      <div class="flow">
+        <div class="fstep"><div class="fn">Pipeline Tracker</div><div class="ft">Kanban deal board</div><div class="fd">Full CRUD Kanban board tracking all deals from sourcing to completion. Shows GDV, margin, risk RAG and stage. Persistent across sessions.</div></div>
+        <div class="fstep"><div class="fn">Due Diligence Checklist</div><div class="ft">Structured sign-off</div><div class="fd">DD checklist across 6 categories (title, planning, construction, finance, commercial, environmental) with status and notes fields. Print-ready.</div></div>
+        <div class="fstep"><div class="fn">Deal Memo</div><div class="ft">1-page decision memo</div><div class="fd">Editable memo template &mdash; site details, appraisal summary, rationale, risks and recommendation. Editable in-browser and exports to PDF.</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">11.3</span> Presentations &amp; reports</h3>
+      <table class="kvtable">
+        <thead><tr><th>Tool</th><th>Format</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Investor Pitch Deck</td><td>7-slide deck</td><td>LP presentation &mdash; site overview, financials, returns profile, sensitivity and deal structure. Keyboard-navigable.</td></tr>
+          <tr><td>Client Report</td><td>5-page A4 PDF</td><td>Printable appraisal report with executive summary, cost breakdown, cashflow chart and comparables table.</td></tr>
+          <tr><td>Project Update Deck</td><td>5-slide deck</td><td>Monthly progress update &mdash; programme milestones, budget vs actuals, sales progress and open actions.</td></tr>
+          <tr><td>Fund Strategy Deck</td><td>8-slide deck</td><td>LP fund overview &mdash; market thesis, three-pillar strategy, track record, fund terms, deal process and team.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout note"><div class="ic">i</div><div class="ct"><b>Navigating to the tools.</b> All ten tools are listed on the <b>Phoenix Hub</b> (&larr; Hub link in the Menu, or directly at <code>Phoenix Hub.html</code>). Each card shows the tool&rsquo;s purpose, tags and a direct link.</div></div>
+    </section>
+
+    <!-- ============ 12. DEPLOYMENT ============ -->
+    <section class="page" id="s11">
+      <div class="eyebrow">Section 12 · Administrator guide</div>
+      <h2 class="sec">Deployment &amp; administration</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">This section is for whoever sets the tool up for the team. Phoenix is a static web application backed by a hosted database — there is no server to run.</p>
+
+      <h3 class="sub"><span class="num">11.1</span> How the tool is built</h3>
+      <p>The application is a set of static files — HTML, styles and view scripts — that run entirely in the browser. All shared data (schemes, snapshots, the audit log and comments) lives in a <strong>Supabase</strong> project, which provides the database and sign-in. Deploying therefore means two things: <strong>(a)</strong> bring the database online once, and <strong>(b)</strong> publish the files to any static host.</p>
+      <div class="flow">
+        <div class="fstep"><div class="fn">Browser</div><div class="ft">Static files</div><div class="fd">App UI &amp; calculation engine</div></div>
+        <div class="fstep"><div class="fn">Supabase</div><div class="ft">Database + Auth</div><div class="fd">Shared schemes, login</div></div>
+        <div class="fstep"><div class="fn">Host</div><div class="ft">Static hosting</div><div class="fd">Netlify, Pages, anywhere</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">11.2</span> Database setup (Supabase)</h3>
+      <p>Do this once in your Supabase dashboard. It takes about five minutes.</p>
+      <div class="steps">
+        <div class="step"><div class="sn"></div><div class="sb"><b>Create the tables and security rules.</b> In <b>SQL Editor &rarr; New query</b>, run the project's setup SQL. It creates four tables — <code>projects</code>, <code>snapshots</code>, <code>audit_log</code> and <code>comments</code> — and enables Row-Level Security on each.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Enable email sign-in.</b> Under <b>Authentication &rarr; Providers</b>, turn the Email provider on, turn <b>Confirm email</b> off, and allow new sign-ups.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Point auth at your site.</b> Under <b>Authentication &rarr; URL Configuration</b>, set the Site URL and add it to the Redirect URLs.</div></div>
+      </div>
+      <p>The Row-Level Security policy is a <strong>shared team workspace</strong>: any signed-in user can read and write every scheme; the public key alone, with no session, can do nothing.</p>
+      <div class="codeblock"><pre><span class="cm">-- shared-team RLS: signed-in users have full access</span>
+<span class="kw">alter table</span> public.projects <span class="kw">enable row level security</span>;
+<span class="kw">create policy</span> <span class="st">"team read"</span>   <span class="kw">on</span> public.projects <span class="kw">for select</span> <span class="kw">to</span> authenticated <span class="kw">using</span> (<span class="kw">true</span>);
+<span class="kw">create policy</span> <span class="st">"team write"</span>  <span class="kw">on</span> public.projects <span class="kw">for all</span>    <span class="kw">to</span> authenticated <span class="kw">using</span> (<span class="kw">true</span>) <span class="kw">with check</span> (<span class="kw">true</span>);</pre></div>
+      <div class="callout danger"><div class="ic">!</div><div class="ct"><b>Security depends on RLS, not on hiding the key.</b> The key shipped in the app is the public <b>anon / publishable</b> key — safe to publish. Your data is guarded by the policies above. <b>Never</b> place the <code>service_role</code> secret key in these files.</div></div>
+
+      <h3 class="sub"><span class="num">11.3</span> Publishing the site</h3>
+      <p>Any static host works. Two common routes:</p>
+      <h4 class="subsub">Drag-and-drop (fastest)</h4>
+      <p>Drop the application folder onto a static host such as Netlify Drop or Cloudflare Pages. You get a live URL in under a minute — ideal for a first deploy or a quick share.</p>
+      <h4 class="subsub">GitHub Pages (versioned)</h4>
+      <div class="steps">
+        <div class="step"><div class="sn"></div><div class="sb"><b>Put the app files in your repository.</b> Rename the entry HTML to <code>index.html</code> if you want the bare folder URL to load it.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Enable Pages.</b> Repo <b>Settings &rarr; Pages</b>, deploy from your branch at root.</div></div>
+        <div class="step"><div class="sn"></div><div class="sb"><b>Wait a minute</b> — the site is live at your Pages URL. Add that URL to Supabase's redirect list (step 11.2.3).</div></div>
+      </div>
+
+      <h3 class="sub"><span class="num">11.4</span> Authentication &amp; security checklist</h3>
+      <table class="kvtable">
+        <thead><tr><th>Check</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>RLS enabled on all four tables</td><td>Without it, anyone with the URL can read/write data</td></tr>
+          <tr><td>Live URL in Supabase redirect list</td><td>Sign-in fails in production otherwise</td></tr>
+          <tr><td>Only the anon key is in the files</td><td>The service_role key must never be shipped</td></tr>
+          <tr><td>Confirm-email setting matches your policy</td><td>Off = instant access; on = users verify first</td></tr>
+        </tbody>
+      </table>
+      <div class="callout note"><div class="ic">i</div><div class="ct"><b>To reset the workspace</b> (e.g. clear the demo schemes and start clean), delete the rows in Supabase's <b>Table Editor &rarr; projects</b>. The next sign-in starts from an empty book.</div></div>
+    </section>
+
+    <!-- ============ 12. TROUBLESHOOTING ============ -->
+    <section class="page" id="s12">
+      <div class="eyebrow">Section 13</div>
+      <h2 class="sec">Troubleshooting</h2>
+      <div class="sec-rule"></div>
+      <table class="kvtable">
+        <thead><tr><th>Symptom</th><th>Likely cause &amp; fix</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Blank white screen when opening a project</strong></td><td>A missing React state declaration caused a <code>ReferenceError</code> on render. Fixed in <code>app.jsx</code> by adding <code>const [showMenu, setShowMenu] = React.useState(false)</code> to the <code>Workspace</code> component. Pull the latest <code>app.jsx</code> from the repo to resolve.</td></tr>
+          <tr><td>Sign-in fails in production</td><td>The live URL isn't in Supabase's redirect list. Add it under Authentication &rarr; URL Configuration.</td></tr>
+          <tr><td>A red bar appears at the top of the app</td><td>A save to the database failed. Check the Supabase project is online and the tables/RLS exist. Your edit is held locally meanwhile.</td></tr>
+          <tr><td>No schemes appear on first load</td><td>The seed only runs against an empty, reachable database. Confirm the <code>projects</code> table exists and you are signed in.</td></tr>
+          <tr><td>&ldquo;Balance to fund&rdquo; flag won&rsquo;t clear</td><td>The funding stack doesn&rsquo;t reconcile &mdash; revisit equity, peak funding and cost-of-sales timing in the cashflow.</td></tr>
+          <tr><td>Schedule-of-units red-flag</td><td>The unit schedule&rsquo;s count or value doesn&rsquo;t match the phase figures. Reconcile the schedule to the phases.</td></tr>
+          <tr><td>Charts missing from the printed pack</td><td>Enable <b>Background graphics</b> in the print dialog.</td></tr>
+          <tr><td>Generated document shows blank / default data</td><td>The document reads from <code>localStorage</code> &mdash; make sure you clicked Generate while the correct project was open, then close and re-open the document tab.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 13. GLOSSARY ============ -->
+    <section class="page" id="s13">
+      <div class="eyebrow">Section 14</div>
+      <h2 class="sec">Glossary</h2>
+      <div class="sec-rule"></div>
+      <dl class="gloss">
+        <div class="g"><dt>GDV</dt><dd>Gross Development Value — total sales value of the completed scheme (net saleable area &times; sale &pound;psf, summed across phases).</dd></div>
+        <div class="g"><dt>Peak funding</dt><dd>The largest outstanding debt balance the scheme requires at any single month of the programme — the facility a lender must provide.</dd></div>
+        <div class="g"><dt>Profit % GDV</dt><dd>Profit as a percentage of GDV — the headline development margin. Target &ge; 20%.</dd></div>
+        <div class="g"><dt>Profit excl. finance</dt><dd>Margin measured before finance cost — the lender's preferred view of underlying profitability. Target &ge; 30%.</dd></div>
+        <div class="g"><dt>Loan to GDV / Loan to Cost</dt><dd>Peak debt as a percentage of GDV, and of total cost — gearing measures the lender caps.</dd></div>
+        <div class="g"><dt>Return on equity (ROE)</dt><dd>Profit relative to the equity committed — the investor's multiple on cash in.</dd></div>
+        <div class="g"><dt>Supportable price</dt><dd>In the Owner version, the purchase price at which the scheme still hits a viable 20% margin — solved by the tool.</dd></div>
+        <div class="g"><dt>Basis</dt><dd>How a cost line resolves to a figure: fixed, % of construction / GDV / land / loan, per-unit, SDLT, or computed interest.</dd></div>
+        <div class="g"><dt>Version</dt><dd>A live, linked variant of a scheme — for an audience (investor, bank, owner) or a set of adjusted assumptions.</dd></div>
+        <div class="g"><dt>Snapshot</dt><dd>A frozen, labelled copy of a scheme at a moment in time, for comparison or restore.</dd></div>
+        <div class="g"><dt>RLS</dt><dd>Row-Level Security — the database rules that restrict data access to signed-in team members.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ============ 14. APPENDIX ============ -->
+    <section class="page" id="s14">
+      <div class="eyebrow">Appendix A</div>
+      <h2 class="sec">KPI thresholds &amp; red-flag rules</h2>
+      <div class="sec-rule"></div>
+      <p class="lead">The exact rules the engine applies. Red is a hard breach; amber is a warning or within-tolerance condition.</p>
+
+      <h3 class="sub"><span class="num">A.1</span> KPI targets</h3>
+      <table class="kvtable">
+        <thead><tr><th>Metric</th><th>Red</th><th>Amber</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>Profit % GDV</td><td class="mono">&lt; 15%</td><td class="mono">&lt; 20%</td><td class="mono">&ge; 20%</td></tr>
+          <tr><td>Profit excl. finance</td><td class="mono">&lt; 25%</td><td class="mono">&lt; 30%</td><td class="mono">&ge; 30%</td></tr>
+          <tr><td>Peak Loan to Cost</td><td class="mono">&gt; 80%</td><td class="mono">—</td><td class="mono">&le; 80%</td></tr>
+          <tr><td>Peak Loan to GDV</td><td class="mono">—</td><td class="mono">&gt; 65%</td><td class="mono">&le; 65%</td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub"><span class="num">A.2</span> Validation rules</h3>
+      <table class="kvtable">
+        <thead><tr><th>Rule</th><th>Trigger</th><th>Severity</th></tr></thead>
+        <tbody>
+          <tr><td>Margin floor</td><td>Profit % GDV below 15% (amber below 20%)</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Lender margin</td><td>Profit excl. finance below 25% (amber below 30%)</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Gearing — cost</td><td>Peak loan to cost above 80%</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Gearing — GDV</td><td>Peak loan to GDV above 65%</td><td><span class="ragtag amber">amber</span></td></tr>
+          <tr><td>Funding reconciliation</td><td>Balance to fund &gt; 3% of cost (amber &gt; 1%)</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Schedule — units</td><td>Schedule unit count &ne; phase unit count</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Schedule — value</td><td>Schedule value &ne; phase GDV</td><td><span class="ragtag red">red</span></td></tr>
+          <tr><td>Completion buffer</td><td>Construction ends at/after project end</td><td><span class="ragtag amber">amber</span></td></tr>
+          <tr><td>Sale months unset</td><td>A phase has income but no sale window</td><td><span class="ragtag amber">amber</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub"><span class="num">A.3</span> Portfolio risk levels</h3>
+      <p>The single traffic-light on each Portfolio card rolls the above into one level:</p>
+      <ul>
+        <li><span class="ragtag red">High</span> — any red flag, or profit at or below zero.</li>
+        <li><span class="ragtag amber">Elevated</span> — two or more ambers, or thin margin / high gearing.</li>
+        <li><span class="ragtag amber">Moderate</span> — a single amber.</li>
+        <li><span class="ragtag ok">Low</span> — no flags.</li>
+      </ul>
+
+      <div class="endmark">PHOENIX · OPERATING &amp; DEPLOYMENT MANUAL · REV 2.0</div>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>
