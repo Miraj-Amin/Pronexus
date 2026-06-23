@@ -78,9 +78,9 @@ function NewProjectModal({ onClose, onCreate }) {
               onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onCreate(name.trim()); }} />
           </div>
           <div className="template-pill">
-            <div className="ti"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M5 6h6M5 8.5h6M5 11h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg></div>
+            <div className="ti"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="[...]
             <div><div className="tt">Master Template v1</div><div className="ts">14-category cost scaffold · default rate library</div></div>
-            <div className="lock"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="4.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1" /><path d="M3.3 4.5V3.4a1.7 1.7 0 013.4 0v1.1" stroke="currentColor" strokeWidth="1" /></svg>locked</div>
+            <div className="lock"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="2" y="4.5" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1" /><path d="M3.3 [...]
           </div>
         </div>
         <div className="modal-foot">
@@ -113,7 +113,7 @@ function Workspace({ session }) {
   const [accounts, setAccounts] = React.useState([]);
   const [view, setView] = React.useState(() => {
     try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio') return u; } catch (e) {}
-    return localStorage.getItem('phx_view') || 'portfolio';
+    return localStorage.getItem('phx_view') || 'crm';
   });
   const email = session.user.email;
 
@@ -353,11 +353,11 @@ function Workspace({ session }) {
           <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
           <div className="ref">PORTFOLIO</div>
           <div className="spacer"></div>
-          <button onClick={() => setView('crm')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,letterSpacing:'.4px',textTransform:'uppercase',padding:'6px 12px',borderRadius:5,cursor:'pointer',marginRight:10 }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <button onClick={() => setView('crm')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFami[...]
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="roun[...]
             Clients
           </button>
-          <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginRight:10 }}>← Hub</a>
+          <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(-[...]
           <div className="acct">
             <span className="acct-email" title={session.user.email}>{session.user.email}</span>
             <button className="btn ghost acct-out" onClick={signOut}>Sign out</button>
@@ -412,38 +412,38 @@ function Workspace({ session }) {
       {showMenu && <div onClick={() => setShowMenu(false)} style={{position:'fixed',inset:0,zIndex:198,background:'rgba(0,0,0,.45)'}} />}
 
       {/* Slide-out menu */}
-      <div style={{position:'fixed',right:0,top:0,bottom:0,width:290,background:'var(--surface)',borderLeft:'1px solid var(--border-strong)',zIndex:199,transform:showMenu?'translateX(0)':'translateX(110%)',transition:'transform .25s ease',display:'flex',flexDirection:'column',boxShadow:'-8px 0 40px rgba(0,0,0,.5)'}}>
+      <div style={{position:'fixed',right:0,top:0,bottom:0,width:290,background:'var(--surface)',borderLeft:'1px solid var(--border-strong)',zIndex:199,transform:showMenu?'translateX(0)':'transla[...]
         <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
           <div style={{fontFamily:'var(--mono)',fontWeight:700,letterSpacing:'3px',fontSize:13,color:'var(--ink)'}}>PHOENIX</div>
-          <button onClick={() => setShowMenu(false)} style={{width:28,height:28,display:'grid',placeItems:'center',border:'1px solid var(--border)',borderRadius:4,background:'var(--surface-2)',color:'var(--muted)',cursor:'pointer',fontSize:18,lineHeight:1}}>×</button>
+          <button onClick={() => setShowMenu(false)} style={{width:28,height:28,display:'grid',placeItems:'center',border:'1px solid var(--border)',borderRadius:4,background:'var(--surface-2)',co[...]
         </div>
         <div style={{padding:'14px 18px',borderBottom:'1px solid var(--border)',flexShrink:0}}>
           <div style={{fontFamily:'var(--mono)',fontSize:9,textTransform:'uppercase',letterSpacing:'1.2px',color:'var(--muted)',marginBottom:8}}>Version</div>
-          <VersionSwitcher active={active} projects={projects} onSwitch={id=>{openProject(id);setShowMenu(false);}} onCreate={()=>{setShowMenu(false);setShowVersion(true);}} onCompare={()=>{setShowMenu(false);setShowCompare(true);}} />
+          <VersionSwitcher active={active} projects={projects} onSwitch={id=>{openProject(id);setShowMenu(false);}} onCreate={()=>{setShowMenu(false);setShowVersion(true);}} onCompare={()=>{setSh[...]
           <div style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--muted)',marginTop:8,wordBreak:'break-all'}}>{active.project.ref}</div>
         </div>
         <div style={{flex:1,overflowY:'auto',padding:'4px 0'}}>
-          {[['Review','History, comments & activity',()=>{openReview('history');setShowMenu(false);}],['PDF Pack','Lender-facing appraisal report',()=>{setShowPack(true);setShowMenu(false);}]].map(([label,sub,action])=>(
-            <button key={label} onClick={action} style={{display:'block',width:'100%',padding:'12px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
-              <div style={{fontFamily:'var(--mono)',fontSize:13,fontWeight:600,color:'var(--ink)',display:'flex',alignItems:'center',gap:8}}>{label}{label==='Review'&&openComments>0?<span style={{background:'var(--cyan-2)',color:'#04141c',fontFamily:'var(--mono)',fontSize:9,fontWeight:700,padding:'1px 6px',borderRadius:3}}>{openComments}</span>:null}</div>
+          {[['Review','History, comments & activity',()=>{openReview('history');setShowMenu(false);}],['PDF Pack','Lender-facing appraisal report',()=>{setShowPack(true);setShowMenu(false);}]].ma[...]
+            <button key={label} onClick={action} style={{display:'block',width:'100%',padding:'12px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',textAlign:'left',c[...]
+              <div style={{fontFamily:'var(--mono)',fontSize:13,fontWeight:600,color:'var(--ink)',display:'flex',alignItems:'center',gap:8}}>{label}{label==='Review'&&openComments>0?<span style={[...]
               <div style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--muted)',marginTop:2}}>{sub}</div>
             </button>
           ))}
-          <div style={{padding:'10px 18px 6px',fontFamily:'var(--mono)',fontSize:9,textTransform:'uppercase',letterSpacing:'1.2px',color:'var(--cyan)',borderTop:'1px solid var(--border)',marginTop:4}}>Generate from project</div>
-          {[['pitch','Investor Pitch Deck','7-slide LP presentation'],['report','Client Report','Printable appraisal report'],['memo','Deal Memo','Decision memorandum'],['update','Project Update Deck','Monthly progress deck']].map(([type,label,sub])=>(
-            <button key={type} onClick={()=>generateDoc(type)} style={{display:'block',width:'100%',padding:'10px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+          <div style={{padding:'10px 18px 6px',fontFamily:'var(--mono)',fontSize:9,textTransform:'uppercase',letterSpacing:'1.2px',color:'var(--cyan)',borderTop:'1px solid var(--border)',marginTo[...]
+          {[['pitch','Investor Pitch Deck','7-slide LP presentation'],['report','Client Report','Printable appraisal report'],['memo','Deal Memo','Decision memorandum'],['update','Project Update [...]
+            <button key={type} onClick={()=>generateDoc(type)} style={{display:'block',width:'100%',padding:'10px 18px',background:'none',border:'none',borderBottom:'1px solid var(--border)',text[...]
               <div style={{fontFamily:'var(--mono)',fontSize:12,fontWeight:600,color:'var(--ink-2)'}}>↳ {label}</div>
               <div style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--muted)',marginTop:2}}>{sub}</div>
             </button>
           ))}
         </div>
         <div style={{borderTop:'1px solid var(--border)',flexShrink:0}}>
-          <a href="Phoenix Hub.html" style={{display:'flex',alignItems:'center',padding:'13px 18px',textDecoration:'none',borderBottom:'1px solid var(--border)'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+          <a href="Phoenix Hub.html" style={{display:'flex',alignItems:'center',padding:'13px 18px',textDecoration:'none',borderBottom:'1px solid var(--border)'}} onMouseEnter={e=>e.currentTarget[...]
             <span style={{fontFamily:'var(--mono)',fontSize:13,fontWeight:600,color:'var(--ink)'}}>← Phoenix Hub</span>
           </a>
-          <button onClick={signOut} style={{display:'flex',alignItems:'center',gap:10,padding:'13px 18px',background:'none',border:'none',width:'100%',textAlign:'left',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--surface-2)'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+          <button onClick={signOut} style={{display:'flex',alignItems:'center',gap:10,padding:'13px 18px',background:'none',border:'none',width:'100%',textAlign:'left',cursor:'pointer'}} onMouseE[...]
             <span style={{fontFamily:'var(--mono)',fontSize:13,color:'var(--muted)'}}>Sign out</span>
-            <span style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--muted)',marginLeft:'auto',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{session.user.email}</span>
+            <span style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--muted)',marginLeft:'auto',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{session.user.e[...]
           </button>
         </div>
       </div>
@@ -461,19 +461,19 @@ function Workspace({ session }) {
       {!pres ? (
         <nav className="mobile-tabs">
           <button className={tab === 'input' ? 'active' : ''} onClick={() => { setTab('input'); window.scrollTo(0, 0); }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 7.5h7M6.5 10h7M6.5 12.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 7.5h7M6.5 10h7M6.5[...]
             <span>Input</span>
           </button>
           <button className={tab === 'cashflow' ? 'active' : ''} onClick={() => { setTab('cashflow'); window.scrollTo(0, 0); }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-4 3 2 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 17h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-4 3 2 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="[...]
             <span>Cashflow</span>
           </button>
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => { setTab('dashboard'); window.scrollTo(0, 0); }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="3" width="6" heigh[...]
             <span>Dashboard</span>
           </button>
           <button className="mt-more" onClick={() => setPres(p => !p)}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><rect x="3" y="3" width="14" heigh[...]
             <span>Present</span>
           </button>
         </nav>
