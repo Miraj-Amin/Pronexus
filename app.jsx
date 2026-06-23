@@ -109,7 +109,15 @@ function Workspace({ session }) {
   const [showCompare, setShowCompare] = React.useState(false);
   const [showGenerate, setShowGenerate] = React.useState(false);
   const [showMenu, setShowMenu] = React.useState(false);
+  // CRM — client accounts + which top-level view is showing when no project is open
+  const [accounts, setAccounts] = React.useState([]);
+  const [view, setView] = React.useState(() => {
+    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio') return u; } catch (e) {}
+    return localStorage.getItem('phx_view') || 'portfolio';
+  });
   const email = session.user.email;
+
+  React.useEffect(() => { localStorage.setItem('phx_view', view); }, [view]);
 
   React.useEffect(() => { localStorage.setItem('appraisal_tab', tab); }, [tab]);
   React.useEffect(() => { DB.setActive(activeId); }, [activeId]);
@@ -120,12 +128,31 @@ function Workspace({ session }) {
       await DB.seedIfEmpty();
       const listed = await DB.list();
       setProjects(listed);
+      return listed;
     } catch (e) {
       setLoadErr((e && e.message) ? e.message : String(e));
       setProjects([]);
+      return [];
     }
   }, []);
-  React.useEffect(() => { loadProjects(); }, [loadProjects]);
+  const loadAccounts = React.useCallback(async () => {
+    try {
+      await DB.seedAccountsIfEmpty();
+      const list = await DB.listAccounts();
+      setAccounts(list);
+    } catch (e) {
+      // accounts table may not exist yet — CRM still renders empty, appraisal unaffected
+      console.warn('[Phoenix CRM] account load skipped:', (e && e.message) || e);
+      setAccounts([]);
+    }
+  }, []);
+  // boot in order: seed/list projects, then seed accounts (which auto-links jobs
+  // by client reference), then re-list projects so the new links are visible.
+  React.useEffect(() => { (async () => {
+    await loadProjects();
+    await loadAccounts();
+    await loadProjects();
+  })(); }, [loadProjects, loadAccounts]);
 
   const active = (activeId && projects) ? projects.filter(p => p.id === activeId)[0] : null;
   const model = React.useMemo(() => active ? window.Appraisal.computeModel(active) : null, [active]);
@@ -151,6 +178,46 @@ function Workspace({ session }) {
     }));
   }, [activeId]);
 
+  // mutate any project by id (used by the CRM to link jobs / set pipeline stage)
+  const setProject = React.useCallback((id, updater) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const copy = JSON.parse(JSON.stringify(p));
+      updater(copy);
+      DB.upsert(copy).catch(e => { console.error('Save failed:', e); setLoadErr('Save failed — ' + ((e && e.message) || '')); });
+      return copy;
+    }));
+  }, []);
+  const assignJob = React.useCallback((projectId, accountId) => {
+    setProject(projectId, p => { p.accountId = accountId || null; });
+  }, [setProject]);
+  const setJobStage = React.useCallback((projectId, stage) => {
+    setProject(projectId, p => { p.meta = p.meta || {}; p.meta.stage = stage; });
+  }, [setProject]);
+
+  // ---- CRM account CRUD (optimistic, then persist) ----
+  const createAccount = React.useCallback(async (fields) => {
+    try { const a = await DB.createAccount(fields); setAccounts(prev => [a, ...prev]); return a; }
+    catch (e) { alert('Could not create account: ' + ((e && e.message) || e)); return null; }
+  }, []);
+  const saveAccount = React.useCallback((account) => {
+    setAccounts(prev => {
+      const exists = prev.some(a => a.id === account.id);
+      return exists ? prev.map(a => a.id === account.id ? account : a) : [account, ...prev];
+    });
+    DB.upsertAccount(JSON.parse(JSON.stringify(account))).catch(e => { console.error(e); setLoadErr('Account save failed — ' + ((e && e.message) || '')); });
+  }, []);
+  const deleteAccount = React.useCallback(async (id) => {
+    // unassign any linked jobs, then drop the account
+    setProjects(prev => prev.map(p => {
+      if (p.accountId !== id) return p;
+      const copy = JSON.parse(JSON.stringify(p)); copy.accountId = null;
+      DB.upsert(copy).catch(() => {});
+      return copy;
+    }));
+    setAccounts(prev => prev.filter(a => a.id !== id));
+    try { await DB.removeAccount(id); } catch (e) { alert('Could not delete account: ' + ((e && e.message) || e)); }
+  }, []);
   const openProject = id => { setActiveId(id); setTab('dashboard'); window.scrollTo(0, 0); };
   const backToPortfolio = () => { setActiveId(null); setPres(false); window.scrollTo(0, 0); };
   const newProject = async name => {
@@ -264,6 +331,20 @@ function Workspace({ session }) {
 
   if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
 
+  // ---- CRM view (no project open) ----
+  if (!active && view === 'crm') {
+    return (
+      <window.CRMApp
+        accounts={accounts} projects={projects} session={session}
+        onBackToPortfolio={() => setView('portfolio')}
+        onSignOut={signOut}
+        onOpenJob={(id) => openProject(id)}
+        createAccount={createAccount} saveAccount={saveAccount} deleteAccount={deleteAccount}
+        assignJob={assignJob} setJobStage={setJobStage}
+      />
+    );
+  }
+
   // ---- Portfolio view ----
   if (!active) {
     return (
@@ -272,6 +353,10 @@ function Workspace({ session }) {
           <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
           <div className="ref">PORTFOLIO</div>
           <div className="spacer"></div>
+          <button onClick={() => setView('crm')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,letterSpacing:'.4px',textTransform:'uppercase',padding:'6px 12px',borderRadius:5,cursor:'pointer',marginRight:10 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+            Clients
+          </button>
           <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,padding:'5px 11px',borderRadius:3,textDecoration:'none',marginRight:10 }}>← Hub</a>
           <div className="acct">
             <span className="acct-email" title={session.user.email}>{session.user.email}</span>
@@ -399,7 +484,7 @@ function Workspace({ session }) {
       {pres
         ? <Presentation state={active} model={model} />
         : tab === 'input'
-          ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} /></div>
+          ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>
           : tab === 'cashflow'
             ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
             : <Dashboard state={active} model={model} />}

@@ -138,6 +138,148 @@
   function getTemplate() { return A.blankTemplate(); }
 
   // ===========================================================================
+  //  CRM — client/developer accounts, contacts, activity; jobs link to accounts
+  //  One row per account; the whole account object lives in `data` (jsonb),
+  //  mirroring the projects table. Contacts + activity are embedded arrays.
+  //  A "job" is an appraisal scheme (projects row); it links to an account via
+  //  project.accountId. The job's CRM pipeline stage lives at project.meta.stage.
+  // ===========================================================================
+  var ACCT_TABLE = 'accounts';
+
+  function uid(prefix) { return (prefix || 'id') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // account factory — a fresh, fully-shaped client record
+  function newAccount(fields) {
+    fields = fields || {};
+    var t = stamp();
+    return {
+      id: fields.id || uid('acc'),
+      name: fields.name || 'New account',
+      type: fields.type || 'Developer',         // category
+      status: fields.status || 'Lead',          // Lead / Active / Dormant / Archived
+      region: fields.region || '',
+      address: fields.address || '',
+      owner: fields.owner || '',                 // internal team member responsible
+      notes: fields.notes || '',
+      tags: fields.tags || [],
+      contacts: fields.contacts || [],           // [{id,name,role,email,phone,primary}]
+      activity: fields.activity || [],           // [{id,type,note,author,at}]
+      createdAt: fields.createdAt || t,
+      updatedAt: t
+    };
+  }
+
+  async function listAccounts() {
+    var res = await sb().from(ACCT_TABLE).select('data,updated_at').order('updated_at', { ascending: false });
+    if (res.error) throw res.error;
+    return (res.data || []).map(function (r) { return r.data; });
+  }
+  async function getAccount(id) {
+    var res = await sb().from(ACCT_TABLE).select('data').eq('id', id).maybeSingle();
+    if (res.error) throw res.error;
+    return res.data ? res.data.data : null;
+  }
+  async function upsertAccount(a) {
+    a.updatedAt = stamp();
+    var row = { id: a.id, data: a, updated_at: a.updatedAt };
+    var res = await sb().from(ACCT_TABLE).upsert(row, { onConflict: 'id' });
+    if (res.error) throw res.error;
+    return a;
+  }
+  async function createAccount(fields) {
+    var a = newAccount(fields);
+    await upsertAccount(a);
+    return a;
+  }
+  async function removeAccount(id) {
+    var res = await sb().from(ACCT_TABLE).delete().eq('id', id);
+    if (res.error) throw res.error;
+  }
+
+  // link / unlink a job (project) to an account — direct fetch + persist so the
+  // CRM can operate on any scheme, not just the one open in the appraisal view.
+  async function setProjectAccount(projectId, accountId) {
+    var p = await get(projectId);
+    if (!p) return null;
+    p.accountId = accountId || null;
+    await upsert(p);
+    return p;
+  }
+  async function setProjectStage(projectId, stage) {
+    var p = await get(projectId);
+    if (!p) return null;
+    p.meta = p.meta || {};
+    p.meta.stage = stage;
+    await upsert(p);
+    return p;
+  }
+
+  // one-time seed: demo client accounts + auto-link existing schemes by client
+  // reference. Idempotent — stable ids + ignoreDuplicates, and only links jobs
+  // that don't already point at an account.
+  async function seedAccountsIfEmpty() {
+    var head = await sb().from(ACCT_TABLE).select('id', { count: 'exact', head: true });
+    if (head.error) throw head.error;
+    var fresh = (head.count || 0) === 0;
+    if (fresh) {
+      var seeds = [
+        newAccount({
+          id: 'acc-total-homes', name: 'Total Homes', type: 'Developer', status: 'Active',
+          region: 'West Sussex & Surrey', address: 'Pavilion House, Brighton Road, Crawley RH10 6AS',
+          owner: 'M. Amin', tags: ['Repeat client', 'Priority'],
+          notes: 'Core developer client — multiple live schemes across the South East. Quarterly portfolio review with J. Marlowe.',
+          contacts: [
+            { id: uid('ct'), name: 'James Marlowe', role: 'Development Director', email: 'j.marlowe@totalhomes.co.uk', phone: '01293 555 0142', primary: true },
+            { id: uid('ct'), name: 'Amara Okafor', role: 'Land & Acquisitions', email: 'a.okafor@totalhomes.co.uk', phone: '01293 555 0188', primary: false }
+          ],
+          activity: [
+            { id: uid('ac'), type: 'Meeting', note: 'Portfolio review — agreed to progress Cedar Rise to offer and re-appraise Quarry Fields at revised build costs.', author: 'M. Amin', at: '2026-06-04T10:00:00Z' },
+            { id: uid('ac'), type: 'Email', note: 'Sent updated Walnut Marches appraisal pack for funder circulation.', author: 'M. Amin', at: '2026-05-29T14:20:00Z' }
+          ]
+        }),
+        newAccount({
+          id: 'acc-meridian', name: 'Meridian Land', type: 'Landowner', status: 'Lead',
+          region: 'Kent', owner: 'M. Amin', tags: ['Inbound'],
+          notes: 'Introduced via agent — holds a consented site near Maidstone. Awaiting title pack before we appraise.',
+          contacts: [{ id: uid('ct'), name: 'Priya Shah', role: 'Principal', email: 'priya@meridianland.com', phone: '01622 555 0110', primary: true }],
+          activity: [{ id: uid('ac'), type: 'Call', note: 'Intro call — outline of the Maidstone opportunity, ~40 units consented.', author: 'M. Amin', at: '2026-06-10T09:30:00Z' }]
+        }),
+        newAccount({
+          id: 'acc-kestrel', name: 'Kestrel Capital', type: 'Investor', status: 'Dormant',
+          region: 'London', owner: 'M. Amin', tags: ['Equity partner'],
+          notes: 'Equity partner on past schemes. No live mandate — revisit for senior/mezz on the next qualifying deal.',
+          contacts: [{ id: uid('ct'), name: 'Daniel Reeves', role: 'Investment Manager', email: 'd.reeves@kestrelcap.com', phone: '020 7555 0173', primary: true }],
+          activity: []
+        })
+      ];
+      var rows = seeds.map(function (a) { return { id: a.id, data: a, updated_at: stamp() }; });
+      var ins = await sb().from(ACCT_TABLE).upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
+      if (ins.error) throw ins.error;
+    }
+
+    // auto-link: any scheme with a matching clientRef and no account yet
+    try {
+      var accts = await listAccounts();
+      var projs = await list();
+      var byName = {};
+      accts.forEach(function (a) { byName[(a.name || '').trim().toLowerCase()] = a.id; });
+      var toLink = projs.filter(function (p) {
+        if (p.isTemplate) return false;
+        if (p.accountId) return false;
+        var ref = (p.project && p.project.clientRef || '').trim().toLowerCase();
+        return ref && byName[ref];
+      });
+      for (var i = 0; i < toLink.length; i++) {
+        var p = toLink[i];
+        p.accountId = byName[(p.project.clientRef || '').trim().toLowerCase()];
+        await upsert(p);
+      }
+    } catch (e) { /* linking is best-effort; accounts still seed */ }
+
+    return fresh;
+  }
+
+  // ===========================================================================
   //  COLLABORATION — snapshots / audit log / comments
   // ===========================================================================
 
@@ -212,6 +354,11 @@
     setActive: setActive, getActive: getActive,
     // versions
     createVersion: createVersion, setVersionMeta: setVersionMeta, familyId: familyId,
+    // CRM — accounts + job linking
+    listAccounts: listAccounts, getAccount: getAccount, upsertAccount: upsertAccount,
+    createAccount: createAccount, removeAccount: removeAccount, newAccount: newAccount,
+    seedAccountsIfEmpty: seedAccountsIfEmpty,
+    setProjectAccount: setProjectAccount, setProjectStage: setProjectStage, uid: uid,
     // collaboration
     listSnapshots: listSnapshots, getSnapshot: getSnapshot, saveSnapshot: saveSnapshot, deleteSnapshot: deleteSnapshot,
     logChanges: logChanges, listAudit: listAudit,

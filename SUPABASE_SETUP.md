@@ -93,6 +93,28 @@ create policy "team all" on public.audit_log for all to authenticated using (tru
 create policy "team all" on public.comments  for all to authenticated using (true) with check (true);
 ```
 
+### 1c. CRM table — client accounts
+
+Run this **third** block to enable the CRM (client/developer accounts with embedded
+contacts + activity). Jobs link to an account through a column on the existing
+`projects` row — no migration needed there, it lives inside the `data` JSON.
+
+```sql
+-- One row per client account; the whole account object (incl. contacts &
+-- activity timeline) lives in `data`, mirroring the projects table.
+create table if not exists public.accounts (
+  id          text primary key,
+  data        jsonb not null,
+  updated_at  timestamptz not null default now(),
+  created_at  timestamptz not null default now()
+);
+create index if not exists accounts_updated_idx on public.accounts (updated_at desc);
+
+alter table public.accounts enable row level security;
+drop policy if exists "team all" on public.accounts;
+create policy "team all" on public.accounts for all to authenticated using (true) with check (true);
+```
+
 ---
 
 ## 2. Turn on email login (open sign-up, no confirmation)

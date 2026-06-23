@@ -73,7 +73,7 @@ function Section({ idx, title, total, children, defaultOpen }) {
 }
 
 /* ---- Section A: Site Details ---- */
-function SiteDetails({ state, model, set }) {
+function SiteDetails({ state, model, set, accounts }) {
   const p = state.project;
   const f = (label, key, mono) => (
     <div className="field"><label>{label}</label>
@@ -110,6 +110,22 @@ function SiteDetails({ state, model, set }) {
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Gross Area</label><div className="derived">{Math.round(state.phases.reduce((a, x) => a + x.netAreaSqft * (x.phaseType === 'Flat' || x.phaseType === 'Mixed' ? 1 + state.assumptions.gross_area_allowance : 1.0), 0)).toLocaleString()} sqft</div></div>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>Blended £psf</label><div className="derived">£{Math.round(model.ratios.gdv / (state.phases.reduce((a, x) => a + x.netAreaSqft, 0) || 1))}</div></div>
         <div><label style={{ fontSize: '11px', color: 'var(--muted)' }}>GDV</label><div className="derived" style={{ color: 'var(--green-700)', fontWeight: 600 }}>{inpFmt.money(model.ratios.gdv)}</div></div>
+      </div>
+      <div className="fieldrow" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '4px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+        <div className="field">
+          <label>Client Account <span className="badge" style={{ background: 'rgba(45,212,255,.1)', color: 'var(--green-700)' }}>CRM</span></label>
+          <select value={state.accountId || ''} onChange={e => set(s => { s.accountId = e.target.value || null; })}>
+            <option value="">— Unassigned —</option>
+            {(accounts || []).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>Pipeline Stage</label>
+          <select value={window.jobStage ? window.jobStage(state) : ((state.meta && state.meta.stage) || 'lead')}
+            onChange={e => set(s => { s.meta = s.meta || {}; s.meta.stage = e.target.value; })}>
+            {(window.JOB_STAGES || [{ key: 'lead', label: 'Lead' }]).map(st => <option key={st.key} value={st.key}>{st.label}</option>)}
+          </select>
+        </div>
       </div>
     </Section>
   );
@@ -335,13 +351,13 @@ function SummaryRail({ model }) {
   );
 }
 
-function InputScreen({ state, model, set }) {
+function InputScreen({ state, model, set, accounts }) {
   const cats = window.Appraisal.CATEGORIES;
   const costLetters = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S'];
   return (
     <div className="inputlayout">
       <div>
-        <SiteDetails state={state} model={model} set={set} />
+        <SiteDetails state={state} model={model} set={set} accounts={accounts} />
         <Timings state={state} set={set} />
         <ScheduleOfUnits state={state} model={model} set={set} />
         <IncomeByPhase state={state} model={model} set={set} />

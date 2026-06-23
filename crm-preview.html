@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phoenix CRM — preview harness</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="crm.css" />
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="engine.js"></script>
+<!-- minimal DB stub so the CRM components run without Supabase -->
+<script>
+  window.DB = {
+    familyId: function (p) { return (p && p.version && p.version.parentId) ? p.version.parentId : (p ? p.id : null); },
+    uid: function (pre) { return (pre || 'id') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  };
+</script>
+<script type="text/babel" src="crm.jsx"></script>
+<script type="text/babel" src="crm-detail.jsx"></script>
+<script type="text/babel">
+  // ---- mock data ----
+  const projs = [window.Appraisal.seedState()].concat(window.Appraisal.demoProjects());
+  projs.forEach(p => { p.accountId = 'acc-total-homes'; });
+  projs[1] && (projs[1].meta = Object.assign({}, projs[1].meta, { stage: 'won' }));
+  projs[2] && (projs[2].meta = Object.assign({}, projs[2].meta, { stage: 'offer' }));
+
+  const seedAccounts = [
+    window.DB && {
+      id: 'acc-total-homes', name: 'Total Homes', type: 'Developer', status: 'Active',
+      region: 'West Sussex & Surrey', address: 'Pavilion House, Brighton Road, Crawley RH10 6AS',
+      owner: 'M. Amin', tags: ['Repeat client', 'Priority'],
+      notes: 'Core developer client — multiple live schemes across the South East. Quarterly portfolio review with J. Marlowe.',
+      contacts: [
+        { id: 'ct1', name: 'James Marlowe', role: 'Development Director', email: 'j.marlowe@totalhomes.co.uk', phone: '01293 555 0142', primary: true },
+        { id: 'ct2', name: 'Amara Okafor', role: 'Land & Acquisitions', email: 'a.okafor@totalhomes.co.uk', phone: '01293 555 0188', primary: false }
+      ],
+      activity: [
+        { id: 'a1', type: 'Meeting', note: 'Portfolio review — agreed to progress Cedar Rise to offer and re-appraise Quarry Fields at revised build costs.', author: 'M. Amin', at: '2026-06-04T10:00:00Z' },
+        { id: 'a2', type: 'Email', note: 'Sent updated Walnut Marches appraisal pack for funder circulation.', author: 'M. Amin', at: '2026-05-29T14:20:00Z' }
+      ],
+      createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-06-04T10:00:00Z'
+    },
+    { id: 'acc-meridian', name: 'Meridian Land', type: 'Landowner', status: 'Lead', region: 'Kent', owner: 'M. Amin', tags: ['Inbound'], notes: 'Introduced via agent — holds a consented site near Maidstone.', contacts: [{ id: 'ct3', name: 'Priya Shah', role: 'Principal', email: 'priya@meridianland.com', phone: '01622 555 0110', primary: true }], activity: [], createdAt: '2026-06-09T00:00:00Z', updatedAt: '2026-06-10T09:30:00Z' },
+    { id: 'acc-kestrel', name: 'Kestrel Capital', type: 'Investor', status: 'Dormant', region: 'London', owner: 'M. Amin', tags: ['Equity partner'], notes: 'Equity partner on past schemes. No live mandate.', contacts: [{ id: 'ct4', name: 'Daniel Reeves', role: 'Investment Manager', email: 'd.reeves@kestrelcap.com', phone: '020 7555 0173', primary: true }], activity: [], createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-03-01T00:00:00Z' }
+  ];
+
+  function Harness() {
+    const [accounts, setAccounts] = React.useState(seedAccounts);
+    const [projects, setProjects] = React.useState(projs);
+    const session = { user: { email: 'demo@phoenix.co' } };
+
+    const createAccount = async (f) => { const a = Object.assign({ id: window.DB.uid('acc'), contacts: [], activity: [], tags: [], createdAt: new Date().toISOString() }, f, { updatedAt: new Date().toISOString() }); setAccounts(p => [a, ...p]); return a; };
+    const saveAccount = (a) => setAccounts(prev => prev.some(x => x.id === a.id) ? prev.map(x => x.id === a.id ? a : x) : [a, ...prev]);
+    const deleteAccount = async (id) => { setProjects(prev => prev.map(p => p.accountId === id ? Object.assign({}, p, { accountId: null }) : p)); setAccounts(prev => prev.filter(a => a.id !== id)); };
+    const assignJob = (pid, aid) => setProjects(prev => prev.map(p => p.id === pid ? Object.assign({}, p, { accountId: aid || null }) : p));
+    const setJobStage = (pid, st) => setProjects(prev => prev.map(p => p.id === pid ? Object.assign({}, p, { meta: Object.assign({}, p.meta, { stage: st }) }) : p));
+
+    return <window.CRMApp
+      accounts={accounts} projects={projects} session={session}
+      onBackToPortfolio={() => alert('→ back to appraisal portfolio')}
+      onSignOut={() => alert('sign out')}
+      onOpenJob={(id) => alert('open job ' + id)}
+      createAccount={createAccount} saveAccount={saveAccount} deleteAccount={deleteAccount}
+      assignJob={assignJob} setJobStage={setJobStage} />;
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Harness />);
+</script>
+</body>
+</html>
