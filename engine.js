@@ -392,7 +392,7 @@
   // spread default for that (category, month) / income[month] / equity[month].
   function ov(state) {
     var o = state.overrides || {};
-    return { cost: o.cost || {}, income: o.income || {}, equity: o.equity || {} };
+    return { cost: o.cost || {}, income: o.income || {}, equity: o.equity || {}, line: o.line || {} };
   }
   function hasOv(map, key) { return map && Object.prototype.hasOwnProperty.call(map, key); }
 
@@ -407,18 +407,29 @@
     var catMonthly = {}; // catId -> [0..H]
     CATEGORIES.forEach(function (c) { catMonthly[c.id] = []; for (i = 0; i <= H; i++) catMonthly[c.id].push(0); });
     // line-level monthly expenditure — the exact spreadsheet-style breakdown,
-    // one array per cost line, computed BEFORE any category override is applied
-    // (an override replaces a category's total for a month; it doesn't attempt
-    // to redistribute across that category's individual lines).
+    // one array per cost line. Individual cells here are directly editable
+    // (state.overrides.line[lineId][month]); a category-level override (below)
+    // still wins if both are set for the same month, since that's a deliberate
+    // "type one number for the whole category" action.
     var lineMonthly = {}; // lineId -> [0..H]
     state.costLines.forEach(function (l) {
       lineMonthly[l.id] = []; for (i = 0; i <= H; i++) lineMonthly[l.id].push(0);
       if (!l.included || l.basis === 'computed_interest') return;
       var amt = resolveAmount(l, state);
       spread(lineMonthly[l.id], amt, l.start, l.end, H);
-      spread(catMonthly[l.cat], amt, l.start, l.end, H);
     });
-    // apply per-category overrides
+    // apply per-line overrides
+    state.costLines.forEach(function (l) {
+      var lmap = o.line[l.id];
+      if (!lmap) return;
+      for (m = 1; m <= H; m++) if (hasOv(lmap, m)) lineMonthly[l.id][m] = +lmap[m] || 0;
+    });
+    // roll (possibly-edited) lines up into their category totals
+    state.costLines.forEach(function (l) {
+      if (l.basis === 'computed_interest') return;
+      for (m = 1; m <= H; m++) catMonthly[l.cat][m] += lineMonthly[l.id][m];
+    });
+    // apply per-category overrides (a blunt "whole category, this month" edit — wins over line edits)
     CATEGORIES.forEach(function (c) {
       var omap = o.cost[c.id];
       if (!omap) return;
@@ -475,16 +486,19 @@
 
   // mutate helpers used by the editable cashflow table
   function setOverride(state, kind, catId, month, value) {
-    if (!state.overrides) state.overrides = { cost: {}, income: {}, equity: {} };
+    if (!state.overrides) state.overrides = { cost: {}, income: {}, equity: {}, line: {} };
     var o = state.overrides;
+    if (!o.line) o.line = {};
     if (kind === 'cost') { if (!o.cost[catId]) o.cost[catId] = {}; o.cost[catId][month] = value; }
+    else if (kind === 'line') { if (!o.line[catId]) o.line[catId] = {}; o.line[catId][month] = value; }
     else if (kind === 'income') { o.income[month] = value; }
     else if (kind === 'equity') { o.equity[month] = value; }
   }
-  function clearOverrides(state) { state.overrides = { cost: {}, income: {}, equity: {} }; }
+  function clearOverrides(state) { state.overrides = { cost: {}, income: {}, equity: {}, line: {} }; }
   function isOverridden(state, kind, catId, month) {
     var o = state.overrides || {};
     if (kind === 'cost') return !!(o.cost && o.cost[catId] && hasOv(o.cost[catId], month));
+    if (kind === 'line') return !!(o.line && o.line[catId] && hasOv(o.line[catId], month));
     if (kind === 'income') return !!(o.income && hasOv(o.income, month));
     if (kind === 'equity') return !!(o.equity && hasOv(o.equity, month));
     return false;

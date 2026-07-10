@@ -593,6 +593,8 @@ input, select { font-family: inherit; }
 .cftbl .linerow .linebasis { display: block; font-size: 9.5px; color: var(--muted-2); font-family: var(--mono); margin-top: 1px; }
 .cftbl .linerow.excluded .lineitem, .cftbl .linerow.excluded .linebasis { text-decoration: line-through; opacity: .55; }
 .cftbl td.cfcell.ro.linecell { color: var(--muted-2); font-size: 11px; }
+.cftbl td.cfcell.linecell > :not(.ovdot) { font-size: 11px; }
+.cftbl td.cfcell.linecell:not(.ro) { color: var(--ink-2); }
 .cftbl .linerow .totcol.linetotal { font-weight: 500; color: var(--ink-2); background: var(--surface-2); }
 
 .cf-foot { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }

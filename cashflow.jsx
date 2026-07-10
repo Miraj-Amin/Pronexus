@@ -1,11 +1,12 @@
 /* Editable monthly cashflow table. Category rows × month columns, each
    category expandable into its individual cost-line rows — matching the
    line-by-line detail of the source spreadsheet's Cashflow sheet.
-   Editing a CATEGORY cell writes an override (state.overrides) that replaces
-   the spread default for that month; individual line rows are read-only
-   detail (edit the underlying amount/%/dates on the Input tab instead) and
-   always show the calculated breakdown, even if the category above them has
-   been overridden for a given month. Interest + balance rows recompute live. */
+   Both category totals AND individual line cells are directly editable and
+   write to state.overrides (kind 'cost' for a category, kind 'line' for a
+   single cost line). If both are set for the same month, the category-level
+   edit wins (it's a deliberate "type one number for the whole category"
+   action) — editing individual lines is the normal way to amend a figure.
+   Interest + balance rows recompute live and stay read-only. */
 const cfFmt = window.Appraisal;
 
 function CfCell({ value, overridden, onCommit, readOnly, neg, muted }) {
@@ -16,7 +17,7 @@ function CfCell({ value, overridden, onCommit, readOnly, neg, muted }) {
   }
   if (editing) {
     return (
-      <td className="cfcell editing">
+      <td className={'cfcell editing' + (muted ? ' linecell' : '')}>
         <input autoFocus className="num" value={draft}
           onChange={e => setDraft(e.target.value)}
           onBlur={() => { onCommit(draft); setEditing(false); }}
@@ -25,7 +26,7 @@ function CfCell({ value, overridden, onCommit, readOnly, neg, muted }) {
     );
   }
   return (
-    <td className={'cfcell' + (overridden ? ' ov' : '')}
+    <td className={'cfcell' + (overridden ? ' ov' : '') + (muted ? ' linecell' : '')}
       onClick={() => { setDraft(value ? Math.round(value).toString() : ''); setEditing(true); }}
       title={overridden ? 'Edited — overrides the calculated value' : 'Click to edit'}>
       {value ? cfFmt.moneyShort(value) : <span className="zero">–</span>}
@@ -54,6 +55,7 @@ function CashflowTable({ state, model, set }) {
   for (let m = 1; m <= H; m++) months.push(m);
   const anyOverride =
     Object.keys((state.overrides && state.overrides.cost) || {}).length ||
+    Object.keys((state.overrides && state.overrides.line) || {}).length ||
     Object.keys((state.overrides && state.overrides.income) || {}).length ||
     Object.keys((state.overrides && state.overrides.equity) || {}).length;
 
@@ -72,7 +74,7 @@ function CashflowTable({ state, model, set }) {
       <div className="cf-toolbar">
         <div className="cf-tb-l">
           <div className="cf-tb-title">Monthly Cashflow</div>
-          <div className="cf-tb-sub">{H} months · category totals are editable · line items below each category show the calculated spreadsheet-style breakdown.</div>
+          <div className="cf-tb-sub">{H} months · click any category OR line-item cell to amend it directly. Interest &amp; balance recompute automatically.</div>
         </div>
         <div className="cf-tb-r">
           <div className="cf-legendpill"><span className="ovdot"></span>edited cell</div>
@@ -127,7 +129,11 @@ function CashflowTable({ state, model, set }) {
                         <span className="lineitem">{l.item}</span>
                         <span className="linebasis">{lineBasisLabel(l)}{!l.included ? ' · excluded' : ''}</span>
                       </td>
-                      {months.map(m => <CfCell key={m} value={cf.lineMonthly[l.id][m]} readOnly muted />)}
+                      {months.map(m => (
+                        <CfCell key={m} value={cf.lineMonthly[l.id][m]}
+                          overridden={window.Appraisal.isOverridden(state, 'line', l.id, m)}
+                          onCommit={raw => commit('line', l.id, m, raw)} muted />
+                      ))}
                       <td className="totcol num linetotal">{cfFmt.moneyShort(cf.lineTotals[l.id])}</td>
                     </tr>
                   )) : null}
