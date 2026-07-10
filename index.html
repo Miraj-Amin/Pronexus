@@ -40,32 +40,40 @@
       if(!window.React)show('React did not load — check the CDN <script> tags / your network.');
       else if(!window.ReactDOM)show('ReactDOM did not load.');
       else if(!window.Babel)show('Babel did not load — the .jsx files cannot be compiled.');
-      else show('Scripts loaded but nothing rendered. Check the Console for the first red error (expand it to see the file & line).');}
+      else {
+        // Component-presence check: each .jsx file exports its component onto
+        // window. If one is missing, a file failed to load/compile (usually a
+        // stale cached copy) — name it so the fix is obvious.
+        var need={ImportModal:'import-ui.jsx',Portfolio:'portfolio.jsx',SummaryScreen:'summary.jsx',CashflowTable:'cashflow.jsx',InputScreen:'input.jsx',Presentation:'presentation.jsx',CRMApp:'crm.jsx',Appraisal:'engine.js',AppraisalImport:'import.js',DB:'db.js'};
+        var missing=[];for(var k in need){if(!window[k])missing.push(k+' ('+need[k]+')');}
+        if(missing.length)show('Some scripts did not load or are a stale cached copy. Missing: '+missing.join(', ')+'.\n\nFix: hard-refresh (Ctrl/Cmd+Shift+R). If it persists, re-upload those files and confirm the ?v= number in index.html matches your latest upload.');
+        else show('Scripts loaded but nothing rendered. Check the Console for the first red error (expand it to see the file & line).');
+      }}
   },6000);});
 })();
 </script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js?v=7"></script>
+<script src="engine.js?v=8"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="import.js?v=7"></script>
+<script src="import.js?v=8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabaseClient.js?v=7"></script>
-<script src="db.js?v=7"></script>
-<script type="text/babel" src="dashboard.jsx?v=7"></script>
-<script type="text/babel" src="summary.jsx?v=7"></script>
-<script type="text/babel" src="cashflow.jsx?v=7"></script>
-<script type="text/babel" src="portfolio.jsx?v=7"></script>
-<script type="text/babel" src="import-ui.jsx?v=7"></script>
-<script type="text/babel" src="input.jsx?v=7"></script>
-<script type="text/babel" src="auth.jsx?v=7"></script>
-<script type="text/babel" src="collab.jsx?v=7"></script>
-<script type="text/babel" src="versions.jsx?v=7"></script>
-<script type="text/babel" src="printpack.jsx?v=7"></script>
-<script type="text/babel" src="presentation.jsx?v=7"></script>
-<script type="text/babel" src="crm.jsx?v=7"></script>
-<script type="text/babel" src="crm-detail.jsx?v=7"></script>
-<script type="text/babel" src="app.jsx?v=7"></script>
+<script src="supabaseClient.js?v=8"></script>
+<script src="db.js?v=8"></script>
+<script type="text/babel" src="dashboard.jsx?v=8"></script>
+<script type="text/babel" src="summary.jsx?v=8"></script>
+<script type="text/babel" src="cashflow.jsx?v=8"></script>
+<script type="text/babel" src="portfolio.jsx?v=8"></script>
+<script type="text/babel" src="import-ui.jsx?v=8"></script>
+<script type="text/babel" src="input.jsx?v=8"></script>
+<script type="text/babel" src="auth.jsx?v=8"></script>
+<script type="text/babel" src="collab.jsx?v=8"></script>
+<script type="text/babel" src="versions.jsx?v=8"></script>
+<script type="text/babel" src="printpack.jsx?v=8"></script>
+<script type="text/babel" src="presentation.jsx?v=8"></script>
+<script type="text/babel" src="crm.jsx?v=8"></script>
+<script type="text/babel" src="crm-detail.jsx?v=8"></script>
+<script type="text/babel" src="app.jsx?v=8"></script>
 </body>
 </html>

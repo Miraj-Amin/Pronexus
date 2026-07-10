@@ -123,6 +123,24 @@ function NewProjectModal({ onClose, onCreate }) {
 }
 
 function Workspace({ session }) {
+  // Components defined in OTHER .jsx files are exported onto window by those
+  // files (Object.assign(window, {...})). Babel-standalone compiles each
+  // external <script type="text/babel"> in its own scope, so referencing them
+  // as bare identifiers here is unreliable (that was the "ImportModal is not
+  // defined" crash). Resolve them from window explicitly.
+  const Portfolio = window.Portfolio;
+  const ImportModal = window.ImportModal;
+  const InputScreen = window.InputScreen;
+  const SummaryScreen = window.SummaryScreen;
+  const CashflowTable = window.CashflowTable;
+  const Presentation = window.Presentation;
+  const VersionSwitcher = window.VersionSwitcher;
+  const ReviewDrawer = window.ReviewDrawer;
+  const PrintPack = window.PrintPack;
+  const CreateVersionModal = window.CreateVersionModal;
+  const CompareView = window.CompareView;
+  const CRMApp = window.CRMApp;
+
   const [projects, setProjects] = React.useState(null); // null = still loading
   const [loadErr, setLoadErr] = React.useState('');
   const [activeId, setActiveId] = React.useState(() => DB.getActive());
@@ -426,7 +444,7 @@ function Workspace({ session }) {
         <TabErrorBoundary resetLabel="Dismiss & return to portfolio" onReset={() => { setShowNew(false); setShowImport(false); }}>
           <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => setShowImport(true)} onClone={cloneProject} onDelete={deleteProject} />
           {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
-          {showImport ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
+          {showImport && ImportModal ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
         </TabErrorBoundary>
       </div>
     );
