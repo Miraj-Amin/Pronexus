@@ -9,16 +9,66 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="crm.css" />
+<style>
+  /* Visible error overlay — so a script failure never shows as a blank page again */
+  #boot-error{display:none;position:fixed;inset:0;z-index:99999;background:#12202f;color:#f6f3ec;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;padding:32px;overflow:auto}
+  #boot-error h1{font-size:15px;color:#ffb27a;margin:0 0 12px}
+  #boot-error pre{white-space:pre-wrap;color:#e88;background:#0d1926;padding:14px;border-radius:8px;border:1px solid #24384a}
+  #boot-error .hint{color:#9fb0bf;margin-top:14px}
+</style>
 </head>
 <body>
 <div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<div id="boot-error">
+  <h1>⚠ Startup error</h1>
+  <div class="hint">The app hit an error while loading. Details below (also in the browser Console, F12):</div>
+  <pre id="boot-error-msg"></pre>
+  <div class="hint">Most common causes: a CDN script blocked, or a syntax error in one of the .jsx files.</div>
+</div>
+
+<script>
+  // Surface any load-time error on screen instead of failing silently.
+  (function () {
+    function show(msg) {
+      var box = document.getElementById('boot-error');
+      var pre = document.getElementById('boot-error-msg');
+      if (box && pre) { pre.textContent += (pre.textContent ? '\n\n' : '') + msg; box.style.display = 'block'; }
+    }
+    window.addEventListener('error', function (e) {
+      var m = e && e.message ? e.message : String(e);
+      if (e && e.filename) m += '\n  at ' + e.filename + ':' + (e.lineno || '?');
+      show(m);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      show('Unhandled promise rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+    });
+    // Safety net: if React never mounts within 6s, say so.
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        if (root && root.childElementCount === 0) {
+          if (!window.React) show('React did not load — check the CDN <script> tags / your network.');
+          else if (!window.ReactDOM) show('ReactDOM did not load.');
+          else if (!window.Babel) show('Babel did not load — the .jsx files cannot be compiled.');
+          else show('Scripts loaded but nothing rendered. Check the Console for the first red error.');
+        }
+      }, 6000);
+    });
+  })();
+</script>
+
+<!-- Core libs. integrity/crossorigin removed: mismatched SRI hashes were blocking these
+     and blanking the page. Versions stay pinned. -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
 <script src="engine.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabaseClient.js"></script>
 <script src="db.js"></script>
+
 <script type="text/babel" src="dashboard.jsx"></script>
 <script type="text/babel" src="cashflow.jsx"></script>
 <script type="text/babel" src="portfolio.jsx"></script>
