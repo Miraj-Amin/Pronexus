@@ -275,6 +275,16 @@ input, select { font-family: inherit; }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl tr.totalrow td { font-weight: 600; color: var(--ink); background: rgba(45,212,255,.05); font-family: var(--mono); }
 
+/* Summary screen — stat grid + site-details table */
+.sumgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 18px; }
+.sumstat .l { font-size: 9.5px; color: var(--muted); font-weight: 500; letter-spacing: .6px; font-family: var(--mono); text-transform: uppercase; }
+.sumstat .v { font-family: var(--mono); font-size: 19px; font-weight: 600; color: var(--ink); margin-top: 4px; line-height: 1.15; }
+.sumstat .s { font-size: 10px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+.sitetbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--ink); vertical-align: top; }
+.sitetbl tr:last-child td { border-bottom: 0; }
+.sitetbl td.l { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; font-family: var(--mono); width: 130px; white-space: nowrap; }
+@media (max-width: 720px) { .sumgrid { grid-template-columns: 1fr 1fr; } }
+
 /* ---------- flag panel ---------- */
 .flagpanel { display: flex; flex-direction: column; gap: 8px; }
 .flagitem { display: flex; gap: 11px; padding: 11px 13px; border-radius: 0; border: 1px solid var(--border); border-left-width: 2px; background: var(--surface-2); }
@@ -571,6 +581,19 @@ input, select { font-family: inherit; }
 .cftbl .balancerow td.peakcell { background: var(--red); color: #fff; }
 .cftbl td.negv { color: var(--ok); }
 .cftbl .balancerow td.negv { color: var(--ok); }
+
+/* line-item breakdown rows (per-category detail matching the source spreadsheet) */
+.cf-caret { width: 15px; height: 15px; display: inline-grid; place-items: center; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 9px; padding: 0; margin-right: 2px; border-radius: 3px; vertical-align: -1px; }
+.cf-caret:hover { background: var(--surface-3); color: var(--ink); }
+.cf-caret.ph { cursor: default; visibility: hidden; }
+.cftbl .linerow td { border-bottom: 1px solid var(--border); background: var(--surface); }
+.cftbl .linerow:hover .sticky-l { background: var(--surface-2); }
+.cftbl .linerow .rowhead.linelabel { padding-left: 40px; min-width: 210px; }
+.cftbl .linerow .lineitem { display: block; font-size: 11.5px; color: var(--ink-2); line-height: 1.3; }
+.cftbl .linerow .linebasis { display: block; font-size: 9.5px; color: var(--muted-2); font-family: var(--mono); margin-top: 1px; }
+.cftbl .linerow.excluded .lineitem, .cftbl .linerow.excluded .linebasis { text-decoration: line-through; opacity: .55; }
+.cftbl td.cfcell.ro.linecell { color: var(--muted-2); font-size: 11px; }
+.cftbl .linerow .totcol.linetotal { font-weight: 500; color: var(--ink-2); background: var(--surface-2); }
 
 .cf-foot { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; }
 .cf-foot-stat { background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: 1px solid var(--border); border-radius: 0; padding: 13px 15px; box-shadow: var(--shadow-sm); position: relative; }

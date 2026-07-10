@@ -1,13 +1,18 @@
-/* Editable monthly cashflow table. Category rows × month columns.
-   Editing a cell writes an override (state.overrides) that replaces the spread
-   default; interest + balance rows recompute live and are read-only. */
+/* Editable monthly cashflow table. Category rows × month columns, each
+   category expandable into its individual cost-line rows — matching the
+   line-by-line detail of the source spreadsheet's Cashflow sheet.
+   Editing a CATEGORY cell writes an override (state.overrides) that replaces
+   the spread default for that month; individual line rows are read-only
+   detail (edit the underlying amount/%/dates on the Input tab instead) and
+   always show the calculated breakdown, even if the category above them has
+   been overridden for a given month. Interest + balance rows recompute live. */
 const cfFmt = window.Appraisal;
 
-function CfCell({ value, overridden, onCommit, readOnly, neg }) {
+function CfCell({ value, overridden, onCommit, readOnly, neg, muted }) {
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState('');
   if (readOnly) {
-    return <td className={'cfcell ro' + (neg && value < 0 ? ' negv' : '')}>{value ? cfFmt.moneyShort(value) : '–'}</td>;
+    return <td className={'cfcell ro' + (neg && value < 0 ? ' negv' : '') + (muted ? ' linecell' : '')}>{value ? cfFmt.moneyShort(value) : '–'}</td>;
   }
   if (editing) {
     return (
@@ -29,6 +34,18 @@ function CfCell({ value, overridden, onCommit, readOnly, neg }) {
   );
 }
 
+function lineBasisLabel(l) {
+  if (l.sdlt) return 'SDLT (tiered)';
+  if (l.basis === 'fixed') return 'fixed';
+  if (l.basis === 'pct_land') return (l.pct * 100).toFixed(2) + '% land';
+  if (l.basis === 'pct_gdv') return (l.pct * 100).toFixed(2) + '% GDV';
+  if (l.basis === 'pct_construction') return (l.pct * 100).toFixed(2) + '% constr.';
+  if (l.basis === 'pct_loan') return (l.pct * 100).toFixed(2) + '% loan';
+  if (l.basis === 'per_unit') return cfFmt.money(l.rate) + '/unit';
+  if (l.basis === 'construction') return 'build cost';
+  return l.basis;
+}
+
 function CashflowTable({ state, model, set }) {
   const cf = model.cashflow;
   const H = cf.horizon;
@@ -40,21 +57,31 @@ function CashflowTable({ state, model, set }) {
     Object.keys((state.overrides && state.overrides.income) || {}).length ||
     Object.keys((state.overrides && state.overrides.equity) || {}).length;
 
+  const [collapsed, setCollapsed] = React.useState({});
+  const [detail, setDetail] = React.useState(true); // show line-item breakdown
+
   const commit = (kind, catId, m, raw) => {
     const n = parseFloat(String(raw).replace(/[^0-9.\-]/g, ''));
     set(s => { window.Appraisal.setOverride(s, kind, catId, m, isNaN(n) ? 0 : n); });
   };
-  const interestLineId = state.costLines.filter(l => l.basis === 'computed_interest')[0];
+  const toggleCat = id => setCollapsed(c => ({ ...c, [id]: !c[id] }));
+  const allCollapsed = cats.every(c => collapsed[c.id]);
 
   return (
     <div>
       <div className="cf-toolbar">
         <div className="cf-tb-l">
           <div className="cf-tb-title">Monthly Cashflow</div>
-          <div className="cf-tb-sub">{H} months · click any cost / income / equity cell to override. Interest &amp; balance recompute automatically.</div>
+          <div className="cf-tb-sub">{H} months · category totals are editable · line items below each category show the calculated spreadsheet-style breakdown.</div>
         </div>
         <div className="cf-tb-r">
           <div className="cf-legendpill"><span className="ovdot"></span>edited cell</div>
+          <button className="btn ghost" onClick={() => setDetail(d => !d)}>{detail ? 'Hide' : 'Show'} line detail</button>
+          {detail ? (
+            <button className="btn ghost" onClick={() => {
+              const next = {}; cats.forEach(c => { next[c.id] = !allCollapsed; }); setCollapsed(next);
+            }}>{allCollapsed ? 'Expand all' : 'Collapse all'}</button>
+          ) : null}
           <button className="btn" disabled={!anyOverride} style={{ opacity: anyOverride ? 1 : .45 }}
             onClick={() => { if (confirm('Clear all manual cashflow edits and revert to calculated values?')) set(s => window.Appraisal.clearOverrides(s)); }}>
             ↺ Reset edits
@@ -76,31 +103,35 @@ function CashflowTable({ state, model, set }) {
             <tr className="grouprow"><td className="rowhead sticky-l" colSpan={H + 2}>Expenditure</td></tr>
             {cats.map(c => {
               const rowTotal = cf.catTotals[c.id];
-              if (c.id === 14) {
-                // finance row — interest is computed; show read-only
-                return (
-                  <tr key={c.id} className="catrow">
-                    <td className="rowhead sticky-l"><span className="catnum">{c.id}</span>{c.name}</td>
-                    {months.map(m => {
-                      const interest = cf.rows[m - 1] ? cf.rows[m - 1].interest : 0;
-                      const nonInterest = cf.catMonthly[c.id][m];
-                      const val = nonInterest; // overridable finance fees
-                      return <CfCell key={m} value={val} overridden={window.Appraisal.isOverridden(state, 'cost', c.id, m)} onCommit={raw => commit('cost', c.id, m, raw)} />;
-                    })}
+              const lines = (model.byCat[c.id] ? model.byCat[c.id].lines : []).filter(l => l.basis !== 'computed_interest');
+              const isOpen = detail && !collapsed[c.id];
+              return (
+                <React.Fragment key={c.id}>
+                  <tr className="catrow">
+                    <td className="rowhead sticky-l">
+                      {detail && lines.length ? (
+                        <button className="cf-caret" onClick={() => toggleCat(c.id)} title={isOpen ? 'Collapse' : 'Expand'}>{isOpen ? '▾' : '▸'}</button>
+                      ) : <span className="cf-caret ph"></span>}
+                      <span className="catnum">{c.id}</span>{c.name}
+                    </td>
+                    {months.map(m => (
+                      <CfCell key={m} value={cf.catMonthly[c.id][m]}
+                        overridden={window.Appraisal.isOverridden(state, 'cost', c.id, m)}
+                        onCommit={raw => commit('cost', c.id, m, raw)} />
+                    ))}
                     <td className="totcol num">{cfFmt.moneyShort(rowTotal)}</td>
                   </tr>
-                );
-              }
-              return (
-                <tr key={c.id} className="catrow">
-                  <td className="rowhead sticky-l"><span className="catnum">{c.id}</span>{c.name}</td>
-                  {months.map(m => (
-                    <CfCell key={m} value={cf.catMonthly[c.id][m]}
-                      overridden={window.Appraisal.isOverridden(state, 'cost', c.id, m)}
-                      onCommit={raw => commit('cost', c.id, m, raw)} />
-                  ))}
-                  <td className="totcol num">{cfFmt.moneyShort(rowTotal)}</td>
-                </tr>
+                  {isOpen ? lines.map(l => (
+                    <tr key={l.id} className={'linerow' + (l.included ? '' : ' excluded')}>
+                      <td className="rowhead sticky-l linelabel" title={lineBasisLabel(l)}>
+                        <span className="lineitem">{l.item}</span>
+                        <span className="linebasis">{lineBasisLabel(l)}{!l.included ? ' · excluded' : ''}</span>
+                      </td>
+                      {months.map(m => <CfCell key={m} value={cf.lineMonthly[l.id][m]} readOnly muted />)}
+                      <td className="totcol num linetotal">{cfFmt.moneyShort(cf.lineTotals[l.id])}</td>
+                    </tr>
+                  )) : null}
+                </React.Fragment>
               );
             })}
             <tr className="subtotalrow">
@@ -111,7 +142,7 @@ function CashflowTable({ state, model, set }) {
 
             {/* interest (computed) */}
             <tr className="catrow computed">
-              <td className="rowhead sticky-l"><span className="catnum lock">∑</span>Bank Interest <span className="cf-auto">auto</span></td>
+              <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum lock">∑</span>Bank Interest <span className="cf-auto">auto</span></td>
               {months.map(m => <CfCell key={m} value={cf.rows[m - 1].interest} readOnly={true} />)}
               <td className="totcol num">{cfFmt.moneyShort(cf.totalInterest)}</td>
             </tr>
@@ -119,7 +150,7 @@ function CashflowTable({ state, model, set }) {
             {/* funding header */}
             <tr className="grouprow"><td className="rowhead sticky-l" colSpan={H + 2}>Funding &amp; Income</td></tr>
             <tr className="catrow">
-              <td className="rowhead sticky-l"><span className="catnum eq">E</span>Equity Drawn</td>
+              <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum eq">E</span>Equity Drawn</td>
               {months.map(m => (
                 <CfCell key={m} value={cf.equity[m]} overridden={window.Appraisal.isOverridden(state, 'equity', null, m)}
                   onCommit={raw => commit('equity', null, m, raw)} />
@@ -127,13 +158,29 @@ function CashflowTable({ state, model, set }) {
               <td className="totcol num">{cfFmt.moneyShort(cf.totals.equity)}</td>
             </tr>
             <tr className="catrow income">
-              <td className="rowhead sticky-l"><span className="catnum inc">S</span>Sales Income</td>
+              <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum inc">S</span>Sales Income</td>
               {months.map(m => (
                 <CfCell key={m} value={cf.income[m]} overridden={window.Appraisal.isOverridden(state, 'income', null, m)}
                   onCommit={raw => commit('income', null, m, raw)} />
               ))}
               <td className="totcol num">{cfFmt.moneyShort(cf.totals.income)}</td>
             </tr>
+            {detail ? state.phases.filter(p => cfFmt.phaseGdv(p) > 0).map(p => {
+              const g = cfFmt.phaseGdv(p);
+              const arr = []; for (let m = 0; m <= H; m++) arr.push(0);
+              if (p.salesStart && p.salesEnd) {
+                const lo = Math.min(p.salesStart, p.salesEnd), hi = Math.max(p.salesStart, p.salesEnd);
+                const per = g / (hi - lo + 1);
+                for (let m = lo; m <= hi; m++) if (m >= 1 && m <= H) arr[m] = per;
+              }
+              return (
+                <tr key={p.id} className="linerow">
+                  <td className="rowhead sticky-l linelabel"><span className="lineitem">{p.name || p.id}</span><span className="linebasis">sales income</span></td>
+                  {months.map(m => <CfCell key={m} value={arr[m]} readOnly muted />)}
+                  <td className="totcol num linetotal">{cfFmt.moneyShort(g)}</td>
+                </tr>
+              );
+            }) : null}
 
             {/* balance (computed) */}
             <tr className="balancerow">

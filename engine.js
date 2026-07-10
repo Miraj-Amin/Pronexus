@@ -406,9 +406,16 @@
     // category-level monthly expenditure (everything except computed interest)
     var catMonthly = {}; // catId -> [0..H]
     CATEGORIES.forEach(function (c) { catMonthly[c.id] = []; for (i = 0; i <= H; i++) catMonthly[c.id].push(0); });
+    // line-level monthly expenditure — the exact spreadsheet-style breakdown,
+    // one array per cost line, computed BEFORE any category override is applied
+    // (an override replaces a category's total for a month; it doesn't attempt
+    // to redistribute across that category's individual lines).
+    var lineMonthly = {}; // lineId -> [0..H]
     state.costLines.forEach(function (l) {
+      lineMonthly[l.id] = []; for (i = 0; i <= H; i++) lineMonthly[l.id].push(0);
       if (!l.included || l.basis === 'computed_interest') return;
       var amt = resolveAmount(l, state);
+      spread(lineMonthly[l.id], amt, l.start, l.end, H);
       spread(catMonthly[l.cat], amt, l.start, l.end, H);
     });
     // apply per-category overrides
@@ -452,10 +459,14 @@
     // category row totals (across all months)
     var catTotals = {};
     CATEGORIES.forEach(function (c) { var t = 0; for (m = 1; m <= H; m++) t += catMonthly[c.id][m]; catTotals[c.id] = t; });
+    // line row totals (across all months) — matches resolveAmount(l, state) for included lines
+    var lineTotals = {};
+    state.costLines.forEach(function (l) { var t = 0; for (m = 1; m <= H; m++) t += lineMonthly[l.id][m]; lineTotals[l.id] = t; });
 
     return {
       rows: rows, peak: peak, peakMonth: peakMonth, totalInterest: totalInterest, horizon: H,
       catMonthly: catMonthly, income: inc, equity: eq, catTotals: catTotals,
+      lineMonthly: lineMonthly, lineTotals: lineTotals,
       totals: { expenditure: totalExpAll, income: totalIncAll, equity: totalEqAll, interest: totalInterest },
       // which cells are user-overridden (for UI markers)
       overridden: o

@@ -402,6 +402,7 @@ function Workspace({ session }) {
         {!pres ? (
           <div className="nav">
             <button className={tab === 'input' ? 'active' : ''} onClick={() => setTab('input')}>Input</button>
+            <button className={tab === 'summary' ? 'active' : ''} onClick={() => setTab('summary')}>Summary</button>
             <button className={tab === 'cashflow' ? 'active' : ''} onClick={() => setTab('cashflow')}>Cashflow</button>
             <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
           </div>
@@ -477,6 +478,10 @@ function Workspace({ session }) {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 7.5h7M6.5 10h7M6.5 12.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             <span>Input</span>
           </button>
+          <button className={tab === 'summary' ? 'active' : ''} onClick={() => { setTab('summary'); window.scrollTo(0, 0); }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 3.5h12v13H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M6.5 7h7M6.5 10h7M6.5 13h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span>Summary</span>
+          </button>
           <button className={tab === 'cashflow' ? 'active' : ''} onClick={() => { setTab('cashflow'); window.scrollTo(0, 0); }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-4 3 2 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 17h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             <span>Cashflow</span>
@@ -498,9 +503,11 @@ function Workspace({ session }) {
         ? <Presentation state={active} model={model} />
         : tab === 'input'
           ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>
-          : tab === 'cashflow'
-            ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
-            : <Dashboard state={active} model={model} />}
+          : tab === 'summary'
+            ? <SummaryScreen state={active} model={model} />
+            : tab === 'cashflow'
+              ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
+              : <Dashboard state={active} model={model} />}
     </div>
   );
 }
