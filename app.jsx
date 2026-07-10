@@ -11,7 +11,7 @@ const DB = window.DB;
 class TabErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error, info) { console.error('Tab render error:', error, info); }
+  componentDidCatch(error, info) { console.error('Render error caught by boundary:', error, info); }
   render() {
     if (this.state.error) {
       return (
@@ -24,7 +24,7 @@ class TabErrorBoundary extends React.Component {
               {String(this.state.error && this.state.error.message || this.state.error)}
             </div>
             <button className="btn primary" onClick={() => { this.setState({ error: null }); this.props.onReset && this.props.onReset(); }}>
-              ← Back to Dashboard
+              {this.props.resetLabel || '← Back to Dashboard'}
             </button>
           </div>
         </div>
@@ -263,13 +263,27 @@ function Workspace({ session }) {
   const importProject = async importedProject => {
     setBusy(true);
     try {
-      await DB.upsert(importedProject);
+      // Normalise shape defensively so nothing downstream can hit a missing field.
+      const p = importedProject || {};
+      if (!p.id) p.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      if (!p.project) p.project = {};
+      if (!Array.isArray(p.phases)) p.phases = [];
+      if (!Array.isArray(p.units)) p.units = [];
+      if (!Array.isArray(p.costLines)) p.costLines = [];
+      if (!Array.isArray(p.comparables)) p.comparables = [];
+      if (!p.assumptions) p.assumptions = {};
+      if (!p.overrides) p.overrides = { cost: {}, income: {}, equity: {}, line: {} };
+      if (!p.meta) p.meta = { status: 'Draft' };
+      await DB.upsert(p);
       setShowImport(false);
       await loadProjects();
-      openProject(importedProject.id);
+      setActiveId(p.id);
       setTab('input');
-    } catch (e) { alert('Could not import scheme: ' + ((e && e.message) || e)); }
-    finally { setBusy(false); }
+      window.scrollTo(0, 0);
+    } catch (e) {
+      console.error('Import failed:', e);
+      alert('Could not import scheme: ' + ((e && e.message) || e));
+    } finally { setBusy(false); }
   };
   const cloneProject = async id => {
     setBusy(true);
@@ -409,9 +423,11 @@ function Workspace({ session }) {
           </div>
         </div>
         {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
-        <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => setShowImport(true)} onClone={cloneProject} onDelete={deleteProject} />
-        {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
-        {showImport ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
+        <TabErrorBoundary resetLabel="Dismiss & return to portfolio" onReset={() => { setShowNew(false); setShowImport(false); }}>
+          <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => setShowImport(true)} onClone={cloneProject} onDelete={deleteProject} />
+          {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
+          {showImport ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
+        </TabErrorBoundary>
       </div>
     );
   }

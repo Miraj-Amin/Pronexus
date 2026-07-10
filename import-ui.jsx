@@ -30,7 +30,18 @@ function ImportModal({ onClose, onImport }) {
     parse(f);
   };
 
-  const model = preview ? fmt.computeModel(preview) : null;
+  // Compute the preview model defensively — a failure here must NOT throw during
+  // render (that would unmount the whole app / white-screen the page). Instead we
+  // fall back to no preview and surface the message.
+  let model = null;
+  let modelErr = '';
+  if (preview) {
+    try { model = fmt.computeModel(preview); }
+    catch (e) { modelErr = (e && e.message) || String(e); model = null; }
+  }
+  const previewPhases = (preview && Array.isArray(preview.phases)) ? preview.phases : [];
+  const previewUnits = previewPhases.reduce((a, x) => a + (x && x.units || 0), 0);
+  const previewProject = (preview && preview.project) || {};
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -74,19 +85,23 @@ function ImportModal({ onClose, onImport }) {
                 <div className="reconcile bad" style={{ marginTop: 0 }}><span>⚠</span> {err}</div>
               ) : null}
 
-              {state === 'ready' && preview && model ? (
+              {state === 'ready' && preview ? (
                 <div>
                   <div className="field">
                     <label>Scheme name</label>
                     <input autoFocus value={name} onChange={e => setName(e.target.value)} />
                   </div>
-                  <div className="fieldrow" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                    <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>GDV</div><div className="derived">{fmt.money(model.ratios.gdv)}</div></div>
-                    <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Units</div><div className="derived">{preview.phases.reduce((a, x) => a + x.units, 0)}</div></div>
-                    <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Profit</div><div className="derived" style={{ color: model.ratios.profit > 0 ? 'var(--green-700)' : 'var(--red-600, #d33)' }}>{fmt.money(model.ratios.profit)}</div></div>
-                  </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10 }}>{preview.project.address || 'No address found'}{preview.project.planningRef ? ' · ' + preview.project.planningRef : ''}</div>
-                  {model.flags.length ? (
+                  {model ? (
+                    <div className="fieldrow" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                      <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>GDV</div><div className="derived">{fmt.money(model.ratios.gdv)}</div></div>
+                      <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Units</div><div className="derived">{previewUnits}</div></div>
+                      <div><div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Profit</div><div className="derived" style={{ color: model.ratios.profit > 0 ? 'var(--green-700)' : 'var(--red-600, #d33)' }}>{fmt.money(model.ratios.profit)}</div></div>
+                    </div>
+                  ) : (
+                    <div className="reconcile bad" style={{ marginTop: 10 }}><span>⚠</span> Preview figures couldn't be calculated{modelErr ? ' (' + modelErr + ')' : ''}, but you can still import the scheme and review it in the app.</div>
+                  )}
+                  <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 10 }}>{previewProject.address || 'No address found'}{previewProject.planningRef ? ' · ' + previewProject.planningRef : ''}</div>
+                  {model && model.flags && model.flags.length ? (
                     <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 8 }}>{model.flags.length} validation flag{model.flags.length === 1 ? '' : 's'} will show once imported — same as any other scheme.</div>
                   ) : null}
                   {warnings.length ? (
@@ -99,9 +114,9 @@ function ImportModal({ onClose, onImport }) {
         </div>
         <div className="modal-foot">
           <button className="btn ghost" onClick={onClose}>Cancel</button>
-          <button className="btn primary" disabled={state !== 'ready' || !name.trim()}
-            style={{ opacity: (state === 'ready' && name.trim()) ? 1 : .5 }}
-            onClick={() => { preview.project.name = name.trim(); onImport(preview); }}>
+          <button className="btn primary" disabled={state !== 'ready' || !name.trim() || !preview}
+            style={{ opacity: (state === 'ready' && name.trim() && preview) ? 1 : .5 }}
+            onClick={() => { if (!preview) return; if (!preview.project) preview.project = {}; preview.project.name = name.trim(); onImport(preview); }}>
             Import scheme
           </button>
         </div>
