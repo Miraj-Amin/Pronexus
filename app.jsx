@@ -536,13 +536,17 @@ function Workspace({ session }) {
         ? <Presentation state={active} model={model} />
         : (
           <TabErrorBoundary key={tab} onReset={() => { localStorage.setItem('appraisal_tab', 'dashboard'); setTab('dashboard'); }}>
-            {tab === 'input'
-              ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>
-              : tab === 'summary'
-                ? <SummaryScreen state={active} model={model} />
-                : tab === 'cashflow'
-                  ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
-                  : <Dashboard state={active} model={model} />}
+            {(() => {
+              // If a tab's component didn't load (stale/missing file), fall back to Dashboard
+              // rather than passing `undefined` to React (which triggers a hard crash).
+              if (tab === 'input' && typeof InputScreen === 'function')
+                return <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>;
+              if (tab === 'summary' && typeof SummaryScreen === 'function')
+                return <SummaryScreen state={active} model={model} />;
+              if (tab === 'cashflow' && typeof CashflowTable === 'function')
+                return <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>;
+              return <Dashboard state={active} model={model} />;
+            })()}
           </TabErrorBoundary>
         )}
     </div>

@@ -21,42 +21,51 @@
 (function(){
   function show(m){var b=document.getElementById('boot-error'),p=document.getElementById('boot-error-msg');
     if(b&&p){p.textContent+=(p.textContent?'\n\n':'')+m;b.style.display='block';}}
-  window.addEventListener('error',function(e){var m=e&&e.message?e.message:String(e);
-    if(e&&e.filename)m+='\n  at '+e.filename+':'+(e.lineno||'?');show(m);});
+  window.addEventListener('error',function(e){
+    var m=e&&e.message?e.message:String(e);
+    // Prefer the real stack (points at the .jsx source file) over Babel's index.html attribution
+    if(e&&e.error&&e.error.stack) m+='\n\n'+e.error.stack;
+    else if(e&&e.filename) m+='\n  at '+e.filename+':'+(e.lineno||'?');
+    show(m);
+  });
   window.addEventListener('unhandledrejection',function(e){
-    show('Unhandled rejection: '+(e.reason&&e.reason.message?e.reason.message:e.reason));});
+    var r=e&&e.reason;
+    var m='Unhandled rejection: '+(r&&r.message?r.message:r);
+    if(r&&r.stack) m+='\n\n'+r.stack;
+    show(m);
+  });
   window.addEventListener('load',function(){setTimeout(function(){
     var r=document.getElementById('root');
     if(r&&r.childElementCount===0){
       if(!window.React)show('React did not load — check the CDN <script> tags / your network.');
       else if(!window.ReactDOM)show('ReactDOM did not load.');
       else if(!window.Babel)show('Babel did not load — the .jsx files cannot be compiled.');
-      else show('Scripts loaded but nothing rendered. Check the Console for the first red error.');}
+      else show('Scripts loaded but nothing rendered. Check the Console for the first red error (expand it to see the file & line).');}
   },6000);});
 })();
 </script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js"></script>
+<script src="engine.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="import.js"></script>
+<script src="import.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabaseClient.js"></script>
-<script src="db.js"></script>
-<script type="text/babel" src="dashboard.jsx"></script>
-<script type="text/babel" src="summary.jsx"></script>
-<script type="text/babel" src="cashflow.jsx"></script>
-<script type="text/babel" src="portfolio.jsx"></script>
-<script type="text/babel" src="import-ui.jsx"></script>
-<script type="text/babel" src="input.jsx"></script>
-<script type="text/babel" src="auth.jsx"></script>
-<script type="text/babel" src="collab.jsx"></script>
-<script type="text/babel" src="versions.jsx"></script>
-<script type="text/babel" src="printpack.jsx"></script>
-<script type="text/babel" src="presentation.jsx"></script>
-<script type="text/babel" src="crm.jsx"></script>
-<script type="text/babel" src="crm-detail.jsx"></script>
-<script type="text/babel" src="app.jsx"></script>
+<script src="supabaseClient.js?v=6"></script>
+<script src="db.js?v=6"></script>
+<script type="text/babel" src="dashboard.jsx?v=6"></script>
+<script type="text/babel" src="summary.jsx?v=6"></script>
+<script type="text/babel" src="cashflow.jsx?v=6"></script>
+<script type="text/babel" src="portfolio.jsx?v=6"></script>
+<script type="text/babel" src="import-ui.jsx?v=6"></script>
+<script type="text/babel" src="input.jsx?v=6"></script>
+<script type="text/babel" src="auth.jsx?v=6"></script>
+<script type="text/babel" src="collab.jsx?v=6"></script>
+<script type="text/babel" src="versions.jsx?v=6"></script>
+<script type="text/babel" src="printpack.jsx?v=6"></script>
+<script type="text/babel" src="presentation.jsx?v=6"></script>
+<script type="text/babel" src="crm.jsx?v=6"></script>
+<script type="text/babel" src="crm-detail.jsx?v=6"></script>
+<script type="text/babel" src="app.jsx?v=6"></script>
 </body>
 </html>

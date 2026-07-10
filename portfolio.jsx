@@ -26,11 +26,14 @@ function statusColor(status) {
 }
 
 function ProjectCard({ proj, onOpen, onClone, onDelete, versions }) {
+  // Guard against a corrupt row missing project/phases — one bad entry
+  // shouldn't take down the whole portfolio.
+  if (!proj || !proj.project) return null;
   const model = React.useMemo(() => window.Appraisal.computeModel(proj), [proj]);
   const risk = window.Appraisal.riskScore(model);
   const r = model.ratios;
   const sc = statusColor(proj.meta && proj.meta.status);
-  const units = proj.phases.reduce((a, p) => a + p.units, 0);
+  const units = (proj.phases || []).reduce((a, p) => a + (p.units || 0), 0);
   const vers = versions || [];
   const [open, setOpen] = React.useState(false);
   return (
