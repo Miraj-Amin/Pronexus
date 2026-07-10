@@ -95,7 +95,7 @@ function ProjectCard({ proj, onOpen, onClone, onDelete, versions }) {
   );
 }
 
-function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
+function Portfolio({ projects, onOpen, onNew, onImport, onClone, onDelete }) {
   // group versions under their base scheme: a scheme is a "head" when it has no
   // version parent (or points at itself); everything else is a linked version.
   const heads = projects.filter(p => DB.familyId(p) === p.id);
@@ -117,10 +117,16 @@ function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
           <h1 className="pf-title">Portfolio</h1>
           <div className="pf-sub">{heads.length} schemes · {pfFmt.moneyShort(totalGdv)} GDV under appraisal</div>
         </div>
-        <button className="btn primary lg" onClick={onNew}>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5v10M2.5 7.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-          New Project
-        </button>
+        <div style={{ display: 'flex', gap: 9 }}>
+          <button className="btn ghost lg" onClick={onImport}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5v7.2M4.3 5.9l3.2 3 3.2-3M2.5 11v1.5A1 1 0 003.5 13.5h8a1 1 0 001-1V11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Import from Excel
+          </button>
+          <button className="btn primary lg" onClick={onNew}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5v10M2.5 7.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            New Project
+          </button>
+        </div>
       </div>
 
       <div className="pf-rollup">
@@ -149,7 +155,7 @@ function Portfolio({ projects, onOpen, onNew, onClone, onDelete }) {
           <div className="newcard-inner">
             <div className="newcard-plus"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></div>
             <div className="newcard-t">New Appraisal</div>
-            <div className="newcard-s">Start from the locked master template</div>
+            <div className="newcard-s">Start from the locked master template, or <a onClick={e => { e.stopPropagation(); onImport(); }} style={{ color: 'var(--green-500)', cursor: 'pointer' }}>import an Excel workbook</a></div>
           </div>
         </div>
       </div>

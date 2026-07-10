@@ -99,6 +99,7 @@ function Workspace({ session }) {
   const [tab, setTab] = React.useState(() => localStorage.getItem('appraisal_tab') || 'dashboard');
   const [pres, setPres] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
+  const [showImport, setShowImport] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   // collaboration: review drawer + live counters
   const [review, setReview] = React.useState({ open: false, tab: 'history' });
@@ -224,6 +225,17 @@ function Workspace({ session }) {
     setBusy(true);
     try { const p = await DB.create(name); setShowNew(false); await loadProjects(); openProject(p.id); setTab('input'); }
     catch (e) { alert('Could not create scheme: ' + ((e && e.message) || e)); }
+    finally { setBusy(false); }
+  };
+  const importProject = async importedProject => {
+    setBusy(true);
+    try {
+      await DB.upsert(importedProject);
+      setShowImport(false);
+      await loadProjects();
+      openProject(importedProject.id);
+      setTab('input');
+    } catch (e) { alert('Could not import scheme: ' + ((e && e.message) || e)); }
     finally { setBusy(false); }
   };
   const cloneProject = async id => {
@@ -364,8 +376,9 @@ function Workspace({ session }) {
           </div>
         </div>
         {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
-        <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onClone={cloneProject} onDelete={deleteProject} />
+        <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => setShowImport(true)} onClone={cloneProject} onDelete={deleteProject} />
         {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
+        {showImport ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
       </div>
     );
   }
