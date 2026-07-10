@@ -4,6 +4,36 @@
 const dashFmt = window.Appraisal;
 const DB = window.DB;
 
+/* Catches render errors in whichever tab is currently mounted so a bug in
+   ONE screen can't blank the entire app (previously an uncaught render error
+   anywhere would unmount the whole React tree — this scopes the blast radius
+   and gives a way back in even if the last-viewed tab is the one that's broken). */
+class TabErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error('Tab render error:', error, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="main">
+          <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600, color: 'var(--red-ink)', marginBottom: 8 }}>
+              This screen hit an error and couldn't render.
+            </div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 16, wordBreak: 'break-word' }}>
+              {String(this.state.error && this.state.error.message || this.state.error)}
+            </div>
+            <button className="btn primary" onClick={() => { this.setState({ error: null }); this.props.onReset && this.props.onReset(); }}>
+              ← Back to Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function FlagBar({ model }) {
   const red = model.flags.filter(f => f.sev === 'red');
   const amber = model.flags.filter(f => f.sev === 'amber');
@@ -96,7 +126,10 @@ function Workspace({ session }) {
   const [projects, setProjects] = React.useState(null); // null = still loading
   const [loadErr, setLoadErr] = React.useState('');
   const [activeId, setActiveId] = React.useState(() => DB.getActive());
-  const [tab, setTab] = React.useState(() => localStorage.getItem('appraisal_tab') || 'dashboard');
+  const [tab, setTab] = React.useState(() => {
+    const saved = localStorage.getItem('appraisal_tab');
+    return ['input', 'summary', 'cashflow', 'dashboard'].indexOf(saved) !== -1 ? saved : 'dashboard';
+  });
   const [pres, setPres] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
   const [showImport, setShowImport] = React.useState(false);
@@ -501,13 +534,17 @@ function Workspace({ session }) {
 
       {pres
         ? <Presentation state={active} model={model} />
-        : tab === 'input'
-          ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>
-          : tab === 'summary'
-            ? <SummaryScreen state={active} model={model} />
-            : tab === 'cashflow'
-              ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
-              : <Dashboard state={active} model={model} />}
+        : (
+          <TabErrorBoundary key={tab} onReset={() => { localStorage.setItem('appraisal_tab', 'dashboard'); setTab('dashboard'); }}>
+            {tab === 'input'
+              ? <div className="main" data-screen-label="Input"><InputScreen state={active} model={model} set={set} accounts={accounts} /></div>
+              : tab === 'summary'
+                ? <SummaryScreen state={active} model={model} />
+                : tab === 'cashflow'
+                  ? <div className="main" data-screen-label="Cashflow"><CashflowTable state={active} model={model} set={set} /></div>
+                  : <Dashboard state={active} model={model} />}
+          </TabErrorBoundary>
+        )}
     </div>
   );
 }

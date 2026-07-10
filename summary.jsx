@@ -35,12 +35,14 @@ function SiteDetails({ project, netArea, grossArea }) {
 }
 
 function CostMix({ model }) {
-  const gdv = model.ratios.gdv || 1;
-  const land = model.byCat[1].total;
-  const construction = model.byCat[6].total;
-  const finance = model.byCat[14].total;
-  const devRelated = [2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13].reduce((s, id) => s + model.byCat[id].total, 0);
-  const profit = model.ratios.profit;
+  const byCat = model.byCat || {};
+  const catTotal = id => (byCat[id] && byCat[id].total) || 0;
+  const gdv = (model.ratios && model.ratios.gdv) || 1;
+  const land = catTotal(1);
+  const construction = catTotal(6);
+  const finance = catTotal(14);
+  const devRelated = [2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13].reduce((s, id) => s + catTotal(id), 0);
+  const profit = (model.ratios && model.ratios.profit) || 0;
   const rows = [
     ['Land price', land],
     ['Construction', construction],
@@ -64,13 +66,14 @@ function CostMix({ model }) {
 }
 
 function SchemeDetails({ state, model }) {
-  const totalUnits = state.phases.reduce((s, p) => s + (p.units || 0), 0) || 1;
-  const totalGdv = model.ratios.gdv || 1;
+  const phases = state.phases || [];
+  const totalUnits = phases.reduce((s, p) => s + (p.units || 0), 0) || 1;
+  const totalGdv = (model.ratios && model.ratios.gdv) || 1;
   return (
     <table className="tbl">
       <thead><tr><th>Phase</th><th className="r">Units</th><th className="r">% of units</th><th className="r">GDV</th><th className="r">% of GDV</th><th className="r">£ / sqft</th></tr></thead>
       <tbody>
-        {state.phases.filter(p => p.units > 0 || sumFmt.phaseGdv(p) > 0).map(p => (
+        {phases.filter(p => p.units > 0 || sumFmt.phaseGdv(p) > 0).map(p => (
           <tr key={p.id}>
             <td>{p.name || p.id}</td>
             <td className="r num">{p.units || 0}</td>
@@ -84,7 +87,7 @@ function SchemeDetails({ state, model }) {
           <td>Total</td>
           <td className="r num">{totalUnits}</td>
           <td className="r num">100%</td>
-          <td className="r num">{sumFmt.money(model.ratios.gdv)}</td>
+          <td className="r num">{sumFmt.money(totalGdv)}</td>
           <td className="r num">100%</td>
           <td className="r num">—</td>
         </tr>
@@ -94,27 +97,33 @@ function SchemeDetails({ state, model }) {
 }
 
 function ProfitabilityBlock({ model }) {
-  const r = model.ratios;
+  const r = model.ratios || {};
   return (
     <div className="sumgrid">
-      <SumStat label="Project Profit" value={sumFmt.money(r.profit)} />
-      <SumStat label="Profit as % GDV" value={sumFmt.pct(r.profitPctGdv)} sub="target ≥ 20%" />
-      <SumStat label="Profit as % Cost" value={sumFmt.pct(r.profitPctCost)} />
-      <SumStat label="Profit excl. Finance" value={sumFmt.pct(r.profitExFinance)} sub="target ≥ 30%" />
-      <SumStat label="Equity Retained" value={sumFmt.money(r.equity)} />
-      <SumStat label="Return on Equity" value={r.roe.toFixed(2) + '×'} />
-      <SumStat label="Peak Funding (Senior Debt)" value={sumFmt.money(r.peakFunding)} sub={'month ' + r.peakMonth} />
-      <SumStat label="Max Loan to GDV" value={sumFmt.pct(r.peakLoanToGdv)} sub="cap 65%" />
-      <SumStat label="Peak Loan to Cost" value={sumFmt.pct(r.peakLoanToCost)} />
+      <SumStat label="Project Profit" value={sumFmt.money(r.profit || 0)} />
+      <SumStat label="Profit as % GDV" value={sumFmt.pct(r.profitPctGdv || 0)} sub="target ≥ 20%" />
+      <SumStat label="Profit as % Cost" value={sumFmt.pct(r.profitPctCost || 0)} />
+      <SumStat label="Profit excl. Finance" value={sumFmt.pct(r.profitExFinance || 0)} sub="target ≥ 30%" />
+      <SumStat label="Equity Retained" value={sumFmt.money(r.equity || 0)} />
+      <SumStat label="Return on Equity" value={(r.roe || 0).toFixed(2) + '×'} />
+      <SumStat label="Peak Funding (Senior Debt)" value={sumFmt.money(r.peakFunding || 0)} sub={'month ' + (r.peakMonth || 0)} />
+      <SumStat label="Max Loan to GDV" value={sumFmt.pct(r.peakLoanToGdv || 0)} sub="cap 65%" />
+      <SumStat label="Peak Loan to Cost" value={sumFmt.pct(r.peakLoanToCost || 0)} />
     </div>
   );
 }
 
 function SummaryScreen({ state, model }) {
-  const netArea = state.phases.reduce((s, p) => s + (p.netAreaSqft || 0), 0);
-  const grossArea = netArea * (1 + (state.assumptions.gross_area_allowance || 0));
-  const r = model.ratios;
-  const otherCosts = r.totalCost - model.byCat[1].total - model.byCat[6].total;
+  if (!state || !model) return null;
+  const project = state.project || {};
+  const phases = state.phases || [];
+  const assumptions = state.assumptions || {};
+  const byCat = model.byCat || {};
+  const catTotal = id => (byCat[id] && byCat[id].total) || 0;
+  const netArea = phases.reduce((s, p) => s + (p.netAreaSqft || 0), 0);
+  const grossArea = netArea * (1 + (assumptions.gross_area_allowance || 0));
+  const r = model.ratios || {};
+  const otherCosts = (r.totalCost || 0) - catTotal(1) - catTotal(6);
 
   return (
     <div className="main" data-screen-label="Summary">
@@ -122,21 +131,21 @@ function SummaryScreen({ state, model }) {
 
       <div className="grid" style={{ gridTemplateColumns: '0.9fr 1.4fr', alignItems: 'start' }}>
         <div className="card">
-          <div className="cardhead"><h3>Site Details</h3><span className="sub">{state.project.name}</span></div>
-          <div className="cardbody"><SiteDetails project={state.project} netArea={netArea} grossArea={grossArea} /></div>
+          <div className="cardhead"><h3>Site Details</h3><span className="sub">{project.name || '—'}</span></div>
+          <div className="cardbody"><SiteDetails project={project} netArea={netArea} grossArea={grossArea} /></div>
         </div>
         <div className="card">
-          <div className="cardhead"><h3>Headline Appraisal</h3><span className="sub">{state.project.projectLengthMonths}-month scheme · {state.project.constructionPeriodMonths}-month build</span></div>
+          <div className="cardhead"><h3>Headline Appraisal</h3><span className="sub">{project.projectLengthMonths || '—'}-month scheme · {project.constructionPeriodMonths || '—'}-month build</span></div>
           <div className="cardbody">
             <div className="sumgrid">
-              <SumStat label="GDV" value={sumFmt.money(r.gdv)} />
-              <SumStat label="Land Value" value={sumFmt.money(model.byCat[1].total)} />
-              <SumStat label="Construction" value={sumFmt.money(model.byCat[6].total)} />
+              <SumStat label="GDV" value={sumFmt.money(r.gdv || 0)} />
+              <SumStat label="Land Value" value={sumFmt.money(catTotal(1))} />
+              <SumStat label="Construction" value={sumFmt.money(catTotal(6))} />
               <SumStat label="Other Costs" value={sumFmt.money(otherCosts)} />
-              <SumStat label="Total Costs" value={sumFmt.money(r.totalCost)} />
-              <SumStat label="Profit" value={sumFmt.money(r.profit)} sub={sumFmt.pct(r.profitPctGdv) + ' of GDV'} />
-              <SumStat label="Equity Required" value={sumFmt.money(r.equity)} />
-              <SumStat label="Return on Equity" value={r.roe.toFixed(2) + '×'} />
+              <SumStat label="Total Costs" value={sumFmt.money(r.totalCost || 0)} />
+              <SumStat label="Profit" value={sumFmt.money(r.profit || 0)} sub={sumFmt.pct(r.profitPctGdv || 0) + ' of GDV'} />
+              <SumStat label="Equity Required" value={sumFmt.money(r.equity || 0)} />
+              <SumStat label="Return on Equity" value={(r.roe || 0).toFixed(2) + '×'} />
             </div>
           </div>
         </div>
@@ -148,13 +157,13 @@ function SummaryScreen({ state, model }) {
           <div className="cardbody"><CostMix model={model} /></div>
         </div>
         <div className="card">
-          <div className="cardhead"><h3>Scheme &amp; Income by Phase</h3><span className="sub">{state.phases.reduce((s, p) => s + (p.units || 0), 0)} units total</span></div>
+          <div className="cardhead"><h3>Scheme &amp; Income by Phase</h3><span className="sub">{phases.reduce((s, p) => s + (p.units || 0), 0)} units total</span></div>
           <div className="cardbody"><SchemeDetails state={state} model={model} /></div>
         </div>
       </div>
 
       <div className="card" style={{ marginTop: '16px' }}>
-        <div className="cardhead"><h3>Cost Category Breakdown</h3><span className="sub">{sumFmt.money(r.totalCost)} total cost · % of cost</span></div>
+        <div className="cardhead"><h3>Cost Category Breakdown</h3><span className="sub">{sumFmt.money(r.totalCost || 0)} total cost · % of cost</span></div>
         <div className="cardbody"><Breakdown model={model} /></div>
       </div>
 
