@@ -19,7 +19,7 @@
 </div>
 <script>
 (function(){
-  var BUILD='v=14';
+  var BUILD='v=15';
   try{ console.log('%cPronexus build '+BUILD+' loaded '+new Date().toISOString(), 'color:#2dd4ff;font-weight:bold'); }catch(e){}
   window.__PRONEXUS_BUILD=BUILD;
   function show(m){var b=document.getElementById('boot-error'),p=document.getElementById('boot-error-msg');
@@ -47,7 +47,7 @@
         // Component-presence check: each .jsx file exports its component onto
         // window. If one is missing, a file failed to load/compile (usually a
         // stale cached copy) — name it so the fix is obvious.
-        var need={ImportModal:'portfolio.jsx',Portfolio:'portfolio.jsx',SummaryScreen:'summary.jsx',CashflowTable:'cashflow.jsx',InputScreen:'input.jsx',Presentation:'presentation.jsx',CRMApp:'crm.jsx',Appraisal:'engine.js',AppraisalImport:'import.js',DB:'db.js'};
+        var need={ImportModal:'portfolio.jsx',Portfolio:'portfolio.jsx',SummaryScreen:'summary.jsx',CashflowTable:'cashflow.jsx',InputScreen:'input.jsx',Presentation:'presentation.jsx',CRMApp:'crm.jsx',Appraisal:'engine.js',AppraisalImport:'portfolio.jsx',DB:'db.js'};
         var missing=[];for(var k in need){if(!window[k])missing.push(k+' ('+need[k]+')');}
         if(missing.length)show('Some scripts did not load or are a stale cached copy. Missing: '+missing.join(', ')+'.\n\nFix: hard-refresh (Ctrl/Cmd+Shift+R). If it persists, re-upload those files and confirm the ?v= number in index.html matches your latest upload.');
         else show('Scripts loaded but nothing rendered. Check the Console for the first red error (expand it to see the file & line).');
@@ -58,24 +58,23 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js?v=14"></script>
+<script src="engine.js?v=15"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="import.js?v=14"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabaseClient.js?v=14"></script>
-<script src="db.js?v=14"></script>
-<script type="text/babel" src="dashboard.jsx?v=14"></script>
-<script type="text/babel" src="summary.jsx?v=14"></script>
-<script type="text/babel" src="cashflow.jsx?v=14"></script>
-<script type="text/babel" src="portfolio.jsx?v=14"></script>
-<script type="text/babel" src="input.jsx?v=14"></script>
-<script type="text/babel" src="auth.jsx?v=14"></script>
-<script type="text/babel" src="collab.jsx?v=14"></script>
-<script type="text/babel" src="versions.jsx?v=14"></script>
-<script type="text/babel" src="printpack.jsx?v=14"></script>
-<script type="text/babel" src="presentation.jsx?v=14"></script>
-<script type="text/babel" src="crm.jsx?v=14"></script>
-<script type="text/babel" src="crm-detail.jsx?v=14"></script>
-<script type="text/babel" src="app.jsx?v=14"></script>
+<script src="supabaseClient.js?v=15"></script>
+<script src="db.js?v=15"></script>
+<script type="text/babel" src="dashboard.jsx?v=15"></script>
+<script type="text/babel" src="summary.jsx?v=15"></script>
+<script type="text/babel" src="cashflow.jsx?v=15"></script>
+<script type="text/babel" src="portfolio.jsx?v=15"></script>
+<script type="text/babel" src="input.jsx?v=15"></script>
+<script type="text/babel" src="auth.jsx?v=15"></script>
+<script type="text/babel" src="collab.jsx?v=15"></script>
+<script type="text/babel" src="versions.jsx?v=15"></script>
+<script type="text/babel" src="printpack.jsx?v=15"></script>
+<script type="text/babel" src="presentation.jsx?v=15"></script>
+<script type="text/babel" src="crm.jsx?v=15"></script>
+<script type="text/babel" src="crm-detail.jsx?v=15"></script>
+<script type="text/babel" src="app.jsx?v=15"></script>
 </body>
 </html>
