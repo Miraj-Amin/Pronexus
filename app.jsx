@@ -442,7 +442,7 @@ function Workspace({ session }) {
         </div>
         {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
         <TabErrorBoundary resetLabel="Dismiss & return to portfolio" onReset={() => { setShowNew(false); setShowImport(false); }}>
-          <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => { if (!window.ImportModal) { alert('The import screen did not load. This is usually a stale cached file — please hard-refresh the page (Ctrl/Cmd+Shift+R) and try again.'); return; } setShowImport(true); }} onClone={cloneProject} onDelete={deleteProject} />
+          <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => { if (!window.ImportModal) { alert('The import screen is unavailable. Please press F12, copy any red error from the Console, and report it.'); return; } setShowImport(true); }} onClone={cloneProject} onDelete={deleteProject} />
           {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
           {showImport && ImportModal ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
         </TabErrorBoundary>
