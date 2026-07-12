@@ -23,13 +23,14 @@ function SumStat({ label, value, sub }) {
   );
 }
 
-function SiteDetails({ project, netArea, grossArea }) {
+function SummarySiteDetails({ project, netArea, grossArea }) {
+  const pr = project || {};
   const rows = [
-    ['Address', project.address || '—'],
-    ['Borough', project.borough || '—'],
-    ['Planning Reference', project.planningRef || '—'],
-    ['Client Reference', project.clientRef || '—'],
-    ['Main Contact', project.mainContact || '—'],
+    ['Address', pr.address || '—'],
+    ['Borough', pr.borough || '—'],
+    ['Planning Reference', pr.planningRef || '—'],
+    ['Client Reference', pr.clientRef || '—'],
+    ['Main Contact', pr.mainContact || '—'],
     ['Net Area', netArea ? Math.round(netArea).toLocaleString() + ' sqft' : '—'],
     ['Gross Area', grossArea ? Math.round(grossArea).toLocaleString() + ' sqft' : '—']
   ];
@@ -113,7 +114,7 @@ function SchemeDetails({ state, model }) {
 }
 
 /* Income by phase (Summary rows 51-59) — value + % of total income */
-function IncomeByPhase({ state, model }) {
+function SummaryIncomeByPhase({ state, model }) {
   const phases = state.phases || [];
   const totalGdv = (model.ratios && model.ratios.gdv) || 1;
   const rows = phases.filter(p => sumFmt.phaseGdv(p) > 0);
@@ -263,7 +264,7 @@ function SummaryScreen({ state, model }) {
       <div className="grid" style={{ gridTemplateColumns: '0.9fr 1.4fr', alignItems: 'start' }}>
         <div className="card">
           <div className="cardhead"><h3>Site Details</h3><span className="sub">{project.name || '—'}</span></div>
-          <div className="cardbody"><SiteDetails project={project} netArea={netArea} grossArea={grossArea} /></div>
+          <div className="cardbody"><SummarySiteDetails project={project} netArea={netArea} grossArea={grossArea} /></div>
         </div>
         <div className="card">
           <div className="cardhead"><h3>Headline Appraisal</h3><span className="sub">{project.projectLengthMonths || '—'}-month scheme · {project.constructionPeriodMonths || '—'}-month build</span></div>
@@ -320,7 +321,7 @@ function SummaryScreen({ state, model }) {
         </div>
         <div className="card">
           <div className="cardhead"><h3>Income by Phase</h3><span className="sub">% of GDV</span></div>
-          <div className="cardbody"><IncomeByPhase state={state} model={model} /></div>
+          <div className="cardbody"><SummaryIncomeByPhase state={state} model={model} /></div>
         </div>
       </div>
 

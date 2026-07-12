@@ -138,7 +138,7 @@ function ReviewDrawer({ open, onClose, project, author, initialTab, onRestore, o
         </div>
         <div className="rev-body">
           {open && project && tab === 'history' ? <HistoryTab project={project} author={author} onRestore={onRestore} refreshKey={refreshKey} /> : null}
-          {open && project && tab === 'activity' ? <ActivityTab project={project} refreshKey={refreshKey} /> : null}
+          {open && project && tab === 'activity' ? <CollabActivityTab project={project} refreshKey={refreshKey} /> : null}
           {open && project && tab === 'comments' ? <CommentsTab project={project} author={author} onChanged={onChanged} /> : null}
         </div>
       </aside>
@@ -242,7 +242,7 @@ function DiffList({ entries }) {
 }
 
 /* ---------- Activity (audit log) ---------- */
-function ActivityTab({ project, refreshKey }) {
+function CollabActivityTab({ project, refreshKey }) {
   const [rows, setRows] = React.useState(null);
   React.useEffect(() => {
     let on = true;
