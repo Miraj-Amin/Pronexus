@@ -240,11 +240,35 @@
     if (r46) line('c1c', { pct: num(inp, 'C' + r46, 0.90) }, ['D' + r46, 'E' + r46]);
     if (r47) line('c1d', { amount: num(inp, 'B' + r47, 0) }, ['D' + r47, 'E' + r47]);
 
-    // 2 — Acquisition-related (c2a Stamp Duty stays computed via the SDLT engine)
+    // 2 — Acquisition-related. The workbook computes each of these as either
+    // `= price × pct` or a hard-typed amount. Match whichever it actually uses:
+    // if the amount cell equals pct×price (±£1) treat it as pct (stays reactive
+    // if the price changes); otherwise the typed amount is authoritative.
+    var offerPriceVal = p.project.offerPrice || 0;
+    function amtOrPct(id, row, rangeCols) {
+      var amt = num(inp, 'B' + row, 0), pc = num(inp, 'C' + row, 0);
+      var patch;
+      if (pc > 0 && Math.abs(amt - pc * offerPriceVal) < 1) patch = { pct: pc, basis: 'pct_land' };
+      else patch = { amount: amt, basis: 'fixed', pct: 0 };
+      line(id, patch, [rangeCols[0] + row, rangeCols[1] + row]);
+    }
+    // Stamp Duty: the workbook charges a flat % of the purchase price
+    // (=B48*C51), NOT tiered SDLT — override the template's tiered basis.
+    var r51 = itemRow(anc.acquisition, 'Stamp Duty');
+    if (r51) {
+      var sdAmt = num(inp, 'B' + r51, 0), sdPct = num(inp, 'C' + r51, 0);
+      var sdPatch;
+      if (sdPct > 0 && Math.abs(sdAmt - sdPct * offerPriceVal) < 1) sdPatch = { pct: sdPct, basis: 'pct_land' };
+      else sdPatch = { amount: sdAmt, basis: 'fixed' };
+      sdPatch.sdltKind = null;
+      var c2aLine = L.filter(function (l) { return l.id === 'c2a'; })[0];
+      if (c2aLine) { c2aLine.sdlt = false; delete c2aLine.sdltKind; }
+      line('c2a', sdPatch, ['D' + r51, 'E' + r51]);
+    }
     var r52 = itemRow(anc.acquisition, 'Bank Valuation'), r53 = itemRow(anc.acquisition, 'Dev Solicitors Fees (Purchase)'), r54 = itemRow(anc.acquisition, 'Introduction Fees + Planning Gain');
-    if (r52) line('c2b', { pct: num(inp, 'C' + r52, 0.003) }, ['D' + r52, 'E' + r52]);
+    if (r52) amtOrPct('c2b', r52, ['D', 'E']);
     if (r53) line('c2c', { amount: num(inp, 'B' + r53, 0) }, ['D' + r53, 'E' + r53]);
-    if (r54) line('c2d', { pct: num(inp, 'C' + r54, 0.02) }, ['D' + r54, 'E' + r54]);
+    if (r54) amtOrPct('c2d', r54, ['D', 'E']);
 
     // 3 — Local Authority
     var r58 = itemRow(anc.localAuthority, 'CIL (Borough & Mayoral)'), r59 = itemRow(anc.localAuthority, 'Carbon offsetting & monitoring'), r60 = itemRow(anc.localAuthority, 'Section 106 & 278');
@@ -311,11 +335,13 @@
     // 7 — Contractors' Professional Fees
     var r106 = itemRow(anc.contractorsFees, 'Architects Building Regulations Stage'), r107 = itemRow(anc.contractorsFees, 'Landscape Architect'),
         r108 = itemRow(anc.contractorsFees, 'Structural Engineers'), r109 = itemRow(anc.contractorsFees, 'M&E Engineers'), r110 = itemRow(anc.contractorsFees, 'Fire Consultants');
-    if (r106) line('c7a', { pct: num(inp, 'C' + r106, 0.03) }, ['D' + r106, 'E' + r106]);
-    if (r107) line('c7b', { pct: num(inp, 'C' + r107, 0.005) }, ['D' + r107, 'E' + r107]);
-    if (r108) line('c7c', { pct: num(inp, 'C' + r108, 0.015) }, ['D' + r108, 'E' + r108]);
-    if (r109) line('c7d', { pct: num(inp, 'C' + r109, 0.015) }, ['D' + r109, 'E' + r109]);
-    if (r110) line('c7e', { pct: num(inp, 'C' + r110, 0.005) }, ['D' + r110, 'E' + r110]);
+    // Workbook formula: =pct × $B$102 where B102 = residential construction only
+    // (K84 = SUM(K78:K82), excluding Commercial) — hence baseScope 'resi'.
+    if (r106) line('c7a', { pct: num(inp, 'C' + r106, 0.03), baseScope: 'resi' }, ['D' + r106, 'E' + r106]);
+    if (r107) line('c7b', { pct: num(inp, 'C' + r107, 0.005), baseScope: 'resi' }, ['D' + r107, 'E' + r107]);
+    if (r108) line('c7c', { pct: num(inp, 'C' + r108, 0.015), baseScope: 'resi' }, ['D' + r108, 'E' + r108]);
+    if (r109) line('c7d', { pct: num(inp, 'C' + r109, 0.015), baseScope: 'resi' }, ['D' + r109, 'E' + r109]);
+    if (r110) line('c7e', { pct: num(inp, 'C' + r110, 0.005), baseScope: 'resi' }, ['D' + r110, 'E' + r110]);
 
     // 8 — Developers' Consultants / Warranties
     var r114 = itemRow(anc.devConsultants, 'Developers QS'), r115 = itemRow(anc.devConsultants, 'Building Warranties and Insurance'),
@@ -330,16 +356,16 @@
 
     // 9 — Development Management
     var r123 = itemRow(anc.devManagement, 'Development Management'), r124 = itemRow(anc.devManagement, 'SPV Related Costs');
-    var constructionBaseVal = global.Appraisal.constructionBase(p);
     if (r123) {
-      var dmTotal = num(inp, 'C' + r123, 0);
-      line('c9a', { pct: constructionBaseVal > 0 ? (dmTotal / constructionBaseVal) : 0 }, ['D' + r123, 'E' + r123]);
+      // Workbook: C123 = B123(pct) × K84 (residential construction base)
+      line('c9a', { pct: num(inp, 'B' + r123, 0), baseScope: 'resi' }, ['D' + r123, 'E' + r123]);
     }
     if (r124) line('c9b', { amount: num(inp, 'B' + r124, 0) }, ['D' + r124, 'E' + r124]);
 
     // 10 — Contingencies
     var r128 = itemRow(anc.contingencies, 'Private'), r129 = itemRow(anc.contingencies, 'Council Tax'), r130 = itemRow(anc.contingencies, 'Other');
-    if (r128) line('c10a', { pct: num(inp, 'F' + r128, 0.05) }, ['C' + r128, 'D' + r128]);
+    // Workbook: B128 = F128(pct) × K84 (residential construction base)
+    if (r128) line('c10a', { pct: num(inp, 'F' + r128, 0.05), baseScope: 'resi' }, ['C' + r128, 'D' + r128]);
     if (r129) line('c10b', { amount: num(inp, 'B' + r129, 0) }, ['C' + r129, 'D' + r129]);
     if (r130) line('c10c', { amount: num(inp, 'B' + r130, 0) }, ['C' + r130, 'D' + r130]);
 
@@ -367,6 +393,76 @@
     if (r161) line('c14d', { amount: num(inp, 'C' + r161, 0) }, ['D' + r161, 'E' + r161]);
     if (r162) line('c14e', { amount: num(inp, 'C' + r162, 0) }, ['D' + r162, 'E' + r162]);
     if (r165) line('c14f', { pct: numOrNull(inp, 'B' + r165) != null ? num(inp, 'B' + r165) : 0.01 }, ['D' + r165, 'E' + r165]);
+
+    // ----- authoritative line timings from the Cashflow sheet ------------------
+    // The workbook's interest is driven by the Cashflow sheet, whose per-line
+    // start/end months (cols E/F) are the source of truth and differ from the
+    // Input sheet's columns for several lines (e.g. contingency spreads 1→18,
+    // Developers QS 5→19, cost of sales 18→24). Override our lines to match.
+    var cfSheet = wb.Sheets['Cashflow'];
+    if (cfSheet) {
+      var cfTimes = {}; // normLabel -> {s,e}
+      for (var cr = 4; cr <= 115; cr++) {
+        var clbl = cell(cfSheet, 'A' + cr);
+        if (clbl == null || clbl === '') continue;
+        var ne = normLabel(clbl);
+        if (ne.length < 6) continue; // skip ambiguous short labels like 'Other'
+        var cs = cell(cfSheet, 'E' + cr), ce = cell(cfSheet, 'F' + cr);
+        var ctot = cell(cfSheet, 'C' + cr);
+        if (typeof cs === 'number' && typeof ce === 'number' && cs >= 1 && ce >= cs && !(ne in cfTimes)) {
+          cfTimes[ne] = { s: cs, e: ce, total: (typeof ctot === 'number' ? ctot : 0) };
+        }
+      }
+      var cfKeys = Object.keys(cfTimes);
+      function cfLookup(label) {
+        var t = normLabel(label);
+        if (cfTimes[t]) return cfTimes[t];
+        if (t.length < 6) return null;
+        for (var i = 0; i < cfKeys.length; i++) {
+          var k = cfKeys[i];
+          if (k.indexOf(t) === 0 || t.indexOf(k) === 0) return cfTimes[k];
+        }
+        return null;
+      }
+      // engine line id -> the label it appears under on the Cashflow sheet
+      var cfLabelById = {
+        c1a: 'Non Refundable Deposit', c1b: 'Exchange Deposit', c1c: 'Legal Completion', c1d: 'Defered Final Payment',
+        c2a: 'Stamp Duty', c2b: 'Bank Valuation', c2c: 'Dev Solicitors Fees (Purchase)', c2d: 'Introduction Fees + Planning Gain',
+        c3a: 'CIL (Borough & Mayoral)', c3b: 'Carbon offsetting & monitoring', c3c: 'Section 106 & 278',
+        c4a: 'Site Investigation', c4b: 'Party Wall', c4c: 'Rights of Light consultant', c4d: 'SAP Ratings', c4e: 'Building Regs',
+        c5a: 'Demolition', c5b: 'Services',
+        c6a: 'Construction Phase One', c6b: 'Construction Phase Two', c6_commercial: 'Construction Commercial',
+        c7a: 'Architects Building Regulations Stage', c7b: 'Landscape Architect', c7c: 'Structural Engineers', c7d: 'M&E Engineers', c7e: 'Fire Consultants',
+        c8a: 'Developers QS', c8b: 'Building Warranties and Insurance', c8c: 'Dev Solicitors Fees (DMA)', c8d: 'Dev Solicitors Fees (Construction)', c8e: 'Developers CDM Coordinator', c8f: 'Building Regulations Fees',
+        c9a: 'Development Management', c9b: 'SPV Related Costs',
+        c10a: 'Construction & Consultants', c10b: 'Council Tax',
+        c11a: 'Brochure & Marketing Materials', c11b: 'Show flat - Kit Out', c11c: 'Interior design',
+        c12a: 'COST of SALES ALL Blocks A B C', c12b: 'COST of SALESDev solicitiors fees (Sale - private and pkg)',
+        c13a: 'After sales management',
+        c14a: 'Bank Charges (Entry)', c14b: 'Bank Charges (Exit)', c14c: 'Bank QS', c14d: 'Bank Solicitor Fees (Purchase)', c14e: 'Bank Solicitor Fees (Construction)', c14f: 'Funding Brokers Fees'
+      };
+      L.forEach(function (l) {
+        var lbl = cfLabelById[l.id];
+        if (!lbl) return;
+        var t = cfLookup(lbl);
+        if (!t) return;
+        var rg = monthRange(H, t.s, t.e);
+        l.start = rg.start; l.end = rg.end;
+      });
+      // Consistency check: every construction line in the cost totals should be
+      // funded through the workbook's cashflow. If one is missing (e.g. a
+      // Commercial row inserted on Input but never added to the Cashflow sheet),
+      // the workbook's bank interest — and therefore its profit — is overstated.
+      L.forEach(function (l) {
+        if (l.cat !== 6 || !l.included) return;
+        var lbl = cfLabelById[l.id];
+        var t2 = lbl ? cfLookup(lbl) : null;
+        var ph2 = p.phases.filter(function (x) { return x.id === l.phaseId; })[0];
+        var amt2 = ph2 ? Math.round((ph2.buildRatePsf || 0) * (ph2.grossAreaSqft || ph2.netAreaSqft || 0)) : 0;
+        var funded = t2 && Math.abs((t2.total || 0) - amt2) < Math.max(1, amt2 * 0.01);
+        if (amt2 > 0 && !funded) warnings.push('Workbook inconsistency: the "' + l.item + '" cost (£' + amt2.toLocaleString() + ') is in the workbook\'s cost totals but its Cashflow sheet funds £' + Math.round((t2 && t2.total) || 0).toLocaleString() + ' of it — the workbook\'s bank interest is understated and its profit overstated as a result. This tool funds the full amount, which is why the profit here is slightly lower than the spreadsheet\'s.');
+      });
+    }
 
     p.meta = p.meta || {};
     p.meta.importedFrom = 'xlsx';

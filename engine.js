@@ -315,6 +315,24 @@
     return total;
   }
 
+  // Residential-only construction base (phases p1..p4 + freehold, EXCLUDING
+  // commercial/parking) — mirrors the source workbook, whose contractor-fee,
+  // contingency and development-management percentages are applied to
+  // K84 = SUM(K78:K82), i.e. the residential build only.
+  var RESI_PHASE_IDS = { p1: 1, p2: 1, p3: 1, p4: 1, freehold: 1 };
+  function constructionBaseResi(state) {
+    var a = state.assumptions, total = 0;
+    state.costLines.forEach(function (l) {
+      if (l.cat === 6 && l.included && RESI_PHASE_IDS[l.phaseId]) {
+        var p = state.phases.filter(function (x) { return x.id === l.phaseId; })[0];
+        if (!p) return;
+        var gross = (p.grossAreaSqft && p.grossAreaSqft > 0) ? p.grossAreaSqft : ((p.netAreaSqft || 0) * grossMultiplier(p, a));
+        total += (p.buildRatePsf || 0) * gross;
+      }
+    });
+    return total;
+  }
+
   function totalGdv(state) {
     return state.phases.reduce(function (s, p) { return s + phaseGdv(p); }, 0);
   }
@@ -340,7 +358,7 @@
           return (line.pct || 0) * (state.project.offerPrice || 0);
         }
         return (line.pct || 0) * (state.project.offerPrice || 0);
-      case 'pct_construction': return (line.pct || 0) * constructionBase(state);
+      case 'pct_construction': return (line.pct || 0) * (line.baseScope === 'resi' ? constructionBaseResi(state) : constructionBase(state));
       case 'pct_gdv': {
         var p = state.phases.filter(function (x) { return x.id === line.phaseId; })[0];
         return (line.pct || 0) * (p ? phaseGdv(p) : totalGdv(state));
@@ -708,6 +726,7 @@
     sqftFromSqm: sqftFromSqm,
     totalGdv: totalGdv,
     constructionBase: constructionBase,
+    constructionBaseResi: constructionBaseResi,
     money: money, moneyShort: moneyShort, pct: pct,
     PSF_STEPS: PSF_STEPS, COST_STEPS: COST_STEPS,
     SQM_TO_SQFT: SQM_TO_SQFT
