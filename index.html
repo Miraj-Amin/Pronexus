@@ -18,8 +18,35 @@
   <pre id="boot-error-msg" style="white-space:pre-wrap;color:#e88;background:#0d1926;padding:14px;border-radius:8px;border:1px solid #24384a;margin-top:12px"></pre>
 </div>
 <script>
+// Loads a script from the first URL that succeeds, trying each in order. Uses
+// a blocking (synchronous) XHR so execution order relative to the surrounding
+// <script> tags is preserved exactly like a normal <script src> would be —
+// this matters because supabaseClient.js runs immediately after and expects
+// window.supabase to already exist. Falls back across independent CDNs
+// (different infrastructure/networks) so a block or outage on one doesn't
+// take out the feature — this is what was failing before ("Excel reader
+// failed to load"): jsdelivr.net alone is a single point of failure.
+function loadScriptWithFallback(urls, label) {
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', urls[i], false); // false = synchronous
+      xhr.send(null);
+      if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+        var s = document.createElement('script');
+        s.text = xhr.responseText;
+        document.head.appendChild(s);
+        return true;
+      }
+    } catch (e) { /* try next source */ }
+  }
+  console.error('[boot] All CDN sources failed for ' + label + ':', urls);
+  return false;
+}
+</script>
+<script>
 (function(){
-  var BUILD='v=15';
+  var BUILD='v=16';
   try{ console.log('%cPronexus build '+BUILD+' loaded '+new Date().toISOString(), 'color:#2dd4ff;font-weight:bold'); }catch(e){}
   window.__PRONEXUS_BUILD=BUILD;
   function show(m){var b=document.getElementById('boot-error'),p=document.getElementById('boot-error-msg');
@@ -58,23 +85,35 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js?v=15"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabaseClient.js?v=15"></script>
-<script src="db.js?v=15"></script>
-<script type="text/babel" src="dashboard.jsx?v=15"></script>
-<script type="text/babel" src="summary.jsx?v=15"></script>
-<script type="text/babel" src="cashflow.jsx?v=15"></script>
-<script type="text/babel" src="portfolio.jsx?v=15"></script>
-<script type="text/babel" src="input.jsx?v=15"></script>
-<script type="text/babel" src="auth.jsx?v=15"></script>
-<script type="text/babel" src="collab.jsx?v=15"></script>
-<script type="text/babel" src="versions.jsx?v=15"></script>
-<script type="text/babel" src="printpack.jsx?v=15"></script>
-<script type="text/babel" src="presentation.jsx?v=15"></script>
-<script type="text/babel" src="crm.jsx?v=15"></script>
-<script type="text/babel" src="crm-detail.jsx?v=15"></script>
-<script type="text/babel" src="app.jsx?v=15"></script>
+<script src="engine.js?v=16"></script>
+<script>
+  var xlsxOK = loadScriptWithFallback([
+    'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+  ], 'xlsx (Excel reader)');
+  console.log(xlsxOK && window.XLSX ? '[boot] xlsx loaded OK' : '[boot] ⚠ xlsx FAILED on all 3 CDNs — Excel import will not work');
+</script>
+<script>
+  loadScriptWithFallback([
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
+  ], 'supabase-js (database connection)');
+</script>
+<script src="supabaseClient.js?v=16"></script>
+<script src="db.js?v=16"></script>
+<script type="text/babel" src="dashboard.jsx?v=16"></script>
+<script type="text/babel" src="summary.jsx?v=16"></script>
+<script type="text/babel" src="cashflow.jsx?v=16"></script>
+<script type="text/babel" src="portfolio.jsx?v=16"></script>
+<script type="text/babel" src="input.jsx?v=16"></script>
+<script type="text/babel" src="auth.jsx?v=16"></script>
+<script type="text/babel" src="collab.jsx?v=16"></script>
+<script type="text/babel" src="versions.jsx?v=16"></script>
+<script type="text/babel" src="printpack.jsx?v=16"></script>
+<script type="text/babel" src="presentation.jsx?v=16"></script>
+<script type="text/babel" src="crm.jsx?v=16"></script>
+<script type="text/babel" src="crm-detail.jsx?v=16"></script>
+<script type="text/babel" src="app.jsx?v=16"></script>
 </body>
 </html>
