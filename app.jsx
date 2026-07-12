@@ -589,9 +589,15 @@ function Workspace({ session }) {
 
 function App() {
   const session = useSession();
+  const FeedbackLayer = window.FeedbackLayer;
   if (session === undefined) return <div className="app"><Splash label="Starting up…" /></div>;
   if (!session) return <AuthScreen />;
-  return <Workspace session={session} />;
+  return (
+    <>
+      <Workspace session={session} />
+      {FeedbackLayer ? <FeedbackLayer session={session} /> : null}
+    </>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

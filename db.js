@@ -348,6 +348,35 @@
     if (res.error) throw res.error;
   }
 
+  // ---- ui feedback (visual "draw a box + comment" annotations from testers) ----
+  async function listFeedback() {
+    var res = await sb().from('ui_feedback').select('*').order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+  async function addFeedback(entry) {
+    var row = {
+      page: entry.page || null,
+      context: entry.context || null,
+      comment: entry.comment,
+      author: entry.author || null,
+      box: entry.box || null,
+      viewport: entry.viewport || null,
+      status: 'open'
+    };
+    var res = await sb().from('ui_feedback').insert(row).select('*').maybeSingle();
+    if (res.error) throw res.error;
+    return res.data;
+  }
+  async function setFeedbackStatus(id, status) {
+    var res = await sb().from('ui_feedback').update({ status: status }).eq('id', id);
+    if (res.error) throw res.error;
+  }
+  async function deleteFeedback(id) {
+    var res = await sb().from('ui_feedback').delete().eq('id', id);
+    if (res.error) throw res.error;
+  }
+
   global.DB = {
     list: list, get: get, upsert: upsert, create: create, clone: clone,
     remove: remove, seedIfEmpty: seedIfEmpty, getTemplate: getTemplate,
@@ -363,6 +392,8 @@
     listSnapshots: listSnapshots, getSnapshot: getSnapshot, saveSnapshot: saveSnapshot, deleteSnapshot: deleteSnapshot,
     logChanges: logChanges, listAudit: listAudit,
     listComments: listComments, openCommentCount: openCommentCount, addComment: addComment,
-    setCommentResolved: setCommentResolved, deleteComment: deleteComment
+    setCommentResolved: setCommentResolved, deleteComment: deleteComment,
+    // visual feedback / annotations
+    listFeedback: listFeedback, addFeedback: addFeedback, setFeedbackStatus: setFeedbackStatus, deleteFeedback: deleteFeedback
   };
 })(typeof window !== 'undefined' ? window : this);

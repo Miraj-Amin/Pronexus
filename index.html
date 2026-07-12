@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=18" />
-<link rel="stylesheet" href="crm.css?v=18" />
+<link rel="stylesheet" href="styles.css?v=19" />
+<link rel="stylesheet" href="crm.css?v=19" />
 </head>
 <body>
 <div id="root"></div>
@@ -46,7 +46,7 @@ function loadScriptWithFallback(urls, label) {
 </script>
 <script>
 (function(){
-  var BUILD='v=18';
+  var BUILD='v=19';
   try{ console.log('%cPronexus build '+BUILD+' loaded '+new Date().toISOString(), 'color:#2dd4ff;font-weight:bold'); }catch(e){}
   window.__PRONEXUS_BUILD=BUILD;
   // Visible on-page badge — no DevTools needed to confirm which build is live.
@@ -81,7 +81,7 @@ function loadScriptWithFallback(urls, label) {
         // Component-presence check: each .jsx file exports its component onto
         // window. If one is missing, a file failed to load/compile (usually a
         // stale cached copy) — name it so the fix is obvious.
-        var need={ImportModal:'portfolio.jsx',Portfolio:'portfolio.jsx',SummaryScreen:'summary.jsx',CashflowTable:'cashflow.jsx',InputScreen:'input.jsx',Presentation:'presentation.jsx',CRMApp:'crm.jsx',Appraisal:'engine.js',AppraisalImport:'portfolio.jsx',DB:'db.js'};
+        var need={ImportModal:'portfolio.jsx',Portfolio:'portfolio.jsx',SummaryScreen:'summary.jsx',CashflowTable:'cashflow.jsx',InputScreen:'input.jsx',Presentation:'presentation.jsx',CRMApp:'crm.jsx',FeedbackLayer:'feedback.jsx',Appraisal:'engine.js',AppraisalImport:'portfolio.jsx',DB:'db.js'};
         var missing=[];for(var k in need){if(!window[k])missing.push(k+' ('+need[k]+')');}
         if(missing.length)show('Some scripts did not load or are a stale cached copy. Missing: '+missing.join(', ')+'.\n\nFix: hard-refresh (Ctrl/Cmd+Shift+R). If it persists, re-upload those files and confirm the ?v= number in index.html matches your latest upload.');
         else show('Scripts loaded but nothing rendered. Check the Console for the first red error (expand it to see the file & line).');
@@ -92,7 +92,7 @@ function loadScriptWithFallback(urls, label) {
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js?v=18"></script>
+<script src="engine.js?v=19"></script>
 <script>
   var xlsxOK = loadScriptWithFallback([
     'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -107,20 +107,21 @@ function loadScriptWithFallback(urls, label) {
     'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
   ], 'supabase-js (database connection)');
 </script>
-<script src="supabaseClient.js?v=18"></script>
-<script src="db.js?v=18"></script>
-<script type="text/babel" src="dashboard.jsx?v=18"></script>
-<script type="text/babel" src="summary.jsx?v=18"></script>
-<script type="text/babel" src="cashflow.jsx?v=18"></script>
-<script type="text/babel" src="portfolio.jsx?v=18"></script>
-<script type="text/babel" src="input.jsx?v=18"></script>
-<script type="text/babel" src="auth.jsx?v=18"></script>
-<script type="text/babel" src="collab.jsx?v=18"></script>
-<script type="text/babel" src="versions.jsx?v=18"></script>
-<script type="text/babel" src="printpack.jsx?v=18"></script>
-<script type="text/babel" src="presentation.jsx?v=18"></script>
-<script type="text/babel" src="crm.jsx?v=18"></script>
-<script type="text/babel" src="crm-detail.jsx?v=18"></script>
-<script type="text/babel" src="app.jsx?v=18"></script>
+<script src="supabaseClient.js?v=19"></script>
+<script src="db.js?v=19"></script>
+<script type="text/babel" src="dashboard.jsx?v=19"></script>
+<script type="text/babel" src="summary.jsx?v=19"></script>
+<script type="text/babel" src="cashflow.jsx?v=19"></script>
+<script type="text/babel" src="portfolio.jsx?v=19"></script>
+<script type="text/babel" src="input.jsx?v=19"></script>
+<script type="text/babel" src="auth.jsx?v=19"></script>
+<script type="text/babel" src="collab.jsx?v=19"></script>
+<script type="text/babel" src="versions.jsx?v=19"></script>
+<script type="text/babel" src="printpack.jsx?v=19"></script>
+<script type="text/babel" src="presentation.jsx?v=19"></script>
+<script type="text/babel" src="crm.jsx?v=19"></script>
+<script type="text/babel" src="crm-detail.jsx?v=19"></script>
+<script type="text/babel" src="feedback.jsx?v=19"></script>
+<script type="text/babel" src="app.jsx?v=19"></script>
 </body>
 </html>
