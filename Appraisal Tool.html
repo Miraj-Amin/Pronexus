@@ -2,56 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Phoenix — Appraisal Tool</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="crm.css" />
+<!-- This file used to be a full standalone copy of the app, which meant it
+     silently went stale every time the real app (index.html + its scripts)
+     was updated — that's what caused the Excel import to keep failing here
+     even after it was fixed elsewhere. To make that permanently impossible,
+     this is now just a redirect: there is only one real copy of the app,
+     index.html, and every entry point (including Phoenix Hub's "Open
+     Appraisal Tool" link) goes through it. -->
+<meta http-equiv="refresh" content="0; url=index.html" />
+<link rel="canonical" href="index.html" />
 </head>
 <body>
-<div id="root"></div>
-<div id="boot-error" style="display:none;position:fixed;inset:0;z-index:99999;background:#12202f;color:#f6f3ec;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;padding:32px;overflow:auto">
-  <h1 style="font-size:15px;color:#ffb27a;margin:0 0 12px">⚠ Startup error</h1>
-  <div style="color:#9fb0bf">The app hit an error while loading (also in the Console, F12):</div>
-  <pre id="boot-error-msg" style="white-space:pre-wrap;color:#e88;background:#0d1926;padding:14px;border-radius:8px;border:1px solid #24384a;margin-top:12px"></pre>
-</div>
-<script>
-(function(){
-  function show(m){var b=document.getElementById('boot-error'),p=document.getElementById('boot-error-msg');
-    if(b&&p){p.textContent+=(p.textContent?'\n\n':'')+m;b.style.display='block';}}
-  window.addEventListener('error',function(e){var m=e&&e.message?e.message:String(e);
-    if(e&&e.filename)m+='\n  at '+e.filename+':'+(e.lineno||'?');show(m);});
-  window.addEventListener('unhandledrejection',function(e){
-    show('Unhandled rejection: '+(e.reason&&e.reason.message?e.reason.message:e.reason));});
-  window.addEventListener('load',function(){setTimeout(function(){
-    var r=document.getElementById('root');
-    if(r&&r.childElementCount===0){
-      if(!window.React)show('React did not load — check the CDN <script> tags / your network.');
-      else if(!window.ReactDOM)show('ReactDOM did not load.');
-      else if(!window.Babel)show('Babel did not load — the .jsx files cannot be compiled.');
-      else show('Scripts loaded but nothing rendered. Check the Console for the first red error.');}
-  },6000);});
-})();
-</script>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="supabaseClient.js"></script>
-<script src="db.js"></script>
-<script type="text/babel" src="dashboard.jsx"></script>
-<script type="text/babel" src="cashflow.jsx"></script>
-<script type="text/babel" src="portfolio.jsx"></script>
-<script type="text/babel" src="input.jsx"></script>
-<script type="text/babel" src="auth.jsx"></script>
-<script type="text/babel" src="collab.jsx"></script>
-<script type="text/babel" src="versions.jsx"></script>
-<script type="text/babel" src="printpack.jsx"></script>
-<script type="text/babel" src="crm.jsx"></script>
-<script type="text/babel" src="crm-detail.jsx"></script>
-<script type="text/babel" src="app.jsx"></script>
+<p>Redirecting to the <a href="index.html">Appraisal Tool</a>…</p>
+<script>location.replace('index.html');</script>
 </body>
 </html>
