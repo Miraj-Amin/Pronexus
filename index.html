@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="crm.css" />
+<link rel="stylesheet" href="styles.css?v=18" />
+<link rel="stylesheet" href="crm.css?v=18" />
 </head>
 <body>
 <div id="root"></div>
@@ -46,7 +46,7 @@ function loadScriptWithFallback(urls, label) {
 </script>
 <script>
 (function(){
-  var BUILD='v=17';
+  var BUILD='v=18';
   try{ console.log('%cPronexus build '+BUILD+' loaded '+new Date().toISOString(), 'color:#2dd4ff;font-weight:bold'); }catch(e){}
   window.__PRONEXUS_BUILD=BUILD;
   // Visible on-page badge — no DevTools needed to confirm which build is live.
@@ -92,7 +92,7 @@ function loadScriptWithFallback(urls, label) {
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-<script src="engine.js?v=17"></script>
+<script src="engine.js?v=18"></script>
 <script>
   var xlsxOK = loadScriptWithFallback([
     'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -107,20 +107,20 @@ function loadScriptWithFallback(urls, label) {
     'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
   ], 'supabase-js (database connection)');
 </script>
-<script src="supabaseClient.js?v=17"></script>
-<script src="db.js?v=17"></script>
-<script type="text/babel" src="dashboard.jsx?v=17"></script>
-<script type="text/babel" src="summary.jsx?v=17"></script>
-<script type="text/babel" src="cashflow.jsx?v=17"></script>
-<script type="text/babel" src="portfolio.jsx?v=17"></script>
-<script type="text/babel" src="input.jsx?v=17"></script>
-<script type="text/babel" src="auth.jsx?v=17"></script>
-<script type="text/babel" src="collab.jsx?v=17"></script>
-<script type="text/babel" src="versions.jsx?v=17"></script>
-<script type="text/babel" src="printpack.jsx?v=17"></script>
-<script type="text/babel" src="presentation.jsx?v=17"></script>
-<script type="text/babel" src="crm.jsx?v=17"></script>
-<script type="text/babel" src="crm-detail.jsx?v=17"></script>
-<script type="text/babel" src="app.jsx?v=17"></script>
+<script src="supabaseClient.js?v=18"></script>
+<script src="db.js?v=18"></script>
+<script type="text/babel" src="dashboard.jsx?v=18"></script>
+<script type="text/babel" src="summary.jsx?v=18"></script>
+<script type="text/babel" src="cashflow.jsx?v=18"></script>
+<script type="text/babel" src="portfolio.jsx?v=18"></script>
+<script type="text/babel" src="input.jsx?v=18"></script>
+<script type="text/babel" src="auth.jsx?v=18"></script>
+<script type="text/babel" src="collab.jsx?v=18"></script>
+<script type="text/babel" src="versions.jsx?v=18"></script>
+<script type="text/babel" src="printpack.jsx?v=18"></script>
+<script type="text/babel" src="presentation.jsx?v=18"></script>
+<script type="text/babel" src="crm.jsx?v=18"></script>
+<script type="text/babel" src="crm-detail.jsx?v=18"></script>
+<script type="text/babel" src="app.jsx?v=18"></script>
 </body>
 </html>

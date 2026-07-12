@@ -293,46 +293,49 @@ input, select { font-family: inherit; }
 .summary-cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 16px; align-items: start; }
 @media (max-width: 900px) { .summary-cols { grid-template-columns: 1fr; } }
 
-.summary-left, .summary-right { display: flex; flex-direction: column; gap: 12px; }
+.summary-left, .summary-right { display: flex; flex-direction: column; gap: 16px; }
 
-/* a "block" = one titled table in the summary */
-.sb { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg, 8px); overflow: hidden; box-shadow: var(--shadow-md); }
+/* Summary screen blocks use a lighter slate than the app's default near-black
+   navy (--surface), since a long stack of dark cards reads flat and is hard
+   to scan. Scoped to .sb so the rest of the app (Dashboard, Cashflow, etc.)
+   is unaffected. */
+.sb { background: #17293f; border: 1px solid #2c4966; border-radius: var(--r-lg, 8px); overflow: hidden; box-shadow: var(--shadow-md); }
 .sb-title { font-size: 10.5px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: var(--ink); font-family: var(--mono);
-  padding: 9px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); }
-
-/* label / value rows */
-.sb-kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 12px; border-bottom: 1px solid var(--border); }
+  padding: 9px 12px; background: #1f3a56; border-bottom: 1px solid #2c4966; }
+.sb-kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 12px; border-bottom: 1px solid #223c56; }
 .sb-kv:last-child { border-bottom: 0; }
 .sb-kv .k { font-size: 11.5px; color: var(--muted); }
 .sb-kv .v { font-family: var(--mono); font-size: 12.5px; color: var(--ink); font-weight: 500; text-align: right; }
-.sb-kv.strong { background: rgba(45,212,255,.05); }
+.sb-kv.strong { background: rgba(45,212,255,.08); }
 .sb-kv.strong .k { color: var(--ink-2); font-weight: 600; }
 .sb-kv.strong .v { font-weight: 700; font-size: 13px; }
-.sb-divider { height: 1px; background: var(--border-strong); margin: 2px 0; }
+.sb-divider { height: 1px; background: #2c4966; margin: 2px 0; }
 
 /* 3-column rows: label | amount | pct */
-.sb-row3 { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 5px 12px; border-bottom: 1px solid var(--border); align-items: baseline; }
+.sb-row3 { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 5px 12px; border-bottom: 1px solid #223c56; align-items: baseline; }
 .sb-row3:last-child { border-bottom: 0; }
 .sb-row3 .c1 { font-size: 11.5px; color: var(--ink-2); }
 .sb-row3 .c2 { font-family: var(--mono); font-size: 12px; color: var(--ink); text-align: right; min-width: 78px; }
 .sb-row3 .c3 { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; min-width: 58px; }
-.sb-row3.head { background: var(--surface-2); }
+.sb-row3.head { background: #1f3a56; }
 .sb-row3.head .c1, .sb-row3.head .c2, .sb-row3.head .c3 { font-size: 9.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 600; font-family: var(--mono); }
-.sb-row3.strong { background: rgba(45,212,255,.05); }
+.sb-row3.strong { background: rgba(45,212,255,.08); }
 .sb-row3.strong .c1 { font-weight: 700; color: var(--ink); }
 .sb-row3.strong .c2 { font-weight: 700; }
 .sb-row3.strong.good .c2, .sb-row3.strong.good .c3 { color: var(--green-700); }
 .sb-row3.strong.warn .c2, .sb-row3.strong.warn .c3 { color: var(--red-ink); }
 
-/* right-column cost build-up: 2-column rows label | amount */
+/* right-column cost build-up: each category is its own separated card, not
+   one continuous block — this is the fix for "reads as one" (a stray
+   margin-bottom:0 was collapsing every group together). */
+.cbu-col { display: flex; flex-direction: column; gap: 16px; }
 .cbu-col > .sb-title { margin-bottom: 0; }
-.sb.cbu { margin-bottom: 0; }
-.sb-row2 { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 4px 12px; border-bottom: 1px solid var(--border); align-items: baseline; }
+.sb-row2 { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 4px 12px; border-bottom: 1px solid #223c56; align-items: baseline; }
 .sb-row2 .c1 { font-size: 11px; color: var(--ink-2); }
 .sb-row2 .c2 { font-family: var(--mono); font-size: 11.5px; color: var(--ink); text-align: right; min-width: 82px; }
 .sb-row2.excl .c1 { color: var(--muted-2); text-decoration: line-through; }
 .sb-row2.excl .c2 { color: var(--muted-2); }
-.sb-row2.subtotal { background: rgba(45,212,255,.05); border-bottom: 0; }
+.sb-row2.subtotal { background: rgba(45,212,255,.08); border-bottom: 0; }
 .sb-row2.subtotal .c1 { font-size: 9.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); font-family: var(--mono); }
 .sb-row2.subtotal .c2 { font-weight: 700; color: var(--ink); }
 
