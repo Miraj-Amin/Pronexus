@@ -308,7 +308,7 @@
       if (l.cat === 6 && l.included) {
         var p = state.phases.filter(function (x) { return x.id === l.phaseId; })[0];
         if (!p) return;
-        var gross = (p.netAreaSqft || 0) * grossMultiplier(p, a);
+        var gross = (p.grossAreaSqft && p.grossAreaSqft > 0) ? p.grossAreaSqft : ((p.netAreaSqft || 0) * grossMultiplier(p, a));
         total += (p.buildRatePsf || 0) * gross; // net of VAT
       }
     });
@@ -350,7 +350,9 @@
       case 'construction': {
         var ph = state.phases.filter(function (x) { return x.id === line.phaseId; })[0];
         if (!ph) return 0;
-        var gross = (ph.netAreaSqft || 0) * grossMultiplier(ph, a);
+        // Prefer the workbook's actual gross area (net + circulation) captured on
+        // import; fall back to the net×type-multiplier estimate for hand-built schemes.
+        var gross = (ph.grossAreaSqft && ph.grossAreaSqft > 0) ? ph.grossAreaSqft : ((ph.netAreaSqft || 0) * grossMultiplier(ph, a));
         var net = (ph.buildRatePsf || 0) * gross;
         return net * (1 + vatRate(a, line.vatType));
       }

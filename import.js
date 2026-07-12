@@ -66,15 +66,31 @@
     var m = ref.match(/:[A-Z]+(\d+)/);
     return m ? parseInt(m[1], 10) : 400;
   }
-  // find the row whose column-A text matches `label` exactly (after normalizing),
-  // searching forward from `fromRow`. Returns null if not found.
+  // find the row whose column-A text matches `label` (after normalizing).
+  // Two passes: (1) exact match, (2) prefix match — the cell text starts with
+  // the label, or the label starts with the cell text. Real workbooks add
+  // trailing words to line labels (e.g. 'Section 106 & 278' becomes
+  // 'Section 106 & 278 + Planning'); exact-only matching silently dropped those
+  // costs. The search window is bounded per section, so prefix matching here
+  // won't cross-match unrelated rows.
   function findRow(ws, label, fromRow, toRow) {
     var target = normLabel(label);
     var end = toRow || maxRow(ws);
-    for (var r = (fromRow || 1); r <= end; r++) {
-      var v = cell(ws, 'A' + r);
+    var r, v;
+    // pass 1 — exact
+    for (r = (fromRow || 1); r <= end; r++) {
+      v = cell(ws, 'A' + r);
       if (v == null || v === '') continue;
       if (normLabel(v) === target) return r;
+    }
+    // pass 2 — prefix either direction
+    if (target.length >= 4) {
+      for (r = (fromRow || 1); r <= end; r++) {
+        v = cell(ws, 'A' + r);
+        if (v == null || v === '') continue;
+        var nv = normLabel(v);
+        if (nv.indexOf(target) === 0 || target.indexOf(nv) === 0) return r;
+      }
     }
     return null;
   }
@@ -264,13 +280,21 @@
         if (nlbl === 'total') break;
         var pid = phaseNameToId[nlbl];
         if (!pid) continue;
-        var rate = num(inp, 'B' + br, 0), start = numOrNull(inp, 'C' + br), end = numOrNull(inp, 'D' + br), netAmt = num(inp, 'I' + br, 0);
-        if (rate > 0 || netAmt > 0) constructionLines.push({ phaseId: pid, rate: rate, start: start, end: end });
+        var rate = num(inp, 'B' + br, 0), start = numOrNull(inp, 'C' + br), end = numOrNull(inp, 'D' + br);
+        var grossArea = num(inp, 'H' + br, 0), netAmt = num(inp, 'I' + br, 0);
+        if (rate > 0 || netAmt > 0) constructionLines.push({ phaseId: pid, rate: rate, start: start, end: end, grossArea: grossArea, netAmt: netAmt });
       }
     }
     constructionLines.forEach(function (cl) {
       var ph = p.phases.filter(function (x) { return x.id === cl.phaseId; })[0];
-      if (ph) ph.buildRatePsf = cl.rate;
+      if (ph) {
+        ph.buildRatePsf = cl.rate;
+        // gross area (net + circulation) from the workbook — the engine multiplies
+        // build rate by this to reproduce the sheet's construction cost exactly.
+        // If the sheet didn't populate gross, derive it from the net amount / rate.
+        if (cl.grossArea > 0) ph.grossAreaSqft = cl.grossArea;
+        else if (cl.rate > 0 && cl.netAmt > 0) ph.grossAreaSqft = cl.netAmt / cl.rate;
+      }
     });
     var existingC6 = L.filter(function (l) { return l.cat === 6; });
     constructionLines.forEach(function (cl) {
