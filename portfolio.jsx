@@ -171,6 +171,11 @@
       if (cv) a.vat_conversion = num(inp, 'B' + cv, a.vat_conversion);
       if (rf) a.vat_refurb = num(inp, 'B' + rf, a.vat_refurb);
     }
+    // Standard-rate VAT on fees & services — the repaired workbook carries this
+    // as an explicit input ("Standard VAT (fees & services)"); older copies
+    // hard-coded 0.2 inside the Cashflow VAT rows, so default to 20%.
+    var vatStdRow = findRow(inp, 'Standard VAT');
+    a.vat_standard = vatStdRow ? num(inp, 'B' + vatStdRow, 0.20) : 0.20;
     var gaRow = findRow(inp, 'Gross Area Allowance');
     if (gaRow) a.gross_area_allowance = num(inp, 'B' + gaRow, a.gross_area_allowance);
     var baseRateRow = findRow(inp, 'Base rate:');
@@ -357,15 +362,18 @@
     // 9 — Development Management
     var r123 = itemRow(anc.devManagement, 'Development Management'), r124 = itemRow(anc.devManagement, 'SPV Related Costs');
     if (r123) {
-      // Workbook: C123 = B123(pct) × K84 (residential construction base)
-      line('c9a', { pct: num(inp, 'B' + r123, 0), baseScope: 'resi' }, ['D' + r123, 'E' + r123]);
+      // Workbook: C123 = B123(pct) × K84. In the CORRECTED workbook K84 =
+      // SUM(K78:K83) — the FULL construction base including Commercial (the old
+      // residential-only K84 was the audited reconciliation bug), so no resi scope.
+      line('c9a', { pct: num(inp, 'B' + r123, 0) }, ['D' + r123, 'E' + r123]);
     }
     if (r124) line('c9b', { amount: num(inp, 'B' + r124, 0) }, ['D' + r124, 'E' + r124]);
 
     // 10 — Contingencies
     var r128 = itemRow(anc.contingencies, 'Private'), r129 = itemRow(anc.contingencies, 'Council Tax'), r130 = itemRow(anc.contingencies, 'Other');
-    // Workbook: B128 = F128(pct) × K84 (residential construction base)
-    if (r128) line('c10a', { pct: num(inp, 'F' + r128, 0.05), baseScope: 'resi' }, ['C' + r128, 'D' + r128]);
+    // Workbook: B128 = F128(pct) × K84. Corrected K84 includes Commercial
+    // (SUM(K78:K83)), so contingency runs on the FULL construction base.
+    if (r128) line('c10a', { pct: num(inp, 'F' + r128, 0.05) }, ['C' + r128, 'D' + r128]);
     if (r129) line('c10b', { amount: num(inp, 'B' + r129, 0) }, ['C' + r129, 'D' + r129]);
     if (r130) line('c10c', { amount: num(inp, 'B' + r130, 0) }, ['C' + r130, 'D' + r130]);
 

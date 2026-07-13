@@ -146,6 +146,15 @@ function CashflowTable({ state, model, set }) {
               <td className="totcol num">{cfFmt.moneyShort(cf.totals.expenditure)}</td>
             </tr>
 
+            {/* recoverable VAT paid out with the costs (refunded next month, below) */}
+            {cf.totalVat > 0 ? (
+              <tr className="catrow computed">
+                <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum lock">∑</span>VAT on Costs <span className="cf-auto">auto · recoverable</span></td>
+                {months.map(m => <CfCell key={m} value={cf.vat[m]} readOnly={true} />)}
+                <td className="totcol num">{cfFmt.moneyShort(cf.totalVat)}</td>
+              </tr>
+            ) : null}
+
             {/* interest (computed) */}
             <tr className="catrow computed">
               <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum lock">∑</span>Bank Interest <span className="cf-auto">auto</span></td>
@@ -171,6 +180,13 @@ function CashflowTable({ state, model, set }) {
               ))}
               <td className="totcol num">{cfFmt.moneyShort(cf.totals.income)}</td>
             </tr>
+            {cf.totalVat > 0 ? (
+              <tr className="catrow income computed">
+                <td className="rowhead sticky-l"><span className="cf-caret ph"></span><span className="catnum inc">V</span>VAT Refund <span className="cf-auto">auto · 1-month lag</span></td>
+                {months.map(m => <CfCell key={m} value={cf.vatRefund[m]} readOnly={true} />)}
+                <td className="totcol num">{cfFmt.moneyShort(cf.totalVat - cf.vatOutstanding)}</td>
+              </tr>
+            ) : null}
             {detail ? state.phases.filter(p => cfFmt.phaseGdv(p) > 0).map(p => {
               const g = cfFmt.phaseGdv(p);
               const arr = []; for (let m = 0; m <= H; m++) arr.push(0);

@@ -49,6 +49,10 @@
       },
       assumptions: {
         vat_newbuild: 0, vat_conversion: 0.05, vat_refurb: 0.20,
+        // Standard-rate VAT charged on fees & services (recoverable — paid in the
+        // month incurred, refunded the following month; affects interest only,
+        // never total cost). Mirrors the workbook's VAT rows + "VAT Refund" line.
+        vat_standard: 0.20,
         gross_area_allowance: 0.25,
         loan_to_gdv: 0.65,
         base_rate: 0.0375, margin: 0.0525,
@@ -84,38 +88,38 @@
         { id: 'c1d', cat: 1, item: 'Deferred Final Payment', basis: 'fixed', amount: 0, start: 1, end: 1, included: true, info: true },
         // 2 — Acquisition
         { id: 'c2a', cat: 2, item: 'Stamp Duty (SDLT)', basis: 'fixed', amount: 161250, start: 1, end: 1, included: true, sdlt: true },
-        { id: 'c2b', cat: 2, item: 'Bank Valuation', basis: 'pct_land', pct: 0.003, start: 1, end: 1, included: true },
-        { id: 'c2c', cat: 2, item: 'Dev Solicitors (Purchase)', basis: 'fixed', amount: 15000, start: 1, end: 1, included: true },
-        { id: 'c2d', cat: 2, item: 'Introduction Fees + Planning Gain', basis: 'pct_land', pct: 0.02, start: 1, end: 1, included: true },
+        { id: 'c2b', cat: 2, item: 'Bank Valuation', basis: 'pct_land', pct: 0.003, start: 1, end: 1, included: true, vatStd: true },
+        { id: 'c2c', cat: 2, item: 'Dev Solicitors (Purchase)', basis: 'fixed', amount: 15000, start: 1, end: 1, included: true, vatStd: true },
+        { id: 'c2d', cat: 2, item: 'Introduction Fees + Planning Gain', basis: 'pct_land', pct: 0.02, start: 1, end: 1, included: true, vatStd: true },
         // 3 — Local Authority
         { id: 'c3a', cat: 3, item: 'CIL (Borough & Mayoral)', basis: 'fixed', amount: 250000, start: 4, end: 4, included: true },
         { id: 'c3b', cat: 3, item: 'Carbon Offsetting & Monitoring', basis: 'fixed', amount: 0, start: 4, end: 4, included: true, info: true },
         { id: 'c3c', cat: 3, item: 'Section 106 & 278', basis: 'fixed', amount: 75000, start: 4, end: 4, included: true },
         // 4 — Developers' Professional
-        { id: 'c4a', cat: 4, item: 'Site Investigation', basis: 'fixed', amount: 12475, start: 4, end: 4, included: true },
-        { id: 'c4b', cat: 4, item: 'Party Wall', basis: 'fixed', amount: 7772, start: 4, end: 4, included: true },
-        { id: 'c4c', cat: 4, item: 'Rights of Light', basis: 'fixed', amount: 0, start: 6, end: 6, included: true, info: true },
-        { id: 'c4d', cat: 4, item: 'SAP Ratings', basis: 'fixed', amount: 3681, start: 6, end: 6, included: true },
+        { id: 'c4a', cat: 4, item: 'Site Investigation', basis: 'fixed', amount: 12475, start: 4, end: 4, included: true, vatStd: true },
+        { id: 'c4b', cat: 4, item: 'Party Wall', basis: 'fixed', amount: 7772, start: 4, end: 4, included: true, vatStd: true },
+        { id: 'c4c', cat: 4, item: 'Rights of Light', basis: 'fixed', amount: 0, start: 6, end: 6, included: true, vatStd: true, info: true },
+        { id: 'c4d', cat: 4, item: 'SAP Ratings', basis: 'fixed', amount: 3681, start: 6, end: 6, included: true, vatStd: true },
         { id: 'c4e', cat: 4, item: 'Building Regs', basis: 'fixed', amount: 9408, start: 6, end: 6, included: true },
         // 5 — Demolition & Utilities
-        { id: 'c5a', cat: 5, item: 'Demolition', basis: 'fixed', amount: 47000, start: 1, end: 3, included: true },
-        { id: 'c5b', cat: 5, item: 'Services / Utilities', basis: 'fixed', amount: 41312, start: 1, end: 3, included: true },
+        { id: 'c5a', cat: 5, item: 'Demolition', basis: 'fixed', amount: 47000, start: 1, end: 3, included: true, vatStd: true },
+        { id: 'c5b', cat: 5, item: 'Services / Utilities', basis: 'fixed', amount: 41312, start: 1, end: 3, included: true, vatStd: true },
         { id: 'c5c', cat: 5, item: 'Other', basis: 'fixed', amount: 0, start: 1, end: 3, included: true, info: true },
         // 6 — Net Construction (per phase, rate x gross area)
         { id: 'c6a', cat: 6, item: 'Phase 1 Construction', basis: 'construction', phaseId: 'p1', vatType: 'newbuild', start: 4, end: 18, included: true },
         // 7 — Contractors' Professional Fees (% of construction)
-        { id: 'c7a', cat: 7, item: 'Architects', basis: 'pct_construction', pct: 0.03, start: 5, end: 18, included: true },
-        { id: 'c7b', cat: 7, item: 'Landscape Architect', basis: 'pct_construction', pct: 0.005, start: 5, end: 18, included: true },
-        { id: 'c7c', cat: 7, item: 'Structural Engineers', basis: 'pct_construction', pct: 0.015, start: 5, end: 18, included: true },
-        { id: 'c7d', cat: 7, item: 'M&E Engineers', basis: 'pct_construction', pct: 0.015, start: 5, end: 18, included: true },
-        { id: 'c7e', cat: 7, item: 'Fire Consultants', basis: 'pct_construction', pct: 0.005, start: 5, end: 18, included: true },
+        { id: 'c7a', cat: 7, item: 'Architects', basis: 'pct_construction', pct: 0.03, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c7b', cat: 7, item: 'Landscape Architect', basis: 'pct_construction', pct: 0.005, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c7c', cat: 7, item: 'Structural Engineers', basis: 'pct_construction', pct: 0.015, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c7d', cat: 7, item: 'M&E Engineers', basis: 'pct_construction', pct: 0.015, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c7e', cat: 7, item: 'Fire Consultants', basis: 'pct_construction', pct: 0.005, start: 5, end: 18, included: true, vatStd: true },
         // 8 — Developers' Consultants / Warranties
-        { id: 'c8a', cat: 8, item: 'Developers QS', basis: 'fixed', amount: 31291, start: 5, end: 18, included: true },
-        { id: 'c8b', cat: 8, item: 'Building Warranties / NHBC', basis: 'fixed', amount: 37426, start: 5, end: 18, included: true },
-        { id: 'c8c', cat: 8, item: 'Dev Solicitors (DMA)', basis: 'fixed', amount: 0, start: 1, end: 1, included: true, info: true },
-        { id: 'c8d', cat: 8, item: 'Dev Solicitors (Construction)', basis: 'fixed', amount: 11453, start: 1, end: 1, included: true },
-        { id: 'c8e', cat: 8, item: 'CDM Coordinator', basis: 'fixed', amount: 8999, start: 5, end: 18, included: true },
-        { id: 'c8f', cat: 8, item: 'Building Regs Fees', basis: 'fixed', amount: 9612, start: 5, end: 5, included: true },
+        { id: 'c8a', cat: 8, item: 'Developers QS', basis: 'fixed', amount: 31291, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c8b', cat: 8, item: 'Building Warranties / NHBC', basis: 'fixed', amount: 37426, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c8c', cat: 8, item: 'Dev Solicitors (DMA)', basis: 'fixed', amount: 0, start: 1, end: 1, included: true, vatStd: true, info: true },
+        { id: 'c8d', cat: 8, item: 'Dev Solicitors (Construction)', basis: 'fixed', amount: 11453, start: 1, end: 1, included: true, vatStd: true },
+        { id: 'c8e', cat: 8, item: 'CDM Coordinator', basis: 'fixed', amount: 8999, start: 5, end: 18, included: true, vatStd: true },
+        { id: 'c8f', cat: 8, item: 'Building Regs Fees', basis: 'fixed', amount: 9612, start: 5, end: 5, included: true, vatStd: true },
         // 9 — Development Management
         { id: 'c9a', cat: 9, item: 'Development Management Fee', basis: 'pct_construction', pct: 0, start: 5, end: 18, included: true, info: true },
         { id: 'c9b', cat: 9, item: 'SPV Related Costs', basis: 'fixed', amount: 0, start: 18, end: 18, included: true, info: true },
@@ -124,21 +128,21 @@
         { id: 'c10b', cat: 10, item: 'Empty-Unit Council Tax', basis: 'fixed', amount: 0, start: 1, end: 18, included: true, info: true },
         { id: 'c10c', cat: 10, item: 'Other / Professional', basis: 'fixed', amount: 0, start: 1, end: 18, included: true, info: true },
         // 11 — Product Spec & Marketing
-        { id: 'c11a', cat: 11, item: 'Brochure', basis: 'fixed', amount: 0, start: 13, end: 14, included: true, info: true },
-        { id: 'c11b', cat: 11, item: 'Show Flat — Kit Out', basis: 'fixed', amount: 0, start: 13, end: 14, included: true, info: true },
-        { id: 'c11c', cat: 11, item: 'Interior Design', basis: 'fixed', amount: 0, start: 11, end: 12, included: true, info: true },
+        { id: 'c11a', cat: 11, item: 'Brochure', basis: 'fixed', amount: 0, start: 13, end: 14, included: true, vatStd: true, info: true },
+        { id: 'c11b', cat: 11, item: 'Show Flat — Kit Out', basis: 'fixed', amount: 0, start: 13, end: 14, included: true, vatStd: true, info: true },
+        { id: 'c11c', cat: 11, item: 'Interior Design', basis: 'fixed', amount: 0, start: 11, end: 12, included: true, vatStd: true, info: true },
         // 12 — Cost of Sales
-        { id: 'c12a', cat: 12, item: 'Agent Fees — Phase 1', basis: 'pct_gdv', pct: 0.01, phaseId: 'p1', start: 18, end: 18, included: true },
-        { id: 'c12b', cat: 12, item: 'Dev Solicitor Sale Fees', basis: 'per_unit', rate: 1500, start: 12, end: 18, included: true },
+        { id: 'c12a', cat: 12, item: 'Agent Fees — Phase 1', basis: 'pct_gdv', pct: 0.01, phaseId: 'p1', start: 18, end: 18, included: true, vatStd: true },
+        { id: 'c12b', cat: 12, item: 'Dev Solicitor Sale Fees', basis: 'per_unit', rate: 1500, start: 12, end: 18, included: true, vatStd: true },
         // 13 — After Sales
-        { id: 'c13a', cat: 13, item: 'After-Sales Management / Snagging', basis: 'fixed', amount: 0, start: 18, end: 18, included: true, info: true },
+        { id: 'c13a', cat: 13, item: 'After-Sales Management / Snagging', basis: 'fixed', amount: 0, start: 18, end: 18, included: true, vatStd: true, info: true },
         // 14 — Finance
         { id: 'c14a', cat: 14, item: 'Bank Charges (Entry)', basis: 'pct_loan', pct: 0.01, start: 1, end: 1, included: true },
         { id: 'c14b', cat: 14, item: 'Bank Charges (Exit)', basis: 'pct_loan', pct: 0.01, start: 18, end: 18, included: true },
-        { id: 'c14c', cat: 14, item: 'Bank QS', basis: 'fixed', amount: 31291, start: 1, end: 18, included: true },
-        { id: 'c14d', cat: 14, item: 'Bank Solicitor (Purchase)', basis: 'fixed', amount: 15000, start: 1, end: 1, included: true },
-        { id: 'c14e', cat: 14, item: 'Bank Solicitor (Construction)', basis: 'fixed', amount: 0, start: 1, end: 1, included: true, info: true },
-        { id: 'c14f', cat: 14, item: 'Funding Broker Fee', basis: 'pct_loan', pct: 0.01, start: 1, end: 1, included: true },
+        { id: 'c14c', cat: 14, item: 'Bank QS', basis: 'fixed', amount: 31291, start: 1, end: 18, included: true, vatStd: true },
+        { id: 'c14d', cat: 14, item: 'Bank Solicitor (Purchase)', basis: 'fixed', amount: 15000, start: 1, end: 1, included: true, vatStd: true },
+        { id: 'c14e', cat: 14, item: 'Bank Solicitor (Construction)', basis: 'fixed', amount: 0, start: 1, end: 1, included: true, vatStd: true, info: true },
+        { id: 'c14f', cat: 14, item: 'Funding Broker Fee', basis: 'pct_loan', pct: 0.01, start: 1, end: 1, included: true, vatStd: true },
         { id: 'c14g', cat: 14, item: 'Bank Interest', basis: 'computed_interest', start: 1, end: 18, included: true }
       ],
       comparables: [
@@ -302,6 +306,12 @@
     return (t === 'Flat' || t === 'Mixed') ? (1 + a.gross_area_allowance) : 1.0;
   }
 
+  // FULL construction base — every cat-6 line (residential AND commercial),
+  // gross of construction VAT. Mirrors the CORRECTED workbook's K84 =
+  // SUM(K78:K83): the audit established that excluding Commercial from K84 was
+  // the root-cause bug (£343,650 dropped from the cashflow, contingency and
+  // interest understated). Contingency and Development Management percentages
+  // are applied to THIS base.
   function constructionBase(state) {
     var a = state.assumptions, total = 0;
     state.costLines.forEach(function (l) {
@@ -309,16 +319,18 @@
         var p = state.phases.filter(function (x) { return x.id === l.phaseId; })[0];
         if (!p) return;
         var gross = (p.grossAreaSqft && p.grossAreaSqft > 0) ? p.grossAreaSqft : ((p.netAreaSqft || 0) * grossMultiplier(p, a));
-        total += (p.buildRatePsf || 0) * gross; // net of VAT
+        total += (p.buildRatePsf || 0) * gross * (1 + vatRate(a, l.vatType));
       }
     });
     return total;
   }
 
   // Residential-only construction base (phases p1..p4 + freehold, EXCLUDING
-  // commercial/parking) — mirrors the source workbook, whose contractor-fee,
-  // contingency and development-management percentages are applied to
-  // K84 = SUM(K78:K82), i.e. the residential build only.
+  // commercial/parking) — mirrors workbook B102 "SUB TOTAL (NET OF
+  // CONSULTANTS)", which genuinely covers the residential build only.
+  // Contractors' professional fee percentages apply to THIS base; unlike the
+  // old K84 bug, this residential scoping is correct and was confirmed in the
+  // workbook repair.
   var RESI_PHASE_IDS = { p1: 1, p2: 1, p3: 1, p4: 1, freehold: 1 };
   function constructionBaseResi(state) {
     var a = state.assumptions, total = 0;
@@ -327,7 +339,7 @@
         var p = state.phases.filter(function (x) { return x.id === l.phaseId; })[0];
         if (!p) return;
         var gross = (p.grossAreaSqft && p.grossAreaSqft > 0) ? p.grossAreaSqft : ((p.netAreaSqft || 0) * grossMultiplier(p, a));
-        total += (p.buildRatePsf || 0) * gross;
+        total += (p.buildRatePsf || 0) * gross * (1 + vatRate(a, l.vatType));
       }
     });
     return total;
@@ -456,6 +468,21 @@
       for (m = 1; m <= H; m++) if (hasOv(omap, m)) catMonthly[c.id][m] = +omap[m] || 0;
     });
 
+    // Recoverable standard VAT on fees & services (workbook VAT rows):
+    // paid in the month the cost lands, refunded by HMRC the FOLLOWING month
+    // (workbook "VAT Refund" row = previous month's VAT). It never enters
+    // total cost — the only P&L effect is the interest carried on the float.
+    var vatStdRate = (state.assumptions.vat_standard == null) ? 0.20 : state.assumptions.vat_standard;
+    var vat = []; var vatRefund = []; for (i = 0; i <= H; i++) { vat.push(0); vatRefund.push(0); }
+    state.costLines.forEach(function (l) {
+      if (!l.included || !l.vatStd) return;
+      for (m = 1; m <= H; m++) vat[m] += lineMonthly[l.id][m] * vatStdRate;
+    });
+    var totalVat = 0;
+    for (m = 1; m <= H; m++) { totalVat += vat[m]; if (m > 1) vatRefund[m] = vat[m - 1]; }
+    // any VAT still unrefunded at the horizon (paid in the final month)
+    var vatOutstanding = vat[H];
+
     // income (sales) per month, default spread across each phase's sale window
     var inc = []; for (i = 0; i <= H; i++) inc.push(0);
     state.phases.forEach(function (p) {
@@ -478,12 +505,14 @@
       var interest = balance > 0 ? balance * mRate : 0;
       totalInterest += interest; cumInterest += interest;
       var opening = balance;
-      balance = balance + interest + expM - inc[m] - eq[m];
+      // VAT goes out with the cost and comes back next month — cash timing only
+      balance = balance + interest + expM + vat[m] - vatRefund[m] - inc[m] - eq[m];
       if (balance > peak) { peak = balance; peakMonth = m; }
       totalExpAll += expM; totalIncAll += inc[m]; totalEqAll += eq[m];
       rows.push({
         month: m, opening: opening, expenditure: expM, income: inc[m],
-        equityDraw: eq[m], interest: interest, balance: balance, cumInterest: cumInterest
+        equityDraw: eq[m], interest: interest, vat: vat[m], vatRefund: vatRefund[m],
+        balance: balance, cumInterest: cumInterest
       });
     }
 
@@ -498,7 +527,8 @@
       rows: rows, peak: peak, peakMonth: peakMonth, totalInterest: totalInterest, horizon: H,
       catMonthly: catMonthly, income: inc, equity: eq, catTotals: catTotals,
       lineMonthly: lineMonthly, lineTotals: lineTotals,
-      totals: { expenditure: totalExpAll, income: totalIncAll, equity: totalEqAll, interest: totalInterest },
+      vat: vat, vatRefund: vatRefund, totalVat: totalVat, vatOutstanding: vatOutstanding,
+      totals: { expenditure: totalExpAll, income: totalIncAll, equity: totalEqAll, interest: totalInterest, vat: totalVat },
       // which cells are user-overridden (for UI markers)
       overridden: o
     };
@@ -647,15 +677,24 @@
   var COST_STEPS = [-0.10, -0.075, -0.05, -0.025, 0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15, 0.175, 0.20, 0.25, 0.27];
 
   function computeSensitivity(state, r) {
-    var basePsf = state.phases[0] ? state.phases[0].salePsf : 0;
-    var area = state.phases[0] ? state.phases[0].netAreaSqft : 0;
+    // Flex RESIDENTIAL exit value only (all resi phases, blended £psf);
+    // commercial / parking / freehold income is held constant. The old version
+    // flexed Phase 1 alone and dropped every other income stream from the
+    // baseline, so the grid's base cell disagreed with the model's profit.
+    var resiGdv = 0, resiArea = 0, otherGdv = 0;
+    state.phases.forEach(function (p) {
+      var g = phaseGdv(p);
+      if (RESI_PHASE_IDS[p.id]) { resiGdv += g; resiArea += (p.netAreaSqft || 0); }
+      else otherGdv += g;
+    });
+    var basePsf = resiArea ? resiGdv / resiArea : 0;
     var baseCost = r.totalCost;
     var equity = r.equity;
-    var peakDebt = r.grossLoan; // facility, per workbook C8
+    var peakDebt = r.peakFunding; // workbook C8 = Input!B183 = PEAK loan (not the facility)
 
     function profitAt(psfStep, costStep) {
-      var psf = basePsf * (1 + psfStep);
-      return (psf * area) - baseCost * (1 + costStep);
+      // base cell (0,0) === model profit by construction
+      return otherGdv + resiGdv * (1 + psfStep) - baseCost * (1 + costStep);
     }
     var profit = [], eq = [], debt = [];
     COST_STEPS.forEach(function (cs) {

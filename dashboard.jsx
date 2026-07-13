@@ -240,7 +240,7 @@ function Sensitivity({ model, initialTab }) {
       <div style={{ fontSize: '11.5px', color: 'var(--muted)', marginBottom: '12px' }}>{desc[tab]}</div>
       <Heatmap grid={grid} psfSteps={s.psfSteps} costSteps={s.costSteps} colorFn={colorFn} baseRow={baseRow} baseCol={baseCol} />
       <div style={{ fontSize: '10.5px', color: 'var(--muted-2)', marginTop: '10px', fontFamily: 'var(--mono)' }}>
-        Columns: £psf change · Rows: total-cost change · Outlined cell = base case ({money(s.basePsf * 0 + model.ratios.profit)})
+        Columns: residential £psf change (commercial income held constant) · Rows: total-cost change · Outlined cell = base case ({money(s.basePsf * 0 + model.ratios.profit)})
       </div>
     </div>
   );

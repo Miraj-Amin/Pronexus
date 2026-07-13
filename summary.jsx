@@ -133,25 +133,41 @@ function SchemeUnitsBlock({ state }) {
 }
 
 function ConstructionRatesBlock({ state, model }) {
+  /* Rates are cost ÷ GROSS buildable area (net + circulation), matching the
+     workbook's basis (275 construction-only / 297 D&B are per gross sqft —
+     Input D92 = cost / H78). The old version divided by NET area and applied
+     the contractors'-fee uplift to Commercial too, even though those fees are
+     charged on the residential build only. */
   const phases = state.phases || [];
+  const a = state.assumptions || {};
   const byCat = model.byCat || {};
-  const constructionTotal = (byCat[6] && byCat[6].total) || 0;
   const contractorFees = (byCat[7] && byCat[7].total) || 0;
-  const dbFactor = constructionTotal ? (constructionTotal + contractorFees) / constructionTotal : 1;
   const isResi = id => ['p1', 'p2', 'p3', 'p4', 'freehold'].indexOf(id) !== -1;
+  const grossOf = p => (p.grossAreaSqft && p.grossAreaSqft > 0)
+    ? p.grossAreaSqft
+    : (p.netAreaSqft || 0) * ((p.phaseType === 'Flat' || p.phaseType === 'Mixed') ? (1 + (a.gross_area_allowance || 0)) : 1);
   const grp = pred => {
     let area = 0, cost = 0;
-    phases.forEach(p => { if (!pred(p.id)) return; const s = p.netAreaSqft || 0; area += s; cost += (p.buildRatePsf || 0) * s; });
-    return area ? cost / area : 0;
+    phases.forEach(p => {
+      if (!pred(p.id) || !(p.buildRatePsf > 0)) return;
+      const g = grossOf(p); area += g; cost += (p.buildRatePsf || 0) * g;
+    });
+    return { area, cost, rate: area ? cost / area : 0 };
   };
   const resi = grp(isResi), comm = grp(id => id === 'commercial'), all = grp(() => true);
-  const rows = [['Residential', resi], ['Commercial', comm], ['Total', all]];
+  // D&B = construction + contractors' professional fees; the fees apply to the
+  // residential build only, so Commercial's D&B rate equals its build rate.
+  const rows = [
+    ['Residential', resi.rate, resi.area ? (resi.cost + contractorFees) / resi.area : 0],
+    ['Commercial', comm.rate, comm.rate],
+    ['Total', all.rate, all.area ? (all.cost + contractorFees) / all.area : 0]
+  ];
   return (
     <div className="sb">
-      <SBlockTitle>Construction Rates (£/sqft)</SBlockTitle>
+      <SBlockTitle>Construction Rates (£/sqft, gross area)</SBlockTitle>
       <div className="sb-row3 head"><div className="c1">Element</div><div className="c2">Construction Only</div><div className="c3">Design &amp; Build</div></div>
-      {rows.map(([label, rate]) => (
-        <SRow3 key={label} label={label} amount={rate ? '£' + Math.round(rate) : '—'} pct={rate ? '£' + Math.round(rate * dbFactor) : '—'} strong={label === 'Total'} />
+      {rows.map(([label, rate, db]) => (
+        <SRow3 key={label} label={label} amount={rate ? '£' + Math.round(rate) : '—'} pct={db ? '£' + Math.round(db) : '—'} strong={label === 'Total'} />
       ))}
     </div>
   );
