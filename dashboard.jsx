@@ -8,7 +8,7 @@ function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 
 // Three-threshold RAG coloring
 function ragColor(v, redThreshold, amberThreshold, greenThreshold) {
-  // green >= greenThreshold, amber >= amberThreshold & < greenThreshold, red >= redThreshold & < amberThreshold
+  // green >= greenThreshold, amber >= amberThreshold & < greenThreshold, red <= redThreshold
   if (v >= greenThreshold) {
     const r = Math.min(1, (v - greenThreshold) / Math.max(1, greenThreshold || 1));
     return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
@@ -16,11 +16,11 @@ function ragColor(v, redThreshold, amberThreshold, greenThreshold) {
   if (v >= amberThreshold) {
     return `hsl(40 78% 70%)`;
   }
-  if (v >= redThreshold) {
+  if (v <= redThreshold) {
     return `hsl(2 64% 68%)`;
   }
-  // below red threshold — dark red
-  return `hsl(2 66% 45%)`;
+  // between red and amber (shouldn't reach here, but fallback to red)
+  return `hsl(2 64% 68%)`;
 }
 
 function profitColor(v, redThreshold, amberThreshold, greenThreshold) {
@@ -30,19 +30,19 @@ function equityColor(v, redThreshold, amberThreshold, greenThreshold) {
   return ragColor(v, redThreshold, amberThreshold, greenThreshold);
 }
 function debtColor(v, redThreshold, amberThreshold, greenThreshold) {
-  // For debt, LOWER is better — invert all comparisons
+  // For debt, LOWER is better
+  // Green: v <= greenThreshold (low debt is good)
+  // Red: v >= redThreshold (high debt is bad)
+  // Amber: everything in between
   if (v <= greenThreshold) {
     const r = Math.min(1, (greenThreshold - v) / Math.max(1, greenThreshold || 1));
     return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
   }
-  if (v <= amberThreshold) {
-    return `hsl(40 78% 70%)`;
-  }
-  if (v <= redThreshold) {
+  if (v >= redThreshold) {
     return `hsl(2 64% 68%)`;
   }
-  // above red threshold — dark red
-  return `hsl(2 66% 45%)`;
+  // between green and red = amber
+  return `hsl(40 78% 70%)`;
 }
 function textColor() { return 'rgba(7,15,28,.92)'; }
 
@@ -246,7 +246,7 @@ function Sensitivity({ model, initialTab }) {
   // RAG threshold defaults (stored in localStorage)
   const defaultThresholds = {
     profit: { red: 0, amber: 500000, green: 1500000 },
-    equity: { red: 500000, amber: 2000000, green: 3500000 },
+    equity: { red: 0, amber: 1500000, green: 3000000 },
     debt: { red: 7000000, amber: 6500000, green: 5500000 } // for debt, lower is better (thresholds are inverted)
   };
   const [thresholds, setThresholds] = React.useState(() => {
@@ -275,9 +275,9 @@ function Sensitivity({ model, initialTab }) {
     : debtColor;
   const grid = s[tab];
   const desc = {
-    profit: 'Project profit (£). Green ≥ green, amber ≥ amber (< green), red ≥ red (< amber).',
-    equity: 'Equity remaining. Green ≥ green, amber ≥ amber (< green), red ≥ red (< amber).',
-    debt: 'Debt recoverable. Green ≤ green (lower is better), amber ≤ amber (> green), red ≤ red (> amber).'
+    profit: 'Project profit (£). Green ≥ green, amber ≥ amber (< green), red ≤ red.',
+    equity: 'Equity remaining. Green ≥ green, amber ≥ amber (< green), red ≤ red.',
+    debt: 'Debt recoverable. Green ≤ green (lower is better), amber ≥ amber (< red), red ≥ red.'
   };
   const t = thresholds[tab] || defaultThresholds[tab];
   
@@ -292,7 +292,7 @@ function Sensitivity({ model, initialTab }) {
       {/* RAG threshold controls */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '12px', background: 'rgba(255,255,255,.04)', borderRadius: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🔴 Red ≥</label>
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🔴 Red ≤</label>
           <input type="number" value={t.red} onChange={e => updateThreshold(tab, 'red', e.target.value)} 
             style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
         </div>
