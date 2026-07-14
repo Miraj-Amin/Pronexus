@@ -6,43 +6,43 @@ const { money, moneyShort, pct } = window.Appraisal;
 function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 /* heatmap cells — vivid tones that read on the dark blueprint panels */
 
-// Threshold-based RAG coloring
-function ragColor(v, greenThreshold, amberThreshold) {
-  // green >= greenThreshold, amber between green & red, red < amberThreshold
-  const isGreen = v >= greenThreshold;
-  const isAmber = v >= amberThreshold && v < greenThreshold;
-  if (isGreen) {
+// Three-threshold RAG coloring
+function ragColor(v, redThreshold, amberThreshold, greenThreshold) {
+  // green >= greenThreshold, amber >= amberThreshold & < greenThreshold, red >= redThreshold & < amberThreshold
+  if (v >= greenThreshold) {
     const r = Math.min(1, (v - greenThreshold) / Math.max(1, greenThreshold || 1));
     return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
   }
-  if (isAmber) {
+  if (v >= amberThreshold) {
     return `hsl(40 78% 70%)`;
   }
-  // red — scale by distance below amber
-  const r = Math.min(1, (amberThreshold - v) / Math.max(1, Math.abs(amberThreshold) || 1));
-  return `hsl(2 ${66 + r * 14}% ${68 - r * 22}%)`;
+  if (v >= redThreshold) {
+    return `hsl(2 64% 68%)`;
+  }
+  // below red threshold — dark red
+  return `hsl(2 66% 45%)`;
 }
 
-function profitColor(v, greenThreshold, amberThreshold) {
-  return ragColor(v, greenThreshold, amberThreshold);
+function profitColor(v, redThreshold, amberThreshold, greenThreshold) {
+  return ragColor(v, redThreshold, amberThreshold, greenThreshold);
 }
-function equityColor(v, greenThreshold, amberThreshold) {
-  return ragColor(v, greenThreshold, amberThreshold);
+function equityColor(v, redThreshold, amberThreshold, greenThreshold) {
+  return ragColor(v, redThreshold, amberThreshold, greenThreshold);
 }
-function debtColor(v, greenThreshold, amberThreshold) {
-  // For debt, LOWER is better (green), HIGHER is worse (red) — invert the logic
-  const isGreen = v <= greenThreshold;
-  const isAmber = v <= amberThreshold && v > greenThreshold;
-  if (isGreen) {
+function debtColor(v, redThreshold, amberThreshold, greenThreshold) {
+  // For debt, LOWER is better — invert all comparisons
+  if (v <= greenThreshold) {
     const r = Math.min(1, (greenThreshold - v) / Math.max(1, greenThreshold || 1));
     return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
   }
-  if (isAmber) {
+  if (v <= amberThreshold) {
     return `hsl(40 78% 70%)`;
   }
-  // red — scale by distance above amber
-  const r = Math.min(1, (v - amberThreshold) / Math.max(1, v || 1));
-  return `hsl(2 ${66 + r * 14}% ${68 - r * 22}%)`;
+  if (v <= redThreshold) {
+    return `hsl(2 64% 68%)`;
+  }
+  // above red threshold — dark red
+  return `hsl(2 66% 45%)`;
 }
 function textColor() { return 'rgba(7,15,28,.92)'; }
 
@@ -210,7 +210,7 @@ function CashflowChart({ model }) {
 }
 
 /* ---------- sensitivity heatmaps ---------- */
-function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol, greenThreshold, amberThreshold }) {
+function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol, redThreshold, amberThreshold, greenThreshold }) {
   return (
     <div className="heatwrap">
       <table className="heat">
@@ -227,7 +227,7 @@ function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol, greenTh
               {psfSteps.map((ps, ci) => {
                 const v = grid[ri][ci];
                 const isBase = ri === baseRow && ci === baseCol;
-                return <td key={ci} className={'cell' + (isBase ? ' base' : '')} style={{ background: colorFn(v, greenThreshold, amberThreshold), color: textColor() }} title={money(v)}>{Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + 'm' : (v / 1e3).toFixed(0) + 'k'}</td>;
+                return <td key={ci} className={'cell' + (isBase ? ' base' : '')} style={{ background: colorFn(v, redThreshold, amberThreshold, greenThreshold), color: textColor() }} title={money(v)}>{Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + 'm' : (v / 1e3).toFixed(0) + 'k'}</td>;
               })}
             </tr>
           ))}
@@ -245,9 +245,9 @@ function Sensitivity({ model, initialTab }) {
   
   // RAG threshold defaults (stored in localStorage)
   const defaultThresholds = {
-    profit: { green: 1500000, amber: 500000 },
-    equity: { green: 3500000, amber: 2000000 },
-    debt: { green: 5500000, amber: 6500000 } // for debt, lower is better
+    profit: { red: 0, amber: 500000, green: 1500000 },
+    equity: { red: 500000, amber: 2000000, green: 3500000 },
+    debt: { red: 7000000, amber: 6500000, green: 5500000 } // for debt, lower is better (thresholds are inverted)
   };
   const [thresholds, setThresholds] = React.useState(() => {
     try {
@@ -275,9 +275,9 @@ function Sensitivity({ model, initialTab }) {
     : debtColor;
   const grid = s[tab];
   const desc = {
-    profit: 'Project profit (£) across sale price and total cost. Green ≥ green threshold, amber between green & red, red below red threshold.',
-    equity: 'Equity remaining. Green ≥ green threshold, amber between green & red, red below red threshold.',
-    debt: 'Debt recoverable. Green ≤ green threshold (lower debt is better), amber between, red above red threshold.'
+    profit: 'Project profit (£). Green ≥ green, amber ≥ amber (< green), red ≥ red (< amber).',
+    equity: 'Equity remaining. Green ≥ green, amber ≥ amber (< green), red ≥ red (< amber).',
+    debt: 'Debt recoverable. Green ≤ green (lower is better), amber ≤ amber (> green), red ≤ red (> amber).'
   };
   const t = thresholds[tab] || defaultThresholds[tab];
   
@@ -292,8 +292,8 @@ function Sensitivity({ model, initialTab }) {
       {/* RAG threshold controls */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '12px', background: 'rgba(255,255,255,.04)', borderRadius: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🟢 Green ≥</label>
-          <input type="number" value={t.green} onChange={e => updateThreshold(tab, 'green', e.target.value)} 
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🔴 Red ≥</label>
+          <input type="number" value={t.red} onChange={e => updateThreshold(tab, 'red', e.target.value)} 
             style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -302,12 +302,13 @@ function Sensitivity({ model, initialTab }) {
             style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🔴 Red &lt;</label>
-          <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>{money(t.amber)}</span>
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🟢 Green ≥</label>
+          <input type="number" value={t.green} onChange={e => updateThreshold(tab, 'green', e.target.value)}
+            style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
         </div>
       </div>
       
-      <Heatmap grid={grid} psfSteps={s.psfSteps} costSteps={s.costSteps} colorFn={colorFn} baseRow={baseRow} baseCol={baseCol} greenThreshold={t.green} amberThreshold={t.amber} />
+      <Heatmap grid={grid} psfSteps={s.psfSteps} costSteps={s.costSteps} colorFn={colorFn} baseRow={baseRow} baseCol={baseCol} redThreshold={t.red} amberThreshold={t.amber} greenThreshold={t.green} />
       <div style={{ fontSize: '10.5px', color: 'var(--muted-2)', marginTop: '10px', fontFamily: 'var(--mono)' }}>
         Columns: residential £psf change (commercial income held constant) · Rows: total-cost change · Outlined cell = base case ({money(s.basePsf * 0 + model.ratios.profit)})
       </div>
