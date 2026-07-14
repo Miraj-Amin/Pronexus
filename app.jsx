@@ -143,7 +143,7 @@ function Workspace({ session }) {
 
   const [projects, setProjects] = React.useState(null); // null = still loading
   const [loadErr, setLoadErr] = React.useState('');
-  const [activeId, setActiveId] = React.useState(() => DB.getActive());
+  const [activeId, setActiveId] = React.useState(null); // start at CRM, not last project
   const [tab, setTab] = React.useState(() => {
     const saved = localStorage.getItem('appraisal_tab');
     return ['input', 'summary', 'cashflow', 'dashboard'].indexOf(saved) !== -1 ? saved : 'dashboard';
