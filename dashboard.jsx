@@ -245,8 +245,8 @@ function Sensitivity({ model, initialTab }) {
   
   // RAG threshold defaults (stored in localStorage)
   const defaultThresholds = {
-    profit: { red: 0, amber: 500000, green: 1500000 },
-    equity: { red: 0, amber: 1500000, green: 3000000 },
+    profit: { red: 0, amber: 4800000, green: 6000000 },
+    equity: { red: 0, amber: 3000000, green: 4500000 },
     debt: { red: 7000000, amber: 6500000, green: 5500000 } // for debt, lower is better (thresholds are inverted)
   };
   const [thresholds, setThresholds] = React.useState(() => {
