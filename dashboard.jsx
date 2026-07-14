@@ -5,18 +5,44 @@ const { money, moneyShort, pct } = window.Appraisal;
 /* ---------- colour helpers for heatmaps ---------- */
 function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 /* heatmap cells — vivid tones that read on the dark blueprint panels */
-function profitColor(v, maxAbs) {
-  if (v >= 0) { const r = clamp(v / maxAbs, 0, 1); return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`; }
-  if (v > -500000) { const r = (-v) / 500000; return `hsl(40 78% ${70 - r * 12}%)`; }
-  const r = clamp((-v - 500000) / maxAbs, 0, 1); return `hsl(2 ${66 + r * 14}% ${68 - r * 22}%)`;
+
+// Threshold-based RAG coloring
+function ragColor(v, greenThreshold, amberThreshold) {
+  // green >= greenThreshold, amber between green & red, red < amberThreshold
+  const isGreen = v >= greenThreshold;
+  const isAmber = v >= amberThreshold && v < greenThreshold;
+  if (isGreen) {
+    const r = Math.min(1, (v - greenThreshold) / Math.max(1, greenThreshold || 1));
+    return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
+  }
+  if (isAmber) {
+    return `hsl(40 78% 70%)`;
+  }
+  // red — scale by distance below amber
+  const r = Math.min(1, (amberThreshold - v) / Math.max(1, Math.abs(amberThreshold) || 1));
+  return `hsl(2 ${66 + r * 14}% ${68 - r * 22}%)`;
 }
-function equityColor(v, cap) {
-  if (v <= 0) { const r = clamp((-v) / (cap * 1.5), 0, 1); return `hsl(2 ${64 + r * 14}% ${70 - r * 22}%)`; }
-  const r = clamp(v / cap, 0, 1); const hue = 40 + r * 122; return `hsl(${hue} ${58}% ${74 - r * 22}%)`;
+
+function profitColor(v, greenThreshold, amberThreshold) {
+  return ragColor(v, greenThreshold, amberThreshold);
 }
-function debtColor(v, cap) {
-  const r = clamp(v / cap, 0, 1); const hue = 2 + r * 160;
-  return `hsl(${hue} ${56}% ${72 - r * 22}%)`;
+function equityColor(v, greenThreshold, amberThreshold) {
+  return ragColor(v, greenThreshold, amberThreshold);
+}
+function debtColor(v, greenThreshold, amberThreshold) {
+  // For debt, LOWER is better (green), HIGHER is worse (red) — invert the logic
+  const isGreen = v <= greenThreshold;
+  const isAmber = v <= amberThreshold && v > greenThreshold;
+  if (isGreen) {
+    const r = Math.min(1, (greenThreshold - v) / Math.max(1, greenThreshold || 1));
+    return `hsl(162 ${52 + r * 16}% ${78 - r * 30}%)`;
+  }
+  if (isAmber) {
+    return `hsl(40 78% 70%)`;
+  }
+  // red — scale by distance above amber
+  const r = Math.min(1, (v - amberThreshold) / Math.max(1, v || 1));
+  return `hsl(2 ${66 + r * 14}% ${68 - r * 22}%)`;
 }
 function textColor() { return 'rgba(7,15,28,.92)'; }
 
@@ -184,8 +210,7 @@ function CashflowChart({ model }) {
 }
 
 /* ---------- sensitivity heatmaps ---------- */
-function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol }) {
-  const maxAbs = Math.max.apply(null, grid.flat().map(Math.abs)) || 1;
+function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol, greenThreshold, amberThreshold }) {
   return (
     <div className="heatwrap">
       <table className="heat">
@@ -202,7 +227,7 @@ function Heatmap({ grid, psfSteps, costSteps, colorFn, baseRow, baseCol }) {
               {psfSteps.map((ps, ci) => {
                 const v = grid[ri][ci];
                 const isBase = ri === baseRow && ci === baseCol;
-                return <td key={ci} className={'cell' + (isBase ? ' base' : '')} style={{ background: colorFn(v, maxAbs), color: textColor() }} title={money(v)}>{Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + 'm' : (v / 1e3).toFixed(0) + 'k'}</td>;
+                return <td key={ci} className={'cell' + (isBase ? ' base' : '')} style={{ background: colorFn(v, greenThreshold, amberThreshold), color: textColor() }} title={money(v)}>{Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + 'm' : (v / 1e3).toFixed(0) + 'k'}</td>;
               })}
             </tr>
           ))}
@@ -217,28 +242,72 @@ function Sensitivity({ model, initialTab }) {
   const [tab, setTab] = React.useState(initialTab || 'profit');
   const baseCol = s.psfSteps.indexOf(0);
   const baseRow = s.costSteps.indexOf(0);
+  
+  // RAG threshold defaults (stored in localStorage)
+  const defaultThresholds = {
+    profit: { green: 1500000, amber: 500000 },
+    equity: { green: 3500000, amber: 2000000 },
+    debt: { green: 5500000, amber: 6500000 } // for debt, lower is better
+  };
+  const [thresholds, setThresholds] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('sensitivity_thresholds');
+      return saved ? JSON.parse(saved) : defaultThresholds;
+    } catch {
+      return defaultThresholds;
+    }
+  });
+  
+  const updateThreshold = (tabId, kind, value) => {
+    const num = parseFloat(value) || 0;
+    const updated = { ...thresholds, [tabId]: { ...thresholds[tabId], [kind]: num } };
+    setThresholds(updated);
+    localStorage.setItem('sensitivity_thresholds', JSON.stringify(updated));
+  };
+  
   const tabs = [
     { id: 'profit', label: 'Profit' },
     { id: 'equity', label: 'Equity' },
     { id: 'debt', label: 'Debt' }
   ];
-  const colorFn = tab === 'profit' ? (v, m) => profitColor(v, m)
-    : tab === 'equity' ? (v) => equityColor(v, s.equityCap)
-    : (v) => debtColor(v, s.debtCap);
+  const colorFn = tab === 'profit' ? profitColor
+    : tab === 'equity' ? equityColor
+    : debtColor;
   const grid = s[tab];
   const desc = {
-    profit: 'Project profit (£) across sale price and total cost. Green positive → amber near zero → red loss.',
-    equity: 'Equity remaining (capped at ' + money(s.equityCap) + '). Amber as profit erodes equity, red once it goes negative.',
-    debt: 'Debt recoverable (capped at facility ' + money(s.debtCap) + '). Red is where the bank\u2019s position is at risk.'
+    profit: 'Project profit (£) across sale price and total cost. Green ≥ green threshold, amber between green & red, red below red threshold.',
+    equity: 'Equity remaining. Green ≥ green threshold, amber between green & red, red below red threshold.',
+    debt: 'Debt recoverable. Green ≤ green threshold (lower debt is better), amber between, red above red threshold.'
   };
+  const t = thresholds[tab] || defaultThresholds[tab];
+  
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px', flexWrap: 'wrap' }}>
-        <div className="heat-tabs">{tabs.map(t => <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>{t.label} sensitivity</button>)}</div>
+        <div className="heat-tabs">{tabs.map(tb => <button key={tb.id} className={tab === tb.id ? 'active' : ''} onClick={() => setTab(tb.id)}>{tb.label} sensitivity</button>)}</div>
         <div className="heat-scale"><span>loss</span><span className="grad"></span><span>profit</span></div>
       </div>
       <div style={{ fontSize: '11.5px', color: 'var(--muted)', marginBottom: '12px' }}>{desc[tab]}</div>
-      <Heatmap grid={grid} psfSteps={s.psfSteps} costSteps={s.costSteps} colorFn={colorFn} baseRow={baseRow} baseCol={baseCol} />
+      
+      {/* RAG threshold controls */}
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '12px', background: 'rgba(255,255,255,.04)', borderRadius: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🟢 Green ≥</label>
+          <input type="number" value={t.green} onChange={e => updateThreshold(tab, 'green', e.target.value)} 
+            style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🟡 Amber ≥</label>
+          <input type="number" value={t.amber} onChange={e => updateThreshold(tab, 'amber', e.target.value)}
+            style={{ width: '140px', padding: '4px 8px', fontSize: '12px', fontFamily: 'var(--mono)', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '4px', color: '#fff' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>🔴 Red &lt;</label>
+          <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--mono)' }}>{money(t.amber)}</span>
+        </div>
+      </div>
+      
+      <Heatmap grid={grid} psfSteps={s.psfSteps} costSteps={s.costSteps} colorFn={colorFn} baseRow={baseRow} baseCol={baseCol} greenThreshold={t.green} amberThreshold={t.amber} />
       <div style={{ fontSize: '10.5px', color: 'var(--muted-2)', marginTop: '10px', fontFamily: 'var(--mono)' }}>
         Columns: residential £psf change (commercial income held constant) · Rows: total-cost change · Outlined cell = base case ({money(s.basePsf * 0 + model.ratios.profit)})
       </div>
