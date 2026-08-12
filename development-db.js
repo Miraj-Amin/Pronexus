@@ -37,11 +37,22 @@
   }
 
   let store = null;
+  // See bridging-db.js's migrateStore for why this exists — backfills any
+  // fields added after a store was first created so old localStorage data
+  // doesn't leave currentUser.activeRole (or anything else new) undefined.
+  function migrateStore(s) {
+    const defaults = emptyStore();
+    Object.keys(defaults).forEach(k => { if (s[k] === undefined) s[k] = defaults[k]; });
+    s.currentUser = Object.assign({}, defaults.currentUser, s.currentUser);
+    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Deal Lead';
+    if (!s.currentUser.roles || !s.currentUser.roles.length) s.currentUser.roles = defaults.currentUser.roles;
+    return s;
+  }
   function load() {
     if (store) return store;
     try {
       const raw = localStorage.getItem(KEY);
-      store = raw ? JSON.parse(raw) : emptyStore();
+      store = raw ? migrateStore(JSON.parse(raw)) : emptyStore();
     } catch (e) { store = emptyStore(); }
     if (!store.deals || Object.keys(store.deals).length === 0) seed(store);
     return store;

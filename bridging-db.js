@@ -41,11 +41,26 @@
 
   let store = null;
 
+  // Backfills any fields introduced after a store was first created (e.g.
+  // currentUser.activeRole, added when the role switcher shipped) so an
+  // existing browser's localStorage doesn't end up with `role` silently
+  // undefined everywhere permission checks run — that showed up as gating
+  // badges rendering "Read-only for  —" with the role name missing, and
+  // every permission check failing closed because hasPerm(undefined, cap)
+  // is always false.
+  function migrateStore(s) {
+    const defaults = emptyStore();
+    Object.keys(defaults).forEach(k => { if (s[k] === undefined) s[k] = defaults[k]; });
+    s.currentUser = Object.assign({}, defaults.currentUser, s.currentUser);
+    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Deal Lead';
+    if (!s.currentUser.roles || !s.currentUser.roles.length) s.currentUser.roles = defaults.currentUser.roles;
+    return s;
+  }
   function load() {
     if (store) return store;
     try {
       const raw = localStorage.getItem(KEY);
-      store = raw ? JSON.parse(raw) : emptyStore();
+      store = raw ? migrateStore(JSON.parse(raw)) : emptyStore();
     } catch (e) { store = emptyStore(); }
     if (!store.deals || Object.keys(store.deals).length === 0) seed(store);
     return store;
