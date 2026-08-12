@@ -15,7 +15,7 @@
   function emptyStore() {
     return {
       org: { id: 'org_phoenix', name: 'Phoenix London and Regional Limited' },
-      currentUser: { id: 'user_demo', name: 'Demo user', roles: ['Deal Lead', 'Development Analyst', 'Financial Analyst', 'Case Manager', 'Admin', 'Principal', 'Viewer'], activeRole: 'Deal Lead' },
+      currentUser: { id: 'user_demo', name: 'Demo user', roles: ['Deal Lead', 'Development Analyst', 'Financial Analyst', 'Case Manager', 'Admin', 'Principal', 'Viewer'], activeRole: 'Admin' },
       deals: {},
       tasks: {},          // dealId -> [143 task rows]
       gateSignoffs: {},    // dealId -> { GD0: {...} .. GD10: {...} }
@@ -44,7 +44,7 @@
     const defaults = emptyStore();
     Object.keys(defaults).forEach(k => { if (s[k] === undefined) s[k] = defaults[k]; });
     s.currentUser = Object.assign({}, defaults.currentUser, s.currentUser);
-    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Deal Lead';
+    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Admin';
     if (!s.currentUser.roles || !s.currentUser.roles.length) s.currentUser.roles = defaults.currentUser.roles;
     return s;
   }

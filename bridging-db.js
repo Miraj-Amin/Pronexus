@@ -16,7 +16,7 @@
   function emptyStore() {
     return {
       org: { id: 'org_phoenix', name: 'Phoenix London and Regional Limited' },
-      currentUser: { id: 'user_demo', name: 'Demo user', roles: E.ROLES.slice(0, -3), activeRole: 'Deal Lead' }, // excludes the three external-party placeholder roles from the demo switcher for now
+      currentUser: { id: 'user_demo', name: 'Demo user', roles: E.ROLES.slice(0, -3), activeRole: 'Admin' }, // excludes the three external-party placeholder roles from the demo switcher for now; defaults to Admin so casual use isn't blocked by role-specific gating unless deliberately switched
       deals: {},          // dealId -> deal record
       tasks: {},           // dealId -> [{ref,stage,title,owner,required,status,targetDate,doneDate,evidence,notes,gate}]
       gateSignoffs: {},     // dealId -> { G0: {passed,owner,date,signedBy,evidence,waiver} }
@@ -52,7 +52,7 @@
     const defaults = emptyStore();
     Object.keys(defaults).forEach(k => { if (s[k] === undefined) s[k] = defaults[k]; });
     s.currentUser = Object.assign({}, defaults.currentUser, s.currentUser);
-    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Deal Lead';
+    if (!s.currentUser.activeRole) s.currentUser.activeRole = (s.currentUser.roles && s.currentUser.roles[0]) || 'Admin';
     if (!s.currentUser.roles || !s.currentUser.roles.length) s.currentUser.roles = defaults.currentUser.roles;
     return s;
   }
