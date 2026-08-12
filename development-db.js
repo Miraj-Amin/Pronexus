@@ -29,6 +29,8 @@
       escalations: {},              // dealId -> [{id,trigger,raisedDate,raisedTo,status,resolution,resolutionDate,evidence,owner}]
       audit: {},                     // dealId -> [{id,ts,user,action,before,after,reason}]
       documents: {},                   // dealId -> [{id,folder,docType,fileName,mimeType,size,version,storagePath|dataUrl,url,notes,uploadedBy,createdAt}]
+      statusHistory: {},               // dealId -> [{id,ts,fromStatus,toStatus,fromStage,toStage}]
+      portalInvites: {},               // dealId -> [{id,email,token,createdAt,acceptedAt}]
       adminParams: null,
       orgAudit: [],
     };
@@ -52,6 +54,11 @@
   }
   function orgAudit(action, before, after) {
     store.orgAudit.unshift({ id: uid('oaud'), ts: nowISO(), user: store.currentUser.name, action, before: before === undefined ? null : before, after: after === undefined ? null : after });
+  }
+  function recordStatusHistory(dealId, fromStatus, toStatus, fromStage, toStage) {
+    if (fromStatus === toStatus && fromStage === toStage) return;
+    store.statusHistory[dealId] = store.statusHistory[dealId] || [];
+    store.statusHistory[dealId].push({ id: uid('sh'), ts: nowISO(), fromStatus, toStatus, fromStage, toStage });
   }
 
   function seedTasksFor(dealId) {
@@ -118,7 +125,8 @@
     }, fields || {});
     s.deals[id] = deal;
     seedTasksFor(id); seedGatesFor(id); seedEligibilityFor(id); seedInfoPackFor(id); seedFeesFor(id); seedHandoverFor(id); seedAppraisalStressFor(id);
-    s.cp[id] = []; s.notes[id] = []; s.escalations[id] = []; s.documents[id] = [];
+    s.cp[id] = []; s.notes[id] = []; s.escalations[id] = []; s.documents[id] = []; s.portalInvites[id] = [];
+    s.statusHistory[id] = [{ id: uid('sh'), ts: nowISO(), fromStatus: null, toStatus: deal.status, fromStage: null, toStage: deal.stage }];
     audit(id, 'Deal created', null, { dealRef: deal.dealRef, source: deal.source });
     persist();
     return deal;
@@ -127,7 +135,9 @@
   function updateDeal(id, patch, action) {
     const s = load(); const d = s.deals[id]; if (!d) return null;
     const before = {}; Object.keys(patch).forEach(k => before[k] = d[k]);
+    const fromStatus = d.status, fromStage = d.stage;
     Object.assign(d, patch, { updatedAt: nowISO() });
+    if (patch.status !== undefined || patch.stage !== undefined) recordStatusHistory(id, fromStatus, d.status, fromStage, d.stage);
     audit(id, action || 'Deal updated', before, patch);
     persist();
     return d;
@@ -150,7 +160,11 @@
     const gateDef = E.GATES[gateKey];
     const nextStage = gateDef.stage + 1;
     const deal = s.deals[dealId];
-    if (deal) { deal.lastGatePassed = gateKey; if (nextStage <= 10) deal.stage = nextStage; deal.updatedAt = nowISO(); }
+    if (deal) {
+      const fromStage = deal.stage;
+      deal.lastGatePassed = gateKey; if (nextStage <= 10) deal.stage = nextStage; deal.updatedAt = nowISO();
+      recordStatusHistory(dealId, deal.status, deal.status, fromStage, deal.stage);
+    }
     audit(dealId, 'Gate ' + gateKey + ' passed', null, info);
     persist();
     return s.gateSignoffs[dealId][gateKey];
@@ -305,6 +319,32 @@
 
   function setActiveRole(role) { const s = load(); s.currentUser.activeRole = role; persist(); return s.currentUser; }
 
+  /* --------------------------- Client portal invites --------------------------- */
+  function inviteClientPortal(dealId, email) {
+    const s = load(); s.portalInvites[dealId] = s.portalInvites[dealId] || [];
+    const rec = { id: uid('inv'), email, token: uid('tok').replace(/^tok_/, ''), createdAt: nowISO(), acceptedAt: null };
+    s.portalInvites[dealId].push(rec);
+    audit(dealId, 'Client portal invited: ' + email, null, { token: rec.token });
+    orgAudit('Client portal invite issued for deal ' + dealId, null, { email });
+    persist();
+    return rec;
+  }
+  function findPortalInviteByToken(token) {
+    const s = load();
+    for (const dealId of Object.keys(s.portalInvites)) {
+      const hit = (s.portalInvites[dealId] || []).find(i => i.token === token);
+      if (hit) return { dealId, invite: hit };
+    }
+    return null;
+  }
+  function acceptPortalInvite(token) {
+    const hit = findPortalInviteByToken(token);
+    if (!hit) return null;
+    hit.invite.acceptedAt = nowISO();
+    persist();
+    return hit;
+  }
+
   function seed(s) {
     store = s;
     const d = newDeal({
@@ -374,6 +414,10 @@
     getOrgAudit: () => load().orgAudit || [],
     getDocuments: (dealId) => load().documents[dealId] || [],
     addDocument, deleteDocument, nextDocVersion,
+    getStatusHistory: (dealId) => load().statusHistory[dealId] || [],
+    getAllStatusHistory: () => load().statusHistory || {},
+    getPortalInvites: (dealId) => load().portalInvites[dealId] || [],
+    inviteClientPortal, findPortalInviteByToken, acceptPortalInvite,
     resetDemo: () => { localStorage.removeItem(KEY); store = null; load(); },
   };
 

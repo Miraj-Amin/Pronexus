@@ -635,6 +635,11 @@ function Workspace({ session }) {
 }
 
 function App() {
+  const portalToken = React.useMemo(() => {
+    try { return new URLSearchParams(location.search).get('portal'); } catch (e) { return null; }
+  }, []);
+  if (portalToken) return <window.PhoenixPortalApp token={portalToken} />;
+
   const session = useSession();
   const FeedbackLayer = window.FeedbackLayer;
   if (session === undefined) return <div className="app"><Splash label="Starting up…" /></div>;

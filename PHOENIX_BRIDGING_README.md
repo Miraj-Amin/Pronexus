@@ -374,20 +374,14 @@ on first load (`PhoenixBridgingDB.resetDemo()` in the console clears it).
 
 ## 15. What remains to be built next
 
-- Document upload/versioning against `bridging_documents` + Supabase Storage.
-- Admin UI for `bridging_funder_parameters` / `bridging_core_parameters` so
-  a Principal can edit limits without a deploy.
-- SLA due-date engine (`bridging_sla_events` generation + a live countdown)
-  and the MI dashboards (Pipeline / Conversion / Stage Velocity / SLA
-  Performance / Reason Code / Funder Performance / Gate Failure Analysis).
-- AI-assisted features (Deal Summary generator, Eligibility Assistant,
-  Credit Pack generator, Risk Detection, Client Update drafts, Funder Query
-  Assistant) — all explicitly required to be user-reviewed/confirmed before
-  use, never auto-sent.
-- Client Portal (upload + status view) and the narrower RLS policy set for
-  `Client Portal User` / external roles.
-- Full role-based UI gating (today every field is editable by whoever has
-  the deal open — real permission enforcement is RLS-only right now).
-- Ground-up development's separate 11-stage process (explicitly out of
-  scope for this pass — flagged in `PRODUCT_PARAMS['Ground-up development']
-  .note`).
+- Admin UI for `bridging_funder_parameters` / `bridging_core_parameters` — **done** (`admin-app.jsx`, "Funder Parameters" in the sidebar, gated to Admin/Principal, with an org-level change log and a reset-to-defaults control).
+- SLA due-date engine and the MI dashboards — **done** (`mi-app.jsx`, "MI & Reporting" in the sidebar): Pipeline, SLA Performance (live, using the `slaStatusForDeal` engine function), Conversion Funnel and Stage Velocity (both driven by a new `statusHistory` event log recorded on every stage/status change — see `recordStatusHistory` in both DB layers), Stage Distribution, Gate Blockers, Reason Code Analysis, and Funder Performance (Bridging only — Development's multi-layer structuring doesn't reduce to a single "funder" the same way, so that panel correctly shows nothing there rather than a misleading number).
+- Client Portal — **done** (`portal-app.jsx`, reached via `?portal=TOKEN`, bypassing the internal Supabase auth entirely). Shows a plain-English stage timeline and an upload area for outstanding KYC (Bridging) or information-pack (Development) items; deliberately excludes fees, funder terms, internal notes and gate controls. Invites are issued from the KYC / Information Pack tab in each deal workspace and land the client straight on their own deal.
+- Full role-based UI gating — **done** across every editable tab in both modules (Bridging's Funder/Valuation/CP/Fees/Post-completion tabs were the last ones still open; they're now wrapped in the same `Section` permission gate as the rest).
+- Document upload/versioning, Ground-up development's separate process, CRM↔deal linking, and the persistent navigation shell — all done in earlier passes (see above).
+
+**Still open:**
+- The Client Portal's "narrower RLS policy set" is implemented as a UI-side boundary (the portal component simply never reads or renders restricted fields) rather than as real Postgres RLS — that still needs writing once this moves off localStorage onto the actual Supabase schema. `db/bridging_schema.sql` already has the `bridging_client_portal_invites` table and a placeholder policy shape to extend.
+- `statusHistory` is recorded from this point forward for every deal; it does not retroactively reconstruct history for stage changes that happened before this feature existed, so Conversion/Stage Velocity will read thin until deals move through a few more stages under the new tracking.
+- No real multi-user auth — the role switchers in Bridging, Development, and Admin are independent per-module demo pickers, not a single logged-in identity with one role. Worth unifying once this sits on Supabase auth with real per-user role assignment.
+- No browser smoke-test has been run against the built app — the checks in this and earlier passes are static (bracket/paren balance across every file) rather than a live click-through.

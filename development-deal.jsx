@@ -494,11 +494,16 @@ function TasksGatesTab({ deal, dealId, tasks, refresh, role }) {
 /* =========================== INFORMATION PACK =========================== */
 function InfoPackTab({ dealId, role }) {
   const [tick, setTick] = React.useState(0);
+  const [inviteEmail, setInviteEmail] = React.useState('');
   const pack = DB.getInfoPack(dealId) || {};
   const received = E.INFO_PACK_ITEMS.filter(i => (pack[i.n] || {}).received).length;
   const set = (n, field, value) => { DB.setInfoPackItem(dealId, n, { [field]: value }); setTick(t => t + 1); };
   const streams = ['Development', 'Commercial', 'Borrower'];
+  const invites = DB.getPortalInvites(dealId);
+  const B = window.PhoenixBridging;
+  const canInvite = B ? B.hasPerm(role, 'inviteClientPortal') : true;
   return (
+    <div>
     <Section role={role} cap="editKyc" label="Information pack">
       <div className="phxb-panel">
         <h3>Information pack register — three streams</h3>
@@ -537,6 +542,34 @@ function InfoPackTab({ dealId, role }) {
         ))}
       </div>
     </Section>
+
+    <div className="phxb-panel">
+      <h3>Client portal invites</h3>
+      <div className="sub">Invite the client to upload outstanding information pack items themselves via a secure, deal-scoped link.</div>
+      {!canInvite ? <div className="phxb-badge grey" style={{ marginBottom: 10 }}>Read-only for {role} — inviting requires the "inviteClientPortal" permission</div> : (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <input style={{ flex: 1, background: 'var(--surface-3)', border: '1px solid var(--border-strong)', color: 'var(--ink)', borderRadius: 5, padding: '8px 10px' }}
+            type="email" placeholder="client@example.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
+          <button className="phxb-btn primary" disabled={!inviteEmail.trim()} onClick={() => { DB.inviteClientPortal(dealId, inviteEmail.trim()); setInviteEmail(''); setTick(t => t + 1); }}>Send invite</button>
+        </div>
+      )}
+      {invites.length === 0 ? <div className="phxb-empty">No portal invites sent yet.</div> : (
+        <table className="phxb-table">
+          <thead><tr><th>Email</th><th>Status</th><th>Portal link</th><th>Sent</th></tr></thead>
+          <tbody>
+            {invites.map(inv => (
+              <tr key={inv.id}>
+                <td>{inv.email}</td>
+                <td>{inv.acceptedAt ? <span className="phxb-badge ok">Accepted</span> : <span className="phxb-badge amber">Pending</span>}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 11 }}>?portal={inv.token}</td>
+                <td style={{ fontSize: 11 }}>{new Date(inv.createdAt).toLocaleDateString('en-GB')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+    </div>
   );
 }
 

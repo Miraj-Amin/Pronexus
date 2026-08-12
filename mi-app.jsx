@@ -183,11 +183,89 @@ function FunderPerformancePanel({ E, DB, deals }) {
   );
 }
 
+function ConversionFunnelPanel({ E, DB, deals }) {
+  if (!DB.getAllStatusHistory) return null;
+  const allHistory = DB.getAllStatusHistory();
+  const totalDeals = deals.length;
+  if (totalDeals === 0) return null;
+  const maxStageByDeal = {};
+  deals.forEach(d => {
+    const hist = allHistory[d.id] || [];
+    let max = d.stage || 0;
+    hist.forEach(h => { if (h.toStage != null && h.toStage > max) max = h.toStage; });
+    maxStageByDeal[d.id] = max;
+  });
+  return (
+    <div className="phxb-panel">
+      <h3>Conversion funnel</h3>
+      <div className="sub">Of all {totalDeals} opportunities ever logged, the share that has reached each stage at least once — computed from each deal's recorded stage transitions.</div>
+      {E.STAGES.map(s => {
+        const reached = deals.filter(d => maxStageByDeal[d.id] >= s.n).length;
+        const pct = totalDeals ? (reached / totalDeals * 100) : 0;
+        return (
+          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ width: 170, fontSize: 11.5, color: 'var(--muted-2)', flex: 'none' }}>{s.key} — {s.label}</div>
+            <div className="phxb-progress" style={{ flex: 1 }}><div className="bar" style={{ width: pct + '%' }} /></div>
+            <div style={{ width: 70, textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 11.5 }}>{reached} ({pct.toFixed(0)}%)</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StageVelocityPanel({ E, DB, deals }) {
+  if (!DB.getAllStatusHistory) return null;
+  const allHistory = DB.getAllStatusHistory();
+  const now = new Date();
+  const totals = {}; // stage -> {sumDays, count}
+  deals.forEach(d => {
+    const hist = (allHistory[d.id] || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    // walk consecutive stage-change events; time between them is time spent in the "from" stage
+    let lastStage = hist.length ? hist[0].toStage : d.stage;
+    let lastTs = hist.length ? new Date(hist[0].ts) : null;
+    for (let i = 1; i < hist.length; i++) {
+      const h = hist[i];
+      if (h.toStage !== lastStage && h.toStage != null && lastTs) {
+        const days = (new Date(h.ts) - lastTs) / 86400000;
+        if (days >= 0) { totals[lastStage] = totals[lastStage] || { sum: 0, n: 0 }; totals[lastStage].sum += days; totals[lastStage].n++; }
+        lastStage = h.toStage; lastTs = new Date(h.ts);
+      }
+    }
+    // time in the current (still-open) stage, for live deals
+    const isClosed = (E.PIPELINE_BUCKET[d.status] || '') === 'Closed' || (E.PIPELINE_BUCKET[d.status] || '') === 'Excluded' || (E.PIPELINE_BUCKET[d.status] || '') === 'Completion';
+    if (!isClosed && lastTs) {
+      const days = (now - lastTs) / 86400000;
+      if (days >= 0) { totals[lastStage] = totals[lastStage] || { sum: 0, n: 0 }; totals[lastStage].sum += days; totals[lastStage].n++; }
+    }
+  });
+  const anyData = Object.keys(totals).length > 0;
+  return (
+    <div className="phxb-panel">
+      <h3>Stage velocity</h3>
+      <div className="sub">Average days spent in each stage, from recorded transitions (in-progress deals count time in their current stage up to today).</div>
+      {!anyData ? <div className="phxb-empty">Not enough transition history yet — this fills in as deals move through stages and gates get passed.</div> : (
+        E.STAGES.map(s => {
+          const t = totals[s.n];
+          const avg = t && t.n ? t.sum / t.n : null;
+          return (
+            <div key={s.n} className="phxb-kv-list" style={{ marginBottom: 2 }}>
+              <div className="r"><span>{s.key} — {s.label}</span><span style={{ fontFamily: 'var(--mono)' }}>{avg == null ? '—' : avg.toFixed(1) + ' days avg'}{t ? ' (' + t.n + ' obs.)' : ''}</span></div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 function ModuleMi({ E, DB, stageField, notProceedingStatus }) {
   const deals = DB.listDeals();
   return (
     <div>
       <PipelinePanel E={E} deals={deals} />
+      <ConversionFunnelPanel E={E} DB={DB} deals={deals} />
+      <StageVelocityPanel E={E} DB={DB} deals={deals} />
       <SlaPerformancePanel E={E} DB={DB} deals={deals} />
       <StageDistributionPanel E={E} deals={deals} stageField={stageField} />
       <GateBlockersPanel E={E} DB={DB} deals={deals} />

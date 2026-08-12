@@ -284,10 +284,21 @@ create table if not exists bridging_cp_items (
   created_at     timestamptz not null default now()
 );
 create index if not exists idx_cp_deal on bridging_cp_items(deal_id);
--- business rule: a CP cannot be marked Satisfied without an evidence reference
-alter table bridging_cp_items
-  add constraint chk_cp_evidence_on_satisfied
-  check (status <> 'Satisfied' or (evidence_ref is not null and length(trim(evidence_ref)) > 0));
+-- business rule: a CP cannot be marked Satisfied without an evidence reference.
+-- Wrapped in a DO block (not `alter table ... add constraint`) because
+-- Postgres has no `add constraint if not exists` — this makes the whole
+-- migration safely re-runnable, matching the `create table if not exists`
+-- style used everywhere else in this file.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'chk_cp_evidence_on_satisfied'
+  ) then
+    alter table bridging_cp_items
+      add constraint chk_cp_evidence_on_satisfied
+      check (status <> 'Satisfied' or (evidence_ref is not null and length(trim(evidence_ref)) > 0));
+  end if;
+end $$;
 
 -- ----------------------------------------------------------------------------
 -- 8. FEES AND COSTS
@@ -513,18 +524,23 @@ language sql stable as $$
   select organisation_id from bridging_users where id = auth.uid()
 $$;
 
+drop policy if exists org_isolation_orgs on bridging_organisations;
 create policy org_isolation_orgs on bridging_organisations
   for all using (id = bridging_current_org());
 
+drop policy if exists org_isolation_users on bridging_users;
 create policy org_isolation_users on bridging_users
   for all using (organisation_id = bridging_current_org());
 
+drop policy if exists org_isolation_deals on bridging_deals;
 create policy org_isolation_deals on bridging_deals
   for all using (organisation_id = bridging_current_org())
   with check (organisation_id = bridging_current_org());
 
+drop policy if exists org_isolation_params_funder on bridging_funder_parameters;
 create policy org_isolation_params_funder on bridging_funder_parameters
   for all using (organisation_id = bridging_current_org());
+drop policy if exists org_isolation_params_core on bridging_core_parameters;
 create policy org_isolation_params_core on bridging_core_parameters
   for all using (organisation_id = bridging_current_org());
 
@@ -532,52 +548,73 @@ create policy org_isolation_params_core on bridging_core_parameters
 -- "Not proceeding" codes) — every signed-in user may read it, but only a
 -- migration / the service role may write to it, so there is deliberately
 -- no insert/update/delete policy: those default-deny under RLS.
+drop policy if exists read_reason_codes on bridging_reason_codes;
 create policy read_reason_codes on bridging_reason_codes
   for select using (auth.role() = 'authenticated');
 
 -- child tables: scoped via their parent deal's organisation
+drop policy if exists org_isolation_tasks on bridging_stage_tasks;
 create policy org_isolation_tasks on bridging_stage_tasks
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_gates on bridging_gate_signoffs;
 create policy org_isolation_gates on bridging_gate_signoffs
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_elig on bridging_eligibility_tests;
 create policy org_isolation_elig on bridging_eligibility_tests
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_adverse on bridging_adverse_credit_checks;
 create policy org_isolation_adverse on bridging_adverse_credit_checks
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_exceptions on bridging_policy_exceptions;
 create policy org_isolation_exceptions on bridging_policy_exceptions
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_tiers on bridging_appetite_tiers;
 create policy org_isolation_tiers on bridging_appetite_tiers
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_kyc on bridging_kyc_items;
 create policy org_isolation_kyc on bridging_kyc_items
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_cp on bridging_cp_items;
 create policy org_isolation_cp on bridging_cp_items
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_fees on bridging_fees_costs;
 create policy org_isolation_fees on bridging_fees_costs
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_funderapp on bridging_funder_approaches;
 create policy org_isolation_funderapp on bridging_funder_approaches
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_valuation on bridging_valuation_records;
 create policy org_isolation_valuation on bridging_valuation_records
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_comms on bridging_communications;
 create policy org_isolation_comms on bridging_communications
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_sla on bridging_sla_events;
 create policy org_isolation_sla on bridging_sla_events
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_escalations on bridging_escalations;
 create policy org_isolation_escalations on bridging_escalations
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_documents on bridging_documents;
 create policy org_isolation_documents on bridging_documents
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_postcompletion on bridging_post_completion;
 create policy org_isolation_postcompletion on bridging_post_completion
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_statushistory on bridging_status_history;
 create policy org_isolation_statushistory on bridging_status_history
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
+drop policy if exists org_isolation_portalinvites on bridging_client_portal_invites;
 create policy org_isolation_portalinvites on bridging_client_portal_invites
   for all using (deal_id in (select id from bridging_deals where organisation_id = bridging_current_org()));
 
+drop policy if exists org_isolation_audit on bridging_audit_logs;
 create policy org_isolation_audit on bridging_audit_logs
   for all using (organisation_id = bridging_current_org());
 
 -- Role-gated write policies (examples — extend per the Permissions model in
 -- the README). Gate sign-off, for instance, should be restricted further:
+drop policy if exists gate_signoff_role_gate on bridging_gate_signoffs;
 create policy gate_signoff_role_gate on bridging_gate_signoffs
   for insert with check (
     deal_id in (
@@ -593,6 +630,7 @@ create policy gate_signoff_role_gate on bridging_gate_signoffs
 create or replace function bridging_touch_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end; $$;
 
+drop trigger if exists trg_deals_touch on bridging_deals;
 create trigger trg_deals_touch before update on bridging_deals
   for each row execute function bridging_touch_updated_at();
 
@@ -605,6 +643,7 @@ begin
   return new;
 end; $$;
 
+drop trigger if exists trg_deals_status_history on bridging_deals;
 create trigger trg_deals_status_history after update on bridging_deals
   for each row execute function bridging_capture_status_history();
 

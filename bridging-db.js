@@ -31,6 +31,7 @@
       audit: {},                        // dealId -> [{id,ts,user,action,before,after,reason}]
       postCompletion: {},                 // dealId -> {redemptionWatchDate,exitStatus,exitConfidence,retentionBalance,lastReview,redemptionDate,dischargeEvidence}
       documents: {},                        // dealId -> [{id,folder,docType,fileName,mimeType,size,version,dataUrl|storagePath,linkedStage,linkedGate,linkedCpId,linkedKycRef,notes,uploadedBy,createdAt}]
+      statusHistory: {},                    // dealId -> [{id,ts,fromStatus,toStatus,fromStage,toStage}] — feeds Conversion / Stage Velocity MI
       portalInvites: {},                        // dealId -> [{id,email,token,createdAt,acceptedAt}]
       orgAudit: [],                               // org-level events not tied to a single deal (admin param changes, invites...)
       adminParams: null,                            // { productParams: {...override}, coreParams: {...override} } — null until first override saved
@@ -86,6 +87,11 @@
   function orgAudit(action, before, after, reason) {
     store.orgAudit.unshift({ id: uid('oaud'), ts: nowISO(), user: store.currentUser.name, action, before: before === undefined ? null : before, after: after === undefined ? null : after, reason: reason || null });
   }
+  function recordStatusHistory(dealId, fromStatus, toStatus, fromStage, toStage) {
+    if (fromStatus === toStatus && fromStage === toStage) return;
+    store.statusHistory[dealId] = store.statusHistory[dealId] || [];
+    store.statusHistory[dealId].push({ id: uid('sh'), ts: nowISO(), fromStatus, toStatus, fromStage, toStage });
+  }
 
   function newDeal(fields) {
     const s = load();
@@ -117,6 +123,7 @@
     seedTasksFor(id); seedGatesFor(id); seedEligibilityFor(id); seedKycFor(id); seedFeesFor(id);
     s.cp[id] = []; s.funderApproaches[id] = []; s.valuation[id] = {}; s.notes[id] = []; s.escalations[id] = [];
     s.postCompletion[id] = {}; s.documents[id] = []; s.portalInvites[id] = [];
+    s.statusHistory[id] = [{ id: uid('sh'), ts: nowISO(), fromStatus: null, toStatus: deal.status, fromStage: null, toStage: deal.stage }];
     audit(id, 'Deal created', null, { dealRef: deal.dealRef, source: deal.source });
     persist();
     return deal;
@@ -125,7 +132,9 @@
   function updateDeal(id, patch, action) {
     const s = load(); const d = s.deals[id]; if (!d) return null;
     const before = {}; Object.keys(patch).forEach(k => before[k] = d[k]);
+    const fromStatus = d.status, fromStage = d.stage;
     Object.assign(d, patch, { updatedAt: nowISO() });
+    if (patch.status !== undefined || patch.stage !== undefined) recordStatusHistory(id, fromStatus, d.status, fromStage, d.stage);
     audit(id, action || 'Deal updated', before, patch);
     persist();
     return d;
@@ -150,9 +159,11 @@
     const nextStage = gateDef.stage + 1;
     const deal = s.deals[dealId];
     if (deal) {
+      const fromStage = deal.stage;
       deal.lastGatePassed = gateKey;
       if (nextStage <= 7) deal.stage = nextStage;
       deal.updatedAt = nowISO();
+      recordStatusHistory(dealId, deal.status, deal.status, fromStage, deal.stage);
     }
     audit(dealId, 'Gate ' + gateKey + ' passed', null, info);
     persist();
@@ -442,6 +453,8 @@
     // documents
     getDocuments: (dealId) => load().documents[dealId] || [],
     addDocument, updateDocument, deleteDocument, nextDocVersion,
+    getStatusHistory: (dealId) => load().statusHistory[dealId] || [],
+    getAllStatusHistory: () => load().statusHistory || {},
 
     // client portal
     getPortalInvites: (dealId) => load().portalInvites[dealId] || [],
