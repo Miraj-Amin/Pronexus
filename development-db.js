@@ -275,6 +275,11 @@
     persist();
     return getEffectiveCoreParams();
   }
+  function resetProductParams() {
+    const s = load(); s.adminParams = { productParams: {}, coreParams: {} };
+    orgAudit('Admin parameters reset to shipped defaults', null, null);
+    persist();
+  }
 
   function nextDocVersion(dealId, folder, docType) {
     const list = (load().documents[dealId] || []).filter(d => d.folder === folder && d.docType === docType);
@@ -364,7 +369,7 @@
     getAudit: (dealId) => load().audit[dealId] || [],
     currentUser: () => load().currentUser,
     setActiveRole,
-    getEffectiveProductParams, getEffectiveCoreParams, setProductParam, setCoreParam,
+    getEffectiveProductParams, getEffectiveCoreParams, setProductParam, setCoreParam, resetProductParams,
     hasAdminOverrides: () => !!load().adminParams,
     getOrgAudit: () => load().orgAudit || [],
     getDocuments: (dealId) => load().documents[dealId] || [],

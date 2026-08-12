@@ -164,7 +164,7 @@ function Workspace({ session }) {
   // CRM — client accounts + which top-level view is showing when no project is open
   const [accounts, setAccounts] = React.useState([]);
   const [view, setView] = React.useState(() => {
-    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio' || u === 'bridging' || u === 'development') return u; } catch (e) {}
+    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio' || u === 'bridging' || u === 'development' || u === 'admin' || u === 'mi') return u; } catch (e) {}
     return localStorage.getItem('phx_view') || 'crm';
   });
   // cross-module navigation: "+ New deal" on a client page carries the client
@@ -455,6 +455,10 @@ function Workspace({ session }) {
           onDealOpened={() => setOpenDevelopmentDealId(null)}
         />
       );
+    } else if (view === 'admin') {
+      externalContent = <window.PhoenixAdminApp />;
+    } else if (view === 'mi') {
+      externalContent = <window.PhoenixMiApp />;
     } else if (view === 'portfolio') {
       externalContent = (
         <div className="app">

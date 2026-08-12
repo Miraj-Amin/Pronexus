@@ -678,11 +678,12 @@ function KycTab({ dealId, role }) {
     </div>
   );
 }
-function FunderTab({ dealId, patch }) {
+function FunderTab({ dealId, patch, role }) {
   const [tick, setTick] = React.useState(0);
   const rows = DB.getFunderApproaches(dealId);
   const [f, setF] = React.useState({ funder: '', contact: '', dateApproached: '' });
   return (
+    <Section role={role} cap="editFunder" label="Funder Selection">
     <div className="phxb-panel">
       <h3>Funder shortlist and comparison</h3>
       <div className="sub">Gate G2 cannot pass without a selected funder and written client selection recorded on the Overview tab.</div>
@@ -720,17 +721,19 @@ function FunderTab({ dealId, patch }) {
         setF({ funder: '', contact: '', dateApproached: '' }); setTick(t => t + 1);
       }}>+ Add funder approach</button>
     </div>
+    </Section>
   );
 }
 
 /* =========================== VALUATION =========================== */
-function ValuationTab({ deal, patch, dealId }) {
+function ValuationTab({ deal, patch, dealId, role }) {
   const [tick, setTick] = React.useState(0);
   const v = DB.getValuation(dealId);
   const set = (field, val) => { DB.setValuation(dealId, { [field]: val }); setTick(t => t + 1); };
   const variance = (v.assumedValue && v.reportedValue) ? (parseFloat(v.reportedValue) - parseFloat(v.assumedValue)) / parseFloat(v.assumedValue) : null;
   const escalate = variance != null && Math.abs(variance) > 0.05;
   return (
+    <Section role={role} cap="editValuation" label="Valuation">
     <div className="phxb-panel">
       <h3>Valuation and underwriting</h3>
       <div className="phxb-grid3">
@@ -750,11 +753,12 @@ function ValuationTab({ deal, patch, dealId }) {
       <TextAreaField label="Client re-presentation evidence" value={v.clientRepresentation} onChange={val => set('clientRepresentation', val)} />
       {escalate ? <div className="phxb-badge red">Value variance exceeds 5% — escalation triggered</div> : null}
     </div>
+    </Section>
   );
 }
 
 /* =========================== CP SCHEDULE =========================== */
-function CpTab({ dealId }) {
+function CpTab({ dealId, role }) {
   const [tick, setTick] = React.useState(0);
   const cps = DB.getCps(dealId);
   const [n, setN] = React.useState({ condition: '', category: '', owner: '', dueDate: '' });
@@ -768,6 +772,7 @@ function CpTab({ dealId }) {
     return days > 10;
   }).length;
   return (
+    <Section role={role} cap="editCp" label="CP Schedule">
     <div className="phxb-panel">
       <h3>Conditions precedent schedule</h3>
       <div className="sub">Opened at Stage 4 from the offer letter. Nothing is marked satisfied without a filed evidence reference.</div>
@@ -808,11 +813,12 @@ function CpTab({ dealId }) {
       <TextField label="Due date" type="date" value={n.dueDate} onChange={v => setN(Object.assign({}, n, { dueDate: v }))} />
       <button className="phxb-btn primary" disabled={!n.condition} onClick={() => { DB.addCp(dealId, n); setN({ condition: '', category: '', owner: '', dueDate: '' }); setTick(t => t + 1); }}>+ Add condition</button>
     </div>
+    </Section>
   );
 }
 
 /* =========================== FEES & COSTS =========================== */
-function FeesTab({ deal, patch, dealId }) {
+function FeesTab({ deal, patch, dealId, role }) {
   const [tick, setTick] = React.useState(0);
   const fees = DB.getFees(dealId);
   const set = (ref, field, val) => { DB.setFeeItem(dealId, ref, { [field]: val }); setTick(t => t + 1); };
@@ -821,6 +827,7 @@ function FeesTab({ deal, patch, dealId }) {
   const introducerShare = parseFloat((fees.F11 || {}).amount) || 0;
   const phoenixNet = phoenixGross - introducerShare;
   return (
+    <Section role={role} cap="editFees" label="Fees & Costs">
     <div className="phxb-panel">
       <h3>Fees and costs</h3>
       <div className="sub">Cash costs paid by the client, funder charges deducted from the advance, and Phoenix income are kept clearly distinct. Exportable to send to the client.</div>
@@ -850,6 +857,7 @@ function FeesTab({ deal, patch, dealId }) {
         <div className="phxb-card"><div className="l">Phoenix net fee after introducer share</div><div className="v">{E.fmt.money(phoenixNet)}</div></div>
       </div>
     </div>
+    </Section>
   );
 }
 
@@ -875,13 +883,14 @@ function NotesTab({ dealId }) {
 }
 
 /* =========================== POST-COMPLETION =========================== */
-function PostCompletionTab({ deal, patch, dealId }) {
+function PostCompletionTab({ deal, patch, dealId, role }) {
   const [tick, setTick] = React.useState(0);
   const pc = DB.getPostCompletion(dealId);
   const set = (field, val) => { DB.setPostCompletion(dealId, { [field]: val }); setTick(t => t + 1); };
   const watchDue = deal.termEndDate ? E.fmt.daysUntil(deal.termEndDate) : null;
   const atWatch = watchDue != null && watchDue <= 90;
   return (
+    <Section role={role} cap="editPostCompletion" label="Post-completion">
     <div className="phxb-panel">
       <h3>Post-completion and redemption watch</h3>
       {deal.stage < 6 ? <div className="phxb-empty">Activates once the deal reaches Stage 6 (drawdown and completion).</div> : null}
@@ -897,6 +906,7 @@ function PostCompletionTab({ deal, patch, dealId }) {
       </div>
       {atWatch && deal.status !== 'Redeemed' ? <div className="phxb-badge amber">Within redemption watch window (term minus 90 days) — test the exit and flag any deterioration</div> : null}
     </div>
+    </Section>
   );
 }
 
@@ -952,12 +962,12 @@ function PhxDealWorkspace({ dealId, onBack, onOpenAccount }) {
       {tab === 'Tasks & Gates' && <TasksGatesTab deal={deal} dealId={dealId} tasks={tasks} refresh={refresh} role={role} />}
       {tab === 'Documents' && <DocumentsTab deal={deal} dealId={dealId} role={role} />}
       {tab === 'KYC / AML' && <KycTab dealId={dealId} role={role} />}
-      {tab === 'Funder Selection' && <FunderTab dealId={dealId} patch={patch} />}
-      {tab === 'Valuation' && <ValuationTab deal={deal} patch={patch} dealId={dealId} />}
-      {tab === 'CP Schedule' && <CpTab dealId={dealId} />}
-      {tab === 'Fees & Costs' && <FeesTab deal={deal} patch={patch} dealId={dealId} />}
+      {tab === 'Funder Selection' && <FunderTab dealId={dealId} patch={patch} role={role} />}
+      {tab === 'Valuation' && <ValuationTab deal={deal} patch={patch} dealId={dealId} role={role} />}
+      {tab === 'CP Schedule' && <CpTab dealId={dealId} role={role} />}
+      {tab === 'Fees & Costs' && <FeesTab deal={deal} patch={patch} dealId={dealId} role={role} />}
       {tab === 'Notes' && <NotesTab dealId={dealId} />}
-      {tab === 'Post-completion' && <PostCompletionTab deal={deal} patch={patch} dealId={dealId} />}
+      {tab === 'Post-completion' && <PostCompletionTab deal={deal} patch={patch} dealId={dealId} role={role} />}
       {tab === 'Audit Trail' && <AuditTab dealId={dealId} />}
     </div>
   );
