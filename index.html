@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css?v=27" />
 <link rel="stylesheet" href="crm.css?v=27" />
+<link rel="stylesheet" href="bridging.css?v=1" />
 </head>
 <body>
 <div id="root"></div>
@@ -93,6 +94,8 @@ function loadScriptWithFallback(urls, label) {
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
 <script src="engine.js?v=27"></script>
+<script src="bridging-engine.js?v=1"></script>
+<script src="bridging-db.js?v=1"></script>
 <script>
   var xlsxOK = loadScriptWithFallback([
     'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -122,6 +125,9 @@ function loadScriptWithFallback(urls, label) {
 <script type="text/babel" src="crm.jsx?v=27"></script>
 <script type="text/babel" src="crm-detail.jsx?v=27"></script>
 <script type="text/babel" src="feedback.jsx?v=27"></script>
+<script type="text/babel" src="bridging-dashboard.jsx?v=1"></script>
+<script type="text/babel" src="bridging-deal.jsx?v=1"></script>
+<script type="text/babel" src="bridging-app.jsx?v=1"></script>
 <script type="text/babel" src="app.jsx?v=27"></script>
 </body>
 </html>

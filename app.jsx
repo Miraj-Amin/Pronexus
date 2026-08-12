@@ -164,7 +164,7 @@ function Workspace({ session }) {
   // CRM — client accounts + which top-level view is showing when no project is open
   const [accounts, setAccounts] = React.useState([]);
   const [view, setView] = React.useState(() => {
-    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio') return u; } catch (e) {}
+    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio' || u === 'bridging') return u; } catch (e) {}
     return localStorage.getItem('phx_view') || 'crm';
   });
   const email = session.user.email;
@@ -408,6 +408,11 @@ function Workspace({ session }) {
 
   if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
 
+  // ---- Phoenix Bridging view (separate module, own data store) ----
+  if (!active && view === 'bridging') {
+    return <window.PhoenixBridgingApp onBackToPortfolio={() => setView('portfolio')} />;
+  }
+
   // ---- CRM view (no project open) ----
   if (!active && view === 'crm') {
     return (
@@ -433,6 +438,10 @@ function Workspace({ session }) {
           <button onClick={() => setView('crm')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,cursor:'pointer' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Clients
+          </button>
+          <button onClick={() => setView('bridging')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,cursor:'pointer' }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 13V6l6-4 6 4v7M6.5 13V9h3v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Bridging
           </button>
           <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,textDecoration:'none' }}>Phoenix Hub</a>
           <div className="acct">
