@@ -16,7 +16,7 @@
   function emptyStore() {
     return {
       org: { id: 'org_phoenix', name: 'Phoenix London and Regional Limited' },
-      currentUser: { id: 'user_demo', name: 'Demo user', roles: ['Deal Lead', 'Analyst', 'Case Manager', 'Admin'] },
+      currentUser: { id: 'user_demo', name: 'Demo user', roles: E.ROLES.slice(0, -3), activeRole: 'Deal Lead' }, // excludes the three external-party placeholder roles from the demo switcher for now
       deals: {},          // dealId -> deal record
       tasks: {},           // dealId -> [{ref,stage,title,owner,required,status,targetDate,doneDate,evidence,notes,gate}]
       gateSignoffs: {},     // dealId -> { G0: {passed,owner,date,signedBy,evidence,waiver} }
@@ -30,6 +30,10 @@
       escalations: {},                 // dealId -> [{id,trigger,raisedDate,raisedTo,status,resolution,resolutionDate,evidence,owner}]
       audit: {},                        // dealId -> [{id,ts,user,action,before,after,reason}]
       postCompletion: {},                 // dealId -> {redemptionWatchDate,exitStatus,exitConfidence,retentionBalance,lastReview,redemptionDate,dischargeEvidence}
+      documents: {},                        // dealId -> [{id,folder,docType,fileName,mimeType,size,version,dataUrl|storagePath,linkedStage,linkedGate,linkedCpId,linkedKycRef,notes,uploadedBy,createdAt}]
+      portalInvites: {},                        // dealId -> [{id,email,token,createdAt,acceptedAt}]
+      orgAudit: [],                               // org-level events not tied to a single deal (admin param changes, invites...)
+      adminParams: null,                            // { productParams: {...override}, coreParams: {...override} } — null until first override saved
       seq: 0,
     };
   }
@@ -79,6 +83,9 @@
     const f = {}; E.FEE_ROWS.forEach(r => { f[r.ref] = { amount: '', invoiced: false, received: false, notes: '' }; });
     store.fees[dealId] = f;
   }
+  function orgAudit(action, before, after, reason) {
+    store.orgAudit.unshift({ id: uid('oaud'), ts: nowISO(), user: store.currentUser.name, action, before: before === undefined ? null : before, after: after === undefined ? null : after, reason: reason || null });
+  }
 
   function newDeal(fields) {
     const s = load();
@@ -88,6 +95,7 @@
     const deal = Object.assign({
       id, dealRef,
       dateReceived: todayISO(), source: '', introducer: '', introducerShareApplies: 'No',
+      accountId: '', accountName: '',
       dealLead: '', analyst: '', caseManager: '',
       stage: 0, status: 'Enquiry',
       borrowingEntity: '', companyNumber: '', principals: '', guarantors: '',
@@ -108,7 +116,7 @@
     s.deals[id] = deal;
     seedTasksFor(id); seedGatesFor(id); seedEligibilityFor(id); seedKycFor(id); seedFeesFor(id);
     s.cp[id] = []; s.funderApproaches[id] = []; s.valuation[id] = {}; s.notes[id] = []; s.escalations[id] = [];
-    s.postCompletion[id] = {};
+    s.postCompletion[id] = {}; s.documents[id] = []; s.portalInvites[id] = [];
     audit(id, 'Deal created', null, { dealRef: deal.dealRef, source: deal.source });
     persist();
     return deal;
@@ -259,6 +267,106 @@
     return s.postCompletion[dealId];
   }
 
+  /* --------------------------- Admin-configurable parameters --------------------------- */
+  function getEffectiveProductParams() {
+    const s = load();
+    const override = (s.adminParams && s.adminParams.productParams) || {};
+    const merged = {};
+    Object.keys(E.DEFAULT_PRODUCT_PARAMS).forEach(k => { merged[k] = Object.assign({}, E.DEFAULT_PRODUCT_PARAMS[k], override[k] || {}); });
+    return merged;
+  }
+  function getEffectiveCoreParams() {
+    const s = load();
+    const override = (s.adminParams && s.adminParams.coreParams) || {};
+    return Object.assign({}, E.DEFAULT_CORE_PARAMS, override);
+  }
+  function setProductParam(product, field, value, user) {
+    const s = load();
+    s.adminParams = s.adminParams || { productParams: {}, coreParams: {} };
+    s.adminParams.productParams[product] = Object.assign({}, s.adminParams.productParams[product], { [field]: value });
+    orgAudit('Funder parameter changed: ' + product + '.' + field, null, { value, by: user || s.currentUser.name });
+    persist();
+    return getEffectiveProductParams()[product];
+  }
+  function setCoreParam(field, value, user) {
+    const s = load();
+    s.adminParams = s.adminParams || { productParams: {}, coreParams: {} };
+    s.adminParams.coreParams[field] = value;
+    orgAudit('Core parameter changed: ' + field, null, { value, by: user || s.currentUser.name });
+    persist();
+    return getEffectiveCoreParams();
+  }
+  function resetProductParams() {
+    const s = load(); s.adminParams = { productParams: {}, coreParams: {} };
+    orgAudit('Admin parameters reset to shipped defaults', null, null);
+    persist();
+  }
+
+  /* --------------------------- Documents (Supabase Storage-shaped) --------------------------- */
+  // In production, `storagePath` (Supabase Storage object key) replaces
+  // `dataUrl` — see bridging-storage.js for the guarded real-upload path.
+  // Everything else about the record (folder, version, links, audit) is
+  // identical either way, so swapping storage backends doesn't touch the UI.
+  function nextDocVersion(dealId, folder, docType) {
+    const list = (load().documents[dealId] || []).filter(d => d.folder === folder && d.docType === docType);
+    return list.length ? Math.max.apply(null, list.map(d => d.version || 1)) + 1 : 1;
+  }
+  function addDocument(dealId, doc) {
+    const s = load(); s.documents[dealId] = s.documents[dealId] || [];
+    const version = nextDocVersion(dealId, doc.folder, doc.docType);
+    const rec = Object.assign({ id: uid('doc'), version, uploadedBy: s.currentUser.name, createdAt: nowISO() }, doc);
+    s.documents[dealId].push(rec);
+    audit(dealId, 'Document uploaded: ' + doc.folder + '/' + doc.docType + ' v' + version, null, { fileName: doc.fileName, size: doc.size });
+    persist();
+    return rec;
+  }
+  function updateDocument(dealId, docId, patch) {
+    const s = load(); const list = s.documents[dealId] || [];
+    const rec = list.find(d => d.id === docId); if (!rec) return null;
+    Object.assign(rec, patch);
+    persist();
+    return rec;
+  }
+  function deleteDocument(dealId, docId) {
+    const s = load(); const list = s.documents[dealId] || [];
+    const idx = list.findIndex(d => d.id === docId); if (idx === -1) return false;
+    const [removed] = list.splice(idx, 1);
+    audit(dealId, 'Document deleted: ' + removed.folder + '/' + removed.docType + ' v' + removed.version, removed, null);
+    persist();
+    return true;
+  }
+
+  /* --------------------------- Client portal invites --------------------------- */
+  function inviteClientPortal(dealId, email) {
+    const s = load(); s.portalInvites[dealId] = s.portalInvites[dealId] || [];
+    const rec = { id: uid('inv'), email, token: uid('tok').replace(/^tok_/, ''), createdAt: nowISO(), acceptedAt: null };
+    s.portalInvites[dealId].push(rec);
+    audit(dealId, 'Client portal invited: ' + email, null, { token: rec.token });
+    orgAudit('Client portal invite issued for deal ' + dealId, null, { email });
+    persist();
+    return rec;
+  }
+  function findPortalInviteByToken(token) {
+    const s = load();
+    for (const dealId of Object.keys(s.portalInvites)) {
+      const hit = (s.portalInvites[dealId] || []).find(i => i.token === token);
+      if (hit) return { dealId, invite: hit };
+    }
+    return null;
+  }
+  function acceptPortalInvite(token) {
+    const hit = findPortalInviteByToken(token);
+    if (!hit) return null;
+    hit.invite.acceptedAt = nowISO();
+    persist();
+    return hit;
+  }
+
+  /* --------------------------- Roles --------------------------- */
+  function setActiveRole(role) {
+    const s = load(); s.currentUser.activeRole = role; persist(); return s.currentUser;
+  }
+
   function seed(s) {
     store = s;
     const d = newDeal({
@@ -297,6 +405,7 @@
     load, persist,
     newDeal, updateDeal,
     listDeals: () => Object.values(load().deals).sort((a, b) => (b.dateReceived || '').localeCompare(a.dateReceived || '')),
+    listDealsForAccount: (accountId) => Object.values(load().deals).filter(d => d.accountId === accountId).sort((a, b) => (b.dateReceived || '').localeCompare(a.dateReceived || '')),
     getDeal: (id) => load().deals[id],
     listTasks: (dealId) => load().tasks[dealId] || [],
     updateTask, passGate, waiveTask,
@@ -321,7 +430,22 @@
     setPostCompletion,
     getAudit: (dealId) => load().audit[dealId] || [],
     currentUser: () => load().currentUser,
+    setActiveRole,
     resetDemo: () => { localStorage.removeItem(KEY); store = null; load(); },
+
+    // admin-configurable funder / core parameters
+    getEffectiveProductParams, getEffectiveCoreParams,
+    setProductParam, setCoreParam, resetProductParams,
+    hasAdminOverrides: () => !!load().adminParams,
+    getOrgAudit: () => load().orgAudit || [],
+
+    // documents
+    getDocuments: (dealId) => load().documents[dealId] || [],
+    addDocument, updateDocument, deleteDocument, nextDocVersion,
+
+    // client portal
+    getPortalInvites: (dealId) => load().portalInvites[dealId] || [],
+    inviteClientPortal, findPortalInviteByToken, acceptPortalInvite,
   };
 
 })(window);

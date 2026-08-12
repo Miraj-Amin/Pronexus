@@ -20,8 +20,32 @@ function TextAreaField({ label, value, onChange }) {
   return <Field label={label}><textarea value={value || ''} onChange={e => onChange(e.target.value)} /></Field>;
 }
 
+/* =========================== ROLE-BASED GATING =========================== */
+// Wraps a tab's editable content. When the active role lacks `cap`, every
+// input inside becomes inert (pointer-events: none) and a banner explains
+// why — a real, visible restriction, not just a documentation note. Buttons
+// that need a *different, more specific* capability than the tab's default
+// (Pass gate, Waive, Satisfy CP, mark fee received, delete document, invite
+// portal...) are rendered outside this wrapper and gated individually with
+// their own `disabled` check — see each tab below.
+function Section({ role, cap, label, children }) {
+  const allowed = E.hasPerm(role, cap);
+  return (
+    <div>
+      {!allowed ? (
+        <div className="phxb-badge grey" style={{ marginBottom: 12 }}>
+          Read-only for {role} — {label || 'editing this section'} requires a role with the "{cap}" permission
+        </div>
+      ) : null}
+      <div style={allowed ? undefined : { opacity: .55, pointerEvents: 'none', userSelect: 'none' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* =========================== HEADER =========================== */
-function DealHeader({ deal, onBack, tasks, gates }) {
+function DealHeader({ deal, onBack, tasks, gates, onOpenAccount }) {
   const metrics = E.calcMetrics(deal);
   const gateDef = E.GATES[deal.lastGatePassed] || null;
   const blockers = React.useMemo(() => {
@@ -34,7 +58,18 @@ function DealHeader({ deal, onBack, tasks, gates }) {
 
   return (
     <div className="phxb-header">
-      <button className="phxb-btn ghost" style={{ marginBottom: 10 }} onClick={onBack}>← Pipeline</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontFamily: 'var(--mono)', fontSize: 11.5 }}>
+        {deal.accountId && onOpenAccount ? (
+          <React.Fragment>
+            <button className="phxb-btn ghost" onClick={() => onOpenAccount(deal.accountId)}>{deal.accountName || 'Client'}</button>
+            <span style={{ color: 'var(--muted-2)' }}>/</span>
+            <span style={{ color: 'var(--muted-2)' }}>{deal.dealRef}</span>
+          </React.Fragment>
+        ) : (
+          <button className="phxb-btn ghost" onClick={onBack}>← Pipeline</button>
+        )}
+        {deal.accountId ? <button className="phxb-btn ghost" onClick={onBack} style={{ marginLeft: 'auto' }}>Pipeline</button> : null}
+      </div>
       <div className="row1">
         <span className="ref">{deal.dealRef}</span>
         <h2>{deal.borrowingEntity || 'Unnamed borrower'}</h2>
@@ -63,10 +98,10 @@ function DealHeader({ deal, onBack, tasks, gates }) {
 }
 
 /* =========================== OVERVIEW =========================== */
-function OverviewTab({ deal, patch }) {
+function OverviewTab({ deal, patch, role }) {
   const metrics = E.calcMetrics(deal);
   return (
-    <div>
+    <Section role={role} cap="editOverview" label="Overview">
       <div className="phxb-panel">
         <h3>Identification</h3>
         <div className="phxb-grid3">
@@ -166,15 +201,17 @@ function OverviewTab({ deal, patch }) {
         </div>
         <TextAreaField label="Notes" value={deal.notes} onChange={v => patch({ notes: v })} />
       </div>
-    </div>
+    </Section>
   );
 }
 
 /* =========================== ELIGIBILITY =========================== */
-function EligibilityTab({ deal, patch, dealId }) {
+function EligibilityTab({ deal, patch, dealId, role }) {
   const [tick, setTick] = React.useState(0);
   const elig = DB.getEligibility(dealId);
   const metrics = E.calcMetrics(deal);
+  const liveParams = DB.getEffectiveProductParams();
+  const liveCore = DB.getEffectiveCoreParams();
 
   const setTest = (key, field, value) => {
     const t = Object.assign({}, elig.tests[key], { [field]: value });
@@ -199,12 +236,12 @@ function EligibilityTab({ deal, patch, dealId }) {
   };
 
   const failCount = E.ELIGIBILITY_TESTS.filter(t => {
-    const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics) : null;
+    const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics, liveParams, liveCore) : null;
     const v = auto ? auto.verdict : (elig.tests[t.key] || {}).verdict;
     return v === 'Fail';
   }).length;
   const borderlineCount = E.ELIGIBILITY_TESTS.filter(t => {
-    const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics) : null;
+    const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics, liveParams, liveCore) : null;
     const v = auto ? auto.verdict : (elig.tests[t.key] || {}).verdict;
     return v === 'Borderline';
   }).length;
@@ -213,7 +250,7 @@ function EligibilityTab({ deal, patch, dealId }) {
   const suggestedTier = E.suggestTier(deal, adverseFound, exceptionsPresent);
 
   return (
-    <div>
+    <Section role={role} cap="editEligibility" label="Eligibility">
       <div className="phxb-panel">
         <h3>Eligibility screen — 23 tests</h3>
         <div className="sub">Every test applied before terms are sought from any funder. Numeric tests (1, 2, 3, 5, 6, 7) are calculated automatically from Overview fields and product limits.</div>
@@ -227,7 +264,7 @@ function EligibilityTab({ deal, patch, dealId }) {
           <thead><tr><th style={{ width: 28 }}>#</th><th>Test</th><th>Requirement</th><th style={{ width: 110 }}>This deal</th><th style={{ width: 110 }}>Within?</th><th>Evidence / note</th></tr></thead>
           <tbody>
             {E.ELIGIBILITY_TESTS.map(t => {
-              const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics) : null;
+              const auto = t.auto ? E.autoEligibilityVerdict(t, deal, metrics, liveParams, liveCore) : null;
               const rec = elig.tests[t.key] || {};
               const verdict = auto ? auto.verdict : rec.verdict;
               const color = verdict === 'Fail' ? 'red' : verdict === 'Borderline' ? 'amber' : verdict === 'Pass' ? 'ok' : 'grey';
@@ -321,16 +358,16 @@ function EligibilityTab({ deal, patch, dealId }) {
           <div className="phxb-badge red">Tier 4 — decline in writing, close the tracker row with a reason code. Do not seek terms.</div>
         ) : null}
       </div>
-    </div>
+    </Section>
   );
 }
 
 /* =========================== TASKS & GATES =========================== */
-function GateModal({ gateKey, onClose, onPass }) {
+function GateModal({ gateKey, gateDef, onClose, onPass }) {
   const [owner, setOwner] = React.useState('');
   const [signedBy, setSignedBy] = React.useState('');
   const [evidence, setEvidence] = React.useState('');
-  const g = E.GATES[gateKey];
+  const g = gateDef || E.GATES[gateKey];
   return (
     <div className="phxb-modal-overlay" onClick={onClose}>
       <div className="phxb-modal" onClick={e => e.stopPropagation()}>
@@ -366,9 +403,12 @@ function WaiveModal({ task, onClose, onWaive }) {
   );
 }
 
-function TasksGatesTab({ deal, dealId, tasks, refresh }) {
+function TasksGatesTab({ deal, dealId, tasks, refresh, role }) {
   const [gateModal, setGateModal] = React.useState(null);
   const [waiveTarget, setWaiveTarget] = React.useState(null);
+  const canEditTasks = E.hasPerm(role, 'editTasks');
+  const canPass = E.hasPerm(role, 'passGate');
+  const canWaiveAny = E.canWaive(role);
 
   const setStatus = (ref, status) => { DB.updateTask(dealId, ref, { status }); refresh(); };
   const setField = (ref, field, value) => { DB.updateTask(dealId, ref, { [field]: value }); refresh(); };
@@ -398,10 +438,10 @@ function TasksGatesTab({ deal, dealId, tasks, refresh }) {
                 <div className="ref">{t.ref}</div>
                 <div className="title">{t.title}</div>
                 <div className="owner">{t.owner}</div>
-                <select className="phxb-status-select" value={t.status} onChange={e => setStatus(t.ref, e.target.value)}>
+                <select className="phxb-status-select" value={t.status} disabled={!canEditTasks} onChange={e => setStatus(t.ref, e.target.value)}>
                   {['Not started', 'In progress', 'Complete', 'Waived', 'Blocked', 'Not applicable'].map(o => <option key={o}>{o}</option>)}
                 </select>
-                {t.status !== 'Waived' ? <button className="phxb-small-btn" onClick={() => setWaiveTarget(t)}>Waive</button> : null}
+                {t.status !== 'Waived' ? <button className="phxb-small-btn" disabled={!canWaiveAny} title={canWaiveAny ? '' : 'Waivers require senior approval (Admin/Principal)'} onClick={() => setWaiveTarget(t)}>Waive</button> : null}
               </div>
             ))}
 
@@ -421,8 +461,9 @@ function TasksGatesTab({ deal, dealId, tasks, refresh }) {
                     )}
                   </div>
                   {!gateInfo || !gateInfo.passed ? (
-                    <button className="phxb-btn primary" disabled={!readiness.ready} style={{ opacity: readiness.ready ? 1 : .5 }}
-                      onClick={() => setGateModal(s.gate)}>Pass gate</button>
+                    <button className="phxb-btn primary" disabled={!readiness.ready || !canPass} style={{ opacity: (readiness.ready && canPass) ? 1 : .5 }}
+                      title={canPass ? '' : 'Your role cannot pass this gate'}
+                      onClick={() => setGateModal({ key: s.gate, def: E.GATES[s.gate] })}>Pass gate</button>
                   ) : <span className="phxb-badge ok">Passed</span>}
                 </div>
               );
@@ -431,8 +472,18 @@ function TasksGatesTab({ deal, dealId, tasks, refresh }) {
         );
       })}
 
-      {gateModal ? <GateModal gateKey={gateModal} onClose={() => setGateModal(null)}
-        onPass={(info) => { DB.passGate(dealId, gateModal, info); setGateModal(null); refresh(); }} /> : null}
+      {deal.product === 'Ground-up development' ? (
+        <div className="phxb-panel" style={{ borderColor: 'var(--red-border)' }}>
+          <div className="phxb-badge amber">
+            Ground-up development now runs through the separate Development Finance module (its own D0–D10 process,
+            gates and reference series) rather than continuing here — use "+ New enquiry" in Development Finance for
+            this deal. This Bridging record predates that split; update its product type once it's re-created there.
+          </div>
+        </div>
+      ) : null}
+
+      {gateModal ? <GateModal gateKey={gateModal.key} gateDef={gateModal.def} onClose={() => setGateModal(null)}
+        onPass={(info) => { DB.passGate(dealId, gateModal.key, info); setGateModal(null); refresh(); }} /> : null}
       {waiveTarget ? <WaiveModal task={waiveTarget} onClose={() => setWaiveTarget(null)}
         onWaive={(info) => { DB.waiveTask(dealId, waiveTarget.ref, info); setWaiveTarget(null); refresh(); }} /> : null}
     </div>
@@ -440,28 +491,132 @@ function TasksGatesTab({ deal, dealId, tasks, refresh }) {
 }
 
 /* =========================== DOCUMENTS =========================== */
-function DocumentsTab({ deal }) {
+function DocumentsTab({ deal, dealId, role }) {
+  const [tick, setTick] = React.useState(0);
+  const [folder, setFolder] = React.useState(E.DOC_FOLDERS[0].key);
+  const [docType, setDocType] = React.useState('');
+  const [linkedStage, setLinkedStage] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState('');
+  const docs = DB.getDocuments(dealId);
+  const canUpload = E.hasPerm(role, 'uploadDocument');
+  const canDelete = E.hasPerm(role, 'deleteDocument');
+  const storageReady = !!(window.sb && window.sb.storage);
+
+  async function onFile(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file || !canUpload) return;
+    const type = docType.trim() || file.name.replace(/\.[^.]+$/, '');
+    setBusy(true); setErr('');
+    try {
+      const version = DB.nextDocVersion(dealId, folder, type);
+      const result = await window.PhoenixBridgingStorage.uploadDocument({
+        file, orgId: DB.load().org.id, dealRef: deal.dealRef, folder, docType: type, version,
+      });
+      if (!result.ok) { setErr(result.error || 'Upload failed'); setBusy(false); return; }
+      DB.addDocument(dealId, {
+        folder, docType: type, fileName: file.name, mimeType: file.type, size: file.size,
+        storagePath: result.storagePath || null, dataUrl: result.dataUrl || null, url: result.url || null,
+        linkedStage: linkedStage || null, notes: '',
+      });
+      setDocType(''); setTick(t => t + 1);
+    } catch (ex) {
+      setErr(String(ex && ex.message || ex));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function removeDoc(d) {
+    if (!canDelete) return;
+    if (!confirm('Delete ' + d.fileName + ' (v' + d.version + ')? This cannot be undone.')) return;
+    window.PhoenixBridgingStorage.removeDocument({ storagePath: d.storagePath });
+    DB.deleteDocument(dealId, d.id);
+    setTick(t => t + 1);
+  }
+
+  // group by folder, and within folder by docType "family" so versions stack
+  const byFolder = {};
+  docs.forEach(d => { (byFolder[d.folder] = byFolder[d.folder] || []).push(d); });
+
   return (
     <div className="phxb-panel">
       <h3>Document vault</h3>
-      <div className="sub">Folders created automatically at Stage 0. Naming convention: {deal.dealRef}_DocType_v1_{new Date().toISOString().slice(0, 10)} — no "final", no "final final".</div>
-      {E.DOC_FOLDERS.map(f => (
-        <div key={f.key} className="phxb-kv-list" style={{ marginBottom: 4 }}>
-          <div className="r"><span style={{ fontFamily: 'var(--mono)', color: 'var(--green-500)' }}>{f.key}</span><span style={{ color: 'var(--muted-2)', textAlign: 'right', maxWidth: '70%' }}>{f.contents}</span></div>
+      <div className="sub">
+        Naming convention: {deal.dealRef}_DocType_v{'{n}'}_{new Date().toISOString().slice(0, 10)} — no "final", no "final final".
+        {' '}{storageReady ? <span className="phxb-badge ok" style={{ marginLeft: 4 }}>Supabase Storage connected</span> : <span className="phxb-badge amber" style={{ marginLeft: 4 }}>Local fallback storage — bucket not detected</span>}
+      </div>
+
+      {canUpload ? (
+        <div className="phxb-grid3" style={{ marginBottom: 6 }}>
+          <Field label="Folder"><select value={folder} onChange={e => setFolder(e.target.value)}>
+            {E.DOC_FOLDERS.map(f => <option key={f.key} value={f.key}>{f.key}</option>)}
+          </select></Field>
+          <Field label="Document type"><input value={docType} onChange={e => setDocType(e.target.value)} placeholder="e.g. SubmissionPack — defaults to the file name" /></Field>
+          <Field label="Linked stage (optional)"><select value={linkedStage} onChange={e => setLinkedStage(e.target.value)}>
+            <option value="">—</option>{E.STAGES.map(s => <option key={s.n} value={s.n}>Stage {s.n}</option>)}
+          </select></Field>
         </div>
-      ))}
-      <div className="phxb-empty">Full upload/versioning UI lands in MVP3 — the folder structure and naming rule are enforced here so documents in KYC, CP and Valuation tabs reference these folders consistently.</div>
+      ) : (
+        <div className="phxb-badge grey" style={{ marginBottom: 10 }}>Read-only for {role} — uploading requires the "uploadDocument" permission</div>
+      )}
+      {canUpload ? (
+        <div style={{ marginBottom: 16 }}>
+          <label className="phxb-btn primary" style={{ display: 'inline-flex', cursor: busy ? 'wait' : 'pointer', opacity: busy ? .6 : 1 }}>
+            {busy ? 'Uploading…' : '+ Upload file'}
+            <input type="file" style={{ display: 'none' }} disabled={busy} onChange={onFile} />
+          </label>
+          {err ? <span className="phxb-badge red" style={{ marginLeft: 8 }}>{err}</span> : null}
+        </div>
+      ) : null}
+
+      {E.DOC_FOLDERS.map(f => {
+        const list = (byFolder[f.key] || []).slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return (
+          <div key={f.key} style={{ marginBottom: 14 }}>
+            <div className="sh" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{ fontFamily: 'var(--mono)', color: 'var(--green-500)', fontSize: 12 }}>{f.key}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted-2)' }}>{f.contents}</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: 10.5, color: 'var(--muted-2)', fontFamily: 'var(--mono)' }}>{list.length}</span>
+            </div>
+            {list.length === 0 ? <div className="phxb-empty" style={{ padding: '6px 0' }}>No documents yet.</div> : (
+              <table className="phxb-table">
+                <thead><tr><th>File</th><th style={{ width: 70 }}>Version</th><th style={{ width: 110 }}>Date</th><th style={{ width: 90 }}>Size</th><th>Uploaded by</th><th style={{ width: 90 }}></th></tr></thead>
+                <tbody>
+                  {list.map(d => (
+                    <tr key={d.id}>
+                      <td>{d.url ? <a href={d.url} target="_blank" rel="noreferrer" style={{ color: 'var(--green-500)' }}>{d.docType}_v{d.version}_{d.fileName}</a> : d.docType + '_v' + d.version + '_' + d.fileName}</td>
+                      <td>v{d.version}</td>
+                      <td style={{ fontSize: 11 }}>{E.fmt.date((d.createdAt || '').slice(0, 10))}</td>
+                      <td style={{ fontSize: 11 }}>{d.size ? Math.round(d.size / 1024) + ' KB' : '—'}</td>
+                      <td style={{ fontSize: 11 }}>{d.uploadedBy}</td>
+                      <td>{canDelete ? <button className="phxb-small-btn" onClick={() => removeDoc(d)}>Delete</button> : null}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 /* =========================== KYC =========================== */
-function KycTab({ dealId }) {
+function KycTab({ dealId, role }) {
   const [tick, setTick] = React.useState(0);
+  const [inviteEmail, setInviteEmail] = React.useState('');
   const kyc = DB.getKyc(dealId);
   const received = E.KYC_ITEMS.filter(i => (kyc[i.ref] || {}).received).length;
   const set = (ref, field, value) => { DB.setKycItem(dealId, ref, { [field]: value }); setTick(t => t + 1); };
+  const invites = DB.getPortalInvites(dealId);
+  const canInvite = E.hasPerm(role, 'inviteClientPortal');
   return (
+    <div>
+    <Section role={role} cap="editKyc" label="KYC / AML">
     <div className="phxb-panel">
       <h3>KYC / AML register</h3>
       <div className="sub">Required from the borrowing entity, every director, every 25%+ shareholder and every guarantor. Pre-checked by Phoenix before it goes to the funder.</div>
@@ -492,10 +647,37 @@ function KycTab({ dealId }) {
         </tbody>
       </table>
     </div>
+    </Section>
+
+    <div className="phxb-panel">
+      <h3>Client portal invites</h3>
+      <div className="sub">Invite the client to upload outstanding KYC documents themselves via a secure, deal-scoped link. The Client Portal role sees only this deal's status and its own uploads — nothing else on the tracker.</div>
+      {!canInvite ? <div className="phxb-badge grey" style={{ marginBottom: 10 }}>Read-only for {role} — inviting requires the "inviteClientPortal" permission</div> : (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <input style={{ flex: 1, background: 'var(--surface-3)', border: '1px solid var(--border-strong)', color: 'var(--ink)', borderRadius: 5, padding: '8px 10px' }}
+            type="email" placeholder="client@example.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
+          <button className="phxb-btn primary" disabled={!inviteEmail.trim()} onClick={() => { DB.inviteClientPortal(dealId, inviteEmail.trim()); setInviteEmail(''); setTick(t => t + 1); }}>Send invite</button>
+        </div>
+      )}
+      {invites.length === 0 ? <div className="phxb-empty">No portal invites sent yet.</div> : (
+        <table className="phxb-table">
+          <thead><tr><th>Email</th><th>Status</th><th>Portal link</th><th>Sent</th></tr></thead>
+          <tbody>
+            {invites.map(inv => (
+              <tr key={inv.id}>
+                <td>{inv.email}</td>
+                <td>{inv.acceptedAt ? <span className="phxb-badge ok">Accepted</span> : <span className="phxb-badge amber">Pending</span>}</td>
+                <td style={{ fontFamily: 'var(--mono)', fontSize: 11 }}>?portal={inv.token}</td>
+                <td style={{ fontSize: 11 }}>{new Date(inv.createdAt).toLocaleDateString('en-GB')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+    </div>
   );
 }
-
-/* =========================== FUNDER SELECTION =========================== */
 function FunderTab({ dealId, patch }) {
   const [tick, setTick] = React.useState(0);
   const rows = DB.getFunderApproaches(dealId);
@@ -746,13 +928,14 @@ function AuditTab({ dealId }) {
 /* =========================== WORKSPACE SHELL =========================== */
 const TABS = ['Overview', 'Eligibility', 'Tasks & Gates', 'Documents', 'KYC / AML', 'Funder Selection', 'Valuation', 'CP Schedule', 'Fees & Costs', 'Notes', 'Post-completion', 'Audit Trail'];
 
-function PhxDealWorkspace({ dealId, onBack }) {
+function PhxDealWorkspace({ dealId, onBack, onOpenAccount }) {
   const [tick, setTick] = React.useState(0);
   const refresh = () => setTick(t => t + 1);
   const deal = DB.getDeal(dealId);
   const [tab, setTab] = React.useState('Overview');
   const tasks = React.useMemo(() => DB.listTasks(dealId), [dealId, tick]);
   const gates = React.useMemo(() => DB.getGates(dealId), [dealId, tick]);
+  const role = DB.currentUser().activeRole;
 
   if (!deal) return <div className="phxb-empty">Deal not found. <button className="phxb-btn" onClick={onBack}>← Back to pipeline</button></div>;
 
@@ -760,15 +943,15 @@ function PhxDealWorkspace({ dealId, onBack }) {
 
   return (
     <div>
-      <DealHeader deal={deal} onBack={onBack} tasks={tasks} gates={gates} />
+      <DealHeader deal={deal} onBack={onBack} tasks={tasks} gates={gates} onOpenAccount={onOpenAccount} />
       <div className="phxb-tabs">
         {TABS.map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}
       </div>
-      {tab === 'Overview' && <OverviewTab deal={deal} patch={patch} />}
-      {tab === 'Eligibility' && <EligibilityTab deal={deal} patch={patch} dealId={dealId} />}
-      {tab === 'Tasks & Gates' && <TasksGatesTab deal={deal} dealId={dealId} tasks={tasks} refresh={refresh} />}
-      {tab === 'Documents' && <DocumentsTab deal={deal} />}
-      {tab === 'KYC / AML' && <KycTab dealId={dealId} />}
+      {tab === 'Overview' && <OverviewTab deal={deal} patch={patch} role={role} />}
+      {tab === 'Eligibility' && <EligibilityTab deal={deal} patch={patch} dealId={dealId} role={role} />}
+      {tab === 'Tasks & Gates' && <TasksGatesTab deal={deal} dealId={dealId} tasks={tasks} refresh={refresh} role={role} />}
+      {tab === 'Documents' && <DocumentsTab deal={deal} dealId={dealId} role={role} />}
+      {tab === 'KYC / AML' && <KycTab dealId={dealId} role={role} />}
       {tab === 'Funder Selection' && <FunderTab dealId={dealId} patch={patch} />}
       {tab === 'Valuation' && <ValuationTab deal={deal} patch={patch} dealId={dealId} />}
       {tab === 'CP Schedule' && <CpTab dealId={dealId} />}

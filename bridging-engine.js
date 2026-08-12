@@ -148,17 +148,16 @@
   // ---------------------------------------------------------------------
   // Product parameters (Reference tab §8.1 / 8.2)
   // ---------------------------------------------------------------------
-  const PRODUCTS = ['Unregulated bridging', 'Light refurbishment', 'Heavy refurbishment', 'Part-complete development', 'Ground-up development'];
+  const PRODUCTS = ['Unregulated bridging', 'Light refurbishment', 'Heavy refurbishment', 'Part-complete development'];
 
-  const PRODUCT_PARAMS = {
+  const DEFAULT_PRODUCT_PARAMS = {
     'Unregulated bridging':        { day1Ltv: 0.75, grossLtv: 0.75, ltc: null, pricing: 'BBR + 450bps', note: 'Up to 75% LTV' },
     'Light refurbishment':         { day1Ltv: 0.75, grossLtv: 0.75, ltc: 0.90, pricing: 'BBR + 475bps', note: '70% LTGDV preferred' },
     'Heavy refurbishment':         { day1Ltv: 0.70, grossLtv: 0.70, ltc: 0.85, pricing: 'BBR + 500bps', note: 'Standard terms' },
     'Part-complete development':   { day1Ltv: 0.70, grossLtv: 0.65, ltc: 0.85, pricing: 'BBR + 525bps', note: 'Standard terms' },
-    'Ground-up development':       { day1Ltv: 0.55, grossLtv: 0.65, ltc: 0.85, pricing: 'BBR + 525bps', note: '65% day 1 in Greater London and the South East; follows the separate 11-stage development process after initial screening' },
   };
 
-  const CORE_PARAMS = {
+  const DEFAULT_CORE_PARAMS = {
     minLoan: 250000,
     maxLoan: 5000000,
     maxTermMonths: 18,
@@ -173,6 +172,11 @@
     guaranteeOverrunPct: 0.25,
     borderlineBandPts: 2, // "inside criteria by less than 2 percentage points" -> escalate
   };
+  // Back-compat aliases — existing call sites read these two names directly.
+  // Prefer passing live params (from bridging-db.js's admin overrides) into
+  // autoEligibilityVerdict(); these remain as the shipped defaults.
+  const PRODUCT_PARAMS = DEFAULT_PRODUCT_PARAMS;
+  const CORE_PARAMS = DEFAULT_CORE_PARAMS;
 
   // ---------------------------------------------------------------------
   // Eligibility tests — 23 tests, numbered exactly as the workbook.
@@ -415,8 +419,10 @@
   // else is a manual verdict the Analyst records (matches the workbook,
   // which is manually judged apart from the metric cells).
   // ---------------------------------------------------------------------
-  function autoEligibilityVerdict(test, deal, metrics) {
-    const params = PRODUCT_PARAMS[deal.product] || {};
+  function autoEligibilityVerdict(test, deal, metrics, productParamsLive, coreParamsLive) {
+    const allParams = productParamsLive || PRODUCT_PARAMS;
+    const core = coreParamsLive || CORE_PARAMS;
+    const params = allParams[deal.product] || {};
     switch (test.key) {
       case 'productType':
         return PRODUCTS.indexOf(deal.product) >= 0
@@ -425,18 +431,18 @@
       case 'loanSize': {
         const g = num(deal.grossFacility);
         if (g == null) return { verdict: 'N/A', note: 'Gross facility not entered' };
-        const ok = g >= CORE_PARAMS.minLoan && g <= CORE_PARAMS.maxLoan;
+        const ok = g >= core.minLoan && g <= core.maxLoan;
         return { verdict: ok ? 'Pass' : 'Fail', note: money(g) };
       }
       case 'term': {
         const t = num(deal.termMonths);
         if (t == null) return { verdict: 'N/A', note: '' };
-        return { verdict: t <= CORE_PARAMS.maxTermMonths ? 'Pass' : 'Fail', note: t + ' months' };
+        return { verdict: t <= core.maxTermMonths ? 'Pass' : 'Fail', note: t + ' months' };
       }
       case 'day1Ltv': {
         if (metrics.day1Ltv == null || params.day1Ltv == null) return { verdict: 'N/A', note: '' };
         const limit = params.day1Ltv;
-        const borderline = metrics.day1Ltv <= limit && (limit - metrics.day1Ltv) * 100 < CORE_PARAMS.borderlineBandPts;
+        const borderline = metrics.day1Ltv <= limit && (limit - metrics.day1Ltv) * 100 < core.borderlineBandPts;
         return {
           verdict: metrics.day1Ltv > limit ? 'Fail' : (borderline ? 'Borderline' : 'Pass'),
           note: pctOrDash(metrics.day1Ltv) + ' vs ' + pctOrDash(limit) + ' limit',
@@ -445,7 +451,7 @@
       case 'grossLtv': {
         if (metrics.grossLtv == null || params.grossLtv == null) return { verdict: 'N/A', note: '' };
         const limit = params.grossLtv;
-        const borderline = metrics.grossLtv <= limit && (limit - metrics.grossLtv) * 100 < CORE_PARAMS.borderlineBandPts;
+        const borderline = metrics.grossLtv <= limit && (limit - metrics.grossLtv) * 100 < core.borderlineBandPts;
         return {
           verdict: metrics.grossLtv > limit ? 'Fail' : (borderline ? 'Borderline' : 'Pass'),
           note: pctOrDash(metrics.grossLtv) + ' vs ' + pctOrDash(limit) + ' limit',
@@ -455,7 +461,7 @@
         if (params.ltc == null) return { verdict: 'N/A', note: 'Not applicable to this product' };
         if (metrics.ltc == null) return { verdict: 'N/A', note: '' };
         const limit = params.ltc;
-        const borderline = metrics.ltc <= limit && (limit - metrics.ltc) * 100 < CORE_PARAMS.borderlineBandPts;
+        const borderline = metrics.ltc <= limit && (limit - metrics.ltc) * 100 < core.borderlineBandPts;
         return {
           verdict: metrics.ltc > limit ? 'Fail' : (borderline ? 'Borderline' : 'Pass'),
           note: pctOrDash(metrics.ltc) + ' vs ' + pctOrDash(limit) + ' limit',
@@ -495,15 +501,108 @@
   }
 
   // ---------------------------------------------------------------------
+  // Roles & permissions
+  // ---------------------------------------------------------------------
+  const ROLES = ['Admin', 'Principal', 'Deal Lead', 'Analyst', 'Case Manager', 'Viewer', 'Client Portal User', 'External Introducer', 'External Solicitor', 'External Funder'];
+
+  // Capability matrix. `true` = allowed. Anything not listed for a role
+  // defaults to false. Admin/Principal are given every capability so new
+  // capabilities added later are safe-by-default for the senior roles.
+  const CAPABILITIES = [
+    'editOverview', 'editEligibility', 'editTasks', 'passGate', 'waiveTask',
+    'editKyc', 'editFunder', 'editValuation', 'editCp', 'satisfyCp',
+    'editFees', 'markFeeReceived', 'addNote', 'uploadDocument', 'deleteDocument',
+    'editAdminParams', 'viewAudit', 'editPostCompletion', 'setOutcomeNotProceeding',
+    'inviteClientPortal', 'viewMi',
+  ];
+  const PERMISSIONS = {
+    'Admin':        { all: true },
+    'Principal':    { all: true },
+    'Deal Lead':    { editOverview: 1, editEligibility: 1, editTasks: 1, passGate: 1, editFunder: 1, editValuation: 1, editCp: 1, addNote: 1, uploadDocument: 1, editPostCompletion: 1, setOutcomeNotProceeding: 1, viewAudit: 1, viewMi: 1, inviteClientPortal: 1 },
+    'Analyst':      { editEligibility: 1, editTasks: 1, editValuation: 1, addNote: 1, uploadDocument: 1, editPostCompletion: 1, viewAudit: 1, viewMi: 1 },
+    'Case Manager': { editOverview: 1, editTasks: 1, editKyc: 1, editCp: 1, satisfyCp: 1, editFees: 1, markFeeReceived: 1, editFunder: 1, addNote: 1, uploadDocument: 1, deleteDocument: 1, viewAudit: 1, viewMi: 1, inviteClientPortal: 1 },
+    'Viewer':       { viewAudit: 1, viewMi: 1 },
+    'Client Portal User': {},        // handled entirely by the separate portal surface, not the deal workspace
+    'External Introducer': {},
+    'External Solicitor': {},
+    'External Funder': {},
+  };
+  function hasPerm(role, capability) {
+    const p = PERMISSIONS[role];
+    if (!p) return false;
+    if (p.all) return true;
+    return !!p[capability];
+  }
+  // Waivers require senior approval — deliberately not in any role's map
+  // above except via `all`, so only Admin/Principal can grant one.
+  function canWaive(role) { return hasPerm(role, 'all') || role === 'Admin' || role === 'Principal'; }
+
+  // ---------------------------------------------------------------------
+  // SLA engine — due-at computation per commitment, from deal/task timestamps
+  // ---------------------------------------------------------------------
+  function addHours(iso, hours) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    return new Date(d.getTime() + hours * 3600000);
+  }
+  // Maps each SLA_ITEMS key to the deal/task timestamp it's measured from,
+  // and whether it's "satisfied" (met) once a later timestamp exists.
+  function slaStatusForDeal(deal, tasks) {
+    const gateDate = (ref) => { const t = (tasks || []).find(x => x.ref === ref); return t && t.doneDate ? t.doneDate : null; };
+    const rows = [
+      { key: 'ack', from: deal.dateReceived, metWhen: gateDate('0.5') },
+      { key: 'eligibility', from: gateDate('1.1'), metWhen: gateDate('1.12') },
+      { key: 'terms', from: gateDate('1.12'), metWhen: deal.termsIssued },
+      { key: 'submission', from: deal.acceptanceFeePaidDate, metWhen: deal.submittedToFunder },
+      { key: 'docreview', from: deal.offerIssued, metWhen: gateDate('4.10') },
+      { key: 'drawdown', from: gateDate('6.1'), metWhen: deal.actualCompletion },
+      { key: 'facilityreview', from: deal.actualCompletion, metWhen: null, recurringFrom: deal.actualCompletion },
+    ];
+    const now = new Date();
+    return rows.map(r => {
+      const def = SLA_ITEMS.find(s => s.key === r.key);
+      if (!def || !r.from) return { key: r.key, label: def ? def.label : r.key, status: 'not started', dueAt: null, hoursRemaining: null };
+      const dueAt = addHours(r.from, def.targetHours);
+      if (r.metWhen) {
+        const metDate = new Date(r.metWhen);
+        const met = dueAt && metDate <= dueAt;
+        return { key: r.key, label: def.label, status: met ? 'met' : 'missed', dueAt, metAt: metDate };
+      }
+      const hoursRemaining = dueAt ? (dueAt - now) / 3600000 : null;
+      return {
+        key: r.key, label: def.label, dueAt,
+        status: hoursRemaining == null ? 'not started' : hoursRemaining < 0 ? 'breached' : hoursRemaining < 4 ? 'due soon' : 'on track',
+        hoursRemaining,
+      };
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // NOTE: development finance (ground-up, part-complete, heavy refurb-as-
+  // development, land with planning) is NOT a sub-process of Bridging.
+  // It is Phoenix's separate placement-broker line — its own D0-D10
+  // stages, its own GD0-GD10 gates, its own PHX-DV-YY-NNN reference series,
+  // its own reason codes and statuses — implemented in development-engine.js
+  // / development-db.js / development-deal.jsx, per
+  // Phoenix_Development_Finance_Brokerage_Procedure_v2.docx. An earlier
+  // version of this file guessed at an 11-stage "Ground-up development"
+  // sub-process bolted onto a Bridging deal; that was wrong and has been
+  // removed now the real procedure is available. Deals needing development
+  // finance should be created in the Development Finance module directly.
+  // ---------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------
   // export
   // ---------------------------------------------------------------------
   global.PhoenixBridging = {
     STAGES, GATES, TASK_TEMPLATE, tasksForStage, gateTaskForStage,
-    PRODUCTS, PRODUCT_PARAMS, CORE_PARAMS,
+    PRODUCTS, PRODUCT_PARAMS, CORE_PARAMS, DEFAULT_PRODUCT_PARAMS, DEFAULT_CORE_PARAMS,
     ELIGIBILITY_TESTS, ADVERSE_CATEGORIES, ADVERSE_APPLIES_TO, EXCEPTION_TRIGGERS,
     TIERS, REASON_CODES, STATUSES, PIPELINE_BUCKET,
     KYC_ITEMS, FEE_ROWS, ESCALATION_TRIGGERS, SLA_ITEMS, DOC_FOLDERS,
-    nextDealRef, lowerOfValueAndPrice, calcMetrics, autoEligibilityVerdict, suggestTier, gateReadiness,
+    ROLES, CAPABILITIES, PERMISSIONS, hasPerm, canWaive,
+    nextDealRef, lowerOfValueAndPrice, calcMetrics, autoEligibilityVerdict, suggestTier, gateReadiness, slaStatusForDeal,
     fmt: { pct: pctOrDash, money, date: ukDate, daysUntil },
   };
 

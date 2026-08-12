@@ -206,7 +206,7 @@ function AccountsList({ accounts, projects, onOpen, onNew, query, setQuery }) {
 }
 
 /* ---- CRM shell (sidebar + main) ---- */
-function CRMApp({ accounts, projects, session, onBackToPortfolio, onSignOut, onOpenJob, createAccount, saveAccount, deleteAccount, assignJob, setJobStage }) {
+function CRMApp({ accounts, projects, session, onBackToPortfolio, onSignOut, onOpenJob, createAccount, saveAccount, deleteAccount, assignJob, setJobStage, onOpenBridgingDeal, onOpenDevelopmentDeal, onCreateDeal, openAccountId, onAccountOpened, topView, setTopView, externalContent }) {
   const [activeId, setActiveId] = React.useState(null);
   const [showNew, setShowNew] = React.useState(false);
   const [query, setQuery] = React.useState('');
@@ -215,6 +215,8 @@ function CRMApp({ accounts, projects, session, onBackToPortfolio, onSignOut, onO
   const active = activeId ? accounts.find(a => a.id === activeId) : null;
   // if the active account was deleted elsewhere, fall back to the list
   React.useEffect(() => { if (activeId && !active) setActiveId(null); }, [activeId, active]);
+  // arriving from a deal workspace breadcrumb ("← Client name")
+  React.useEffect(() => { if (openAccountId) { setActiveId(openAccountId); if (onAccountOpened) onAccountOpened(); } }, [openAccountId]);
 
   const handleCreate = async (fields) => { const a = await createAccount(fields); setShowNew(false); if (a) setActiveId(a.id); };
 
@@ -230,8 +232,10 @@ function CRMApp({ accounts, projects, session, onBackToPortfolio, onSignOut, onO
         </div>
         <nav className="crm-nav">
           <div className="navlbl">Workspace</div>
-          <button className="on"><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 9a3.2 3.2 0 100-6.4A3.2 3.2 0 009 9zM3 16a6 6 0 0112 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>Clients<span className="cnt">{accounts.length}</span></button>
-          <button onClick={onBackToPortfolio}><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="10" y="10" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/></svg></span>Appraisals<span className="cnt">{totalJobs}</span></button>
+          <button className={topView === 'crm' ? 'on' : ''} onClick={() => setTopView('crm')}><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M9 9a3.2 3.2 0 100-6.4A3.2 3.2 0 009 9zM3 16a6 6 0 0112 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>Clients<span className="cnt">{accounts.length}</span></button>
+          <button className={topView === 'bridging' ? 'on' : ''} onClick={() => setTopView('bridging')}><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M2.5 14.5V7l6-4.5 6 4.5v7.5M7 14.5v-4.5h3.5v4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>Bridging</button>
+          <button className={topView === 'development' ? 'on' : ''} onClick={() => setTopView('development')}><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M3.5 15V7l2.75-2.2L9 7v8M9 15V4.5L11.75 2.5 14.5 4.5V15M2.5 15h13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span>Development Finance</button>
+          <button className={topView === 'portfolio' ? 'on' : ''} onClick={() => setTopView('portfolio')}><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/><rect x="10" y="10" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/></svg></span>Appraisals<span className="cnt">{totalJobs}</span></button>
           <div className="navlbl">Links</div>
           <a href="Phoenix Hub.html"><span className="ic"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M7 11l4-4M5.5 9.5L4 11a2.5 2.5 0 003.5 3.5L9 13M12.5 8.5L14 7a2.5 2.5 0 00-3.5-3.5L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>Phoenix Hub</a>
         </nav>
@@ -245,38 +249,45 @@ function CRMApp({ accounts, projects, session, onBackToPortfolio, onSignOut, onO
       </aside>
 
       <div className="crm-main">
-        <div className="crm-topbar">
-          <button className="crm-burger" onClick={() => setNavOpen(o => !o)}><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>
-          {active ? (
-            <h1 className="crm-h1">{active.name}<span className="sub">Client account</span></h1>
-          ) : (
-            <h1 className="crm-h1">Clients<span className="sub">{accounts.length} accounts · {totalJobs} linked jobs</span></h1>
-          )}
-          <div className="crm-top-r">
-            {!active ? (
-              <div className="crm-search">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search accounts…" />
+        {topView !== 'crm' ? (
+          externalContent
+        ) : (
+          <React.Fragment>
+            <div className="crm-topbar">
+              <button className="crm-burger" onClick={() => setNavOpen(o => !o)}><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>
+              {active ? (
+                <h1 className="crm-h1">{active.name}<span className="sub">Client account</span></h1>
+              ) : (
+                <h1 className="crm-h1">Clients<span className="sub">{accounts.length} accounts · {totalJobs} linked jobs</span></h1>
+              )}
+              <div className="crm-top-r">
+                {!active ? (
+                  <div className="crm-search">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search accounts…" />
+                  </div>
+                ) : null}
+                {!active ? <button className="cbtn primary" onClick={() => setShowNew(true)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>New account</button> : null}
               </div>
-            ) : null}
-            {!active ? <button className="cbtn primary" onClick={() => setShowNew(true)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>New account</button> : null}
-          </div>
-        </div>
+            </div>
 
-        <div className="crm-body">
-          {active ? (
-            <window.AccountDetail
-              account={active} accounts={accounts} projects={projects}
-              onBack={() => setActiveId(null)}
-              onOpenJob={onOpenJob}
-              saveAccount={saveAccount} deleteAccount={async (id) => { await deleteAccount(id); setActiveId(null); }}
-              assignJob={assignJob} setJobStage={setJobStage}
-              session={session}
-            />
-          ) : (
-            <AccountsList accounts={accounts} projects={projects} onOpen={setActiveId} onNew={() => setShowNew(true)} query={query} setQuery={setQuery} />
-          )}
-        </div>
+            <div className="crm-body">
+              {active ? (
+                <window.AccountDetail
+                  account={active} accounts={accounts} projects={projects}
+                  onBack={() => setActiveId(null)}
+                  onOpenJob={onOpenJob}
+                  saveAccount={saveAccount} deleteAccount={async (id) => { await deleteAccount(id); setActiveId(null); }}
+                  assignJob={assignJob} setJobStage={setJobStage}
+                  session={session}
+                  onOpenBridgingDeal={onOpenBridgingDeal} onOpenDevelopmentDeal={onOpenDevelopmentDeal} onCreateDeal={onCreateDeal}
+                />
+              ) : (
+                <AccountsList accounts={accounts} projects={projects} onOpen={setActiveId} onNew={() => setShowNew(true)} query={query} setQuery={setQuery} />
+              )}
+            </div>
+          </React.Fragment>
+        )}
       </div>
 
       {showNew ? <AccountModal onClose={() => setShowNew(false)} onSave={handleCreate} /> : null}

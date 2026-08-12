@@ -505,6 +505,7 @@ alter table bridging_status_history enable row level security;
 alter table bridging_client_portal_invites enable row level security;
 alter table bridging_funder_parameters enable row level security;
 alter table bridging_core_parameters enable row level security;
+alter table bridging_reason_codes enable row level security;
 
 -- helper: organisation of the calling user
 create or replace function bridging_current_org() returns uuid
@@ -526,6 +527,13 @@ create policy org_isolation_params_funder on bridging_funder_parameters
   for all using (organisation_id = bridging_current_org());
 create policy org_isolation_params_core on bridging_core_parameters
   for all using (organisation_id = bridging_current_org());
+
+-- bridging_reason_codes is shared, non-tenant reference data (the 13 fixed
+-- "Not proceeding" codes) — every signed-in user may read it, but only a
+-- migration / the service role may write to it, so there is deliberately
+-- no insert/update/delete policy: those default-deny under RLS.
+create policy read_reason_codes on bridging_reason_codes
+  for select using (auth.role() = 'authenticated');
 
 -- child tables: scoped via their parent deal's organisation
 create policy org_isolation_tasks on bridging_stage_tasks

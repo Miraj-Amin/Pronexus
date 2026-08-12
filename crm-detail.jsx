@@ -189,6 +189,112 @@ function JobsTab({ account, projects, onOpenJob, assignJob, setJobStage, onLink 
   );
 }
 
+function DealTypePickerModal({ onClose, onPick }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+        <div className="modal-head"><h3>New deal</h3><p>Choose which brokerage line this opportunity belongs to.</p></div>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button className="cbtn" style={{ justifyContent: 'flex-start', padding: '12px 14px' }} onClick={() => onPick('bridging')}>
+            <b style={{ marginRight: 8 }}>Bridging</b><span style={{ color: 'var(--c-muted)', fontSize: 12 }}>Unregulated bridging, light/heavy refurb, part-complete development</span>
+          </button>
+          <button className="cbtn" style={{ justifyContent: 'flex-start', padding: '12px 14px' }} onClick={() => onPick('development')}>
+            <b style={{ marginRight: 8 }}>Development Finance</b><span style={{ color: 'var(--c-muted)', fontSize: 12 }}>Ground-up, part-complete development, heavy refurb, land with planning</span>
+          </button>
+        </div>
+        <div className="modal-foot"><button className="cbtn" onClick={onClose}>Cancel</button></div>
+      </div>
+    </div>
+  );
+}
+
+function DealsTab({ account, onOpenBridgingDeal, onOpenDevelopmentDeal, onCreateDeal }) {
+  const [showPicker, setShowPicker] = React.useState(false);
+  const BDB = window.PhoenixBridgingDB, BE = window.PhoenixBridging;
+  const DDB = window.PhoenixDevelopmentDB, DE = window.PhoenixDevelopment;
+  const bridgingDeals = BDB ? BDB.listDealsForAccount(account.id) : [];
+  const devDeals = DDB ? DDB.listDealsForAccount(account.id) : [];
+  const total = bridgingDeals.length + devDeals.length;
+
+  let gatesBlocked = 0, cpsOverdue = 0;
+  bridgingDeals.forEach(d => {
+    const tasks = BDB.listTasks(d.id);
+    if (!BE.gateReadiness(d.stage, tasks).ready) gatesBlocked++;
+    (BDB.getCps(d.id) || []).forEach(c => { if (c.status !== 'Satisfied' && c.dueDate && new Date(c.dueDate) < new Date()) cpsOverdue++; });
+  });
+  devDeals.forEach(d => {
+    const tasks = DDB.listTasks(d.id);
+    if (!DE.gateReadiness(d.stage, tasks).ready) gatesBlocked++;
+    (DDB.getCps(d.id) || []).forEach(c => { if (c.status !== 'Satisfied' && c.dueDate && new Date(c.dueDate) < new Date()) cpsOverdue++; });
+  });
+
+  return (
+    <div className="crm-card">
+      <div className="crm-card-h">
+        <span className="t">Bridging &amp; development deals <span className="n">{total}</span></span>
+        <button className="cbtn sm primary" style={{ marginLeft: 'auto' }} onClick={() => setShowPicker(true)}>+ New deal</button>
+      </div>
+
+      {total > 0 ? (
+        <div style={{ display: 'flex', gap: 8, padding: '2px 14px 12px', flexWrap: 'wrap' }}>
+          <span className="phxb-badge cyan">{total} deal{total === 1 ? '' : 's'}</span>
+          {gatesBlocked > 0 ? <span className="phxb-badge red">{gatesBlocked} gate {gatesBlocked === 1 ? 'blocked' : 'blocked'}</span> : <span className="phxb-badge ok">All gates clear</span>}
+          {cpsOverdue > 0 ? <span className="phxb-badge red">{cpsOverdue} CP{cpsOverdue === 1 ? '' : 's'} overdue</span> : null}
+        </div>
+      ) : null}
+
+      {total === 0 ? (
+        <div className="crm-empty">
+          <div className="ei"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 6h16M4 18h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg></div>
+          <div className="et">No bridging or development deals yet</div>
+          <div className="es">Create a bridging or development finance opportunity for this client — the deal reference, folder structure and Stage 0 tasks are generated automatically.</div>
+          <button className="cbtn primary" onClick={() => setShowPicker(true)}>+ New deal</button>
+        </div>
+      ) : (
+        <React.Fragment>
+          {bridgingDeals.map(d => {
+            const tasks = BDB.listTasks(d.id);
+            const blocked = !BE.gateReadiness(d.stage, tasks).ready;
+            return (
+              <div key={d.id} className="jobrow" onClick={() => onOpenBridgingDeal(d.id)}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="jn">{d.dealRef} <span style={{ fontWeight: 400, color: 'var(--c-muted)' }}>· Bridging</span></div>
+                  <div className="ja">{d.product} · {d.securityAddress || 'No address recorded'}</div>
+                </div>
+                <div className="jm hide-sm"><div className="ml">Stage</div><div className="mv">S{d.stage}</div></div>
+                <div className="jm hide-sm"><div className="ml">Facility</div><div className="mv">{BE.fmt.money(d.grossFacility)}</div></div>
+                <div className="jm" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className={'phxb-badge ' + (blocked ? 'red' : 'ok')}>{blocked ? 'Blocked' : d.status}</span>
+                </div>
+              </div>
+            );
+          })}
+          {devDeals.map(d => {
+            const tasks = DDB.listTasks(d.id);
+            const blocked = !DE.gateReadiness(d.stage, tasks).ready;
+            const facility = (parseFloat(d.seniorFacility) || 0) + (parseFloat(d.mezzanineFacility) || 0);
+            return (
+              <div key={d.id} className="jobrow" onClick={() => onOpenDevelopmentDeal(d.id)}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="jn">{d.dealRef} <span style={{ fontWeight: 400, color: 'var(--c-muted)' }}>· Development Finance</span></div>
+                  <div className="ja">{d.product} · {d.siteAddress || 'No address recorded'}</div>
+                </div>
+                <div className="jm hide-sm"><div className="ml">Stage</div><div className="mv">D{d.stage}</div></div>
+                <div className="jm hide-sm"><div className="ml">Facility</div><div className="mv">{DE.fmt.money(facility)}</div></div>
+                <div className="jm" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className={'phxb-badge ' + (blocked ? 'red' : 'ok')}>{blocked ? 'Blocked' : d.status}</span>
+                </div>
+              </div>
+            );
+          })}
+        </React.Fragment>
+      )}
+
+      {showPicker ? <DealTypePickerModal onClose={() => setShowPicker(false)} onPick={(type) => { setShowPicker(false); onCreateDeal(type); }} /> : null}
+    </div>
+  );
+}
+
 function ContactsTab({ draft, setField }) {
   const [modal, setModal] = React.useState(null); // {contact} or {} for new
   const contacts = draft.contacts || [];
@@ -290,7 +396,7 @@ function ActivityTab({ draft, setField, session }) {
 }
 
 /* ---- detail shell ---- */
-function AccountDetail({ account, accounts, projects, onBack, onOpenJob, saveAccount, deleteAccount, assignJob, setJobStage, session }) {
+function AccountDetail({ account, accounts, projects, onBack, onOpenJob, saveAccount, deleteAccount, assignJob, setJobStage, session, onOpenBridgingDeal, onOpenDevelopmentDeal, onCreateDeal }) {
   const [tab, setTab] = React.useState('overview');
   const [editing, setEditing] = React.useState(false);
   const [showLink, setShowLink] = React.useState(false);
@@ -343,12 +449,14 @@ function AccountDetail({ account, accounts, projects, onBack, onOpenJob, saveAcc
       <div className="det-tabs">
         <button className={tab === 'overview' ? 'on' : ''} onClick={() => setTab('overview')}>Overview</button>
         <button className={tab === 'jobs' ? 'on' : ''} onClick={() => setTab('jobs')}>Jobs <span className="tc">{rollup.count}</span></button>
+        <button className={tab === 'deals' ? 'on' : ''} onClick={() => setTab('deals')}>Bridging &amp; Development <span className="tc">{((window.PhoenixBridgingDB ? window.PhoenixBridgingDB.listDealsForAccount(account.id).length : 0) + (window.PhoenixDevelopmentDB ? window.PhoenixDevelopmentDB.listDealsForAccount(account.id).length : 0))}</span></button>
         <button className={tab === 'contacts' ? 'on' : ''} onClick={() => setTab('contacts')}>Contacts <span className="tc">{contacts.length}</span></button>
         <button className={tab === 'activity' ? 'on' : ''} onClick={() => setTab('activity')}>Activity <span className="tc">{(draft.activity || []).length}</span></button>
       </div>
 
       {tab === 'overview' ? <OverviewTab draft={draft} setField={setField} commit={commit} rollup={rollup} /> : null}
       {tab === 'jobs' ? <JobsTab account={account} projects={projects} onOpenJob={onOpenJob} assignJob={assignJob} setJobStage={setJobStage} onLink={() => setShowLink(true)} /> : null}
+      {tab === 'deals' ? <DealsTab account={account} onOpenBridgingDeal={onOpenBridgingDeal} onOpenDevelopmentDeal={onOpenDevelopmentDeal} onCreateDeal={(type) => onCreateDeal(type, account)} /> : null}
       {tab === 'contacts' ? <ContactsTab draft={draft} setField={setField} /> : null}
       {tab === 'activity' ? <ActivityTab draft={draft} setField={setField} session={session} /> : null}
 

@@ -164,9 +164,27 @@ function Workspace({ session }) {
   // CRM — client accounts + which top-level view is showing when no project is open
   const [accounts, setAccounts] = React.useState([]);
   const [view, setView] = React.useState(() => {
-    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio' || u === 'bridging') return u; } catch (e) {}
+    try { const u = new URLSearchParams(location.search).get('view'); if (u === 'crm' || u === 'portfolio' || u === 'bridging' || u === 'development') return u; } catch (e) {}
     return localStorage.getItem('phx_view') || 'crm';
   });
+  // cross-module navigation: "+ New deal" on a client page carries the client
+  // into Bridging/Development so the New Deal modal opens pre-filled instead
+  // of asking the person to find the client again by name.
+  const [pendingDealAccount, setPendingDealAccount] = React.useState(null); // {accountId, accountName}
+  // a deal workspace's "← Client name" breadcrumb carries the account back into CRM
+  const [openAccountId, setOpenAccountId] = React.useState(null);
+  // opening a specific deal directly (e.g. a future global search) bypasses the pipeline click
+  const [openBridgingDealId, setOpenBridgingDealId] = React.useState(null);
+  const [openDevelopmentDealId, setOpenDevelopmentDealId] = React.useState(null);
+
+  function createDealForAccount(type, account) {
+    setPendingDealAccount({ accountId: account.id, accountName: account.name });
+    setView(type);
+  }
+  function openAccountFromDeal(accountId) {
+    setOpenAccountId(accountId);
+    setView('crm');
+  }
   const email = session.user.email;
 
   React.useEffect(() => { localStorage.setItem('phx_view', view); }, [view]);
@@ -408,13 +426,53 @@ function Workspace({ session }) {
 
   if (projects === null) return <div className="app"><Splash label="Loading schemes…" /></div>;
 
-  // ---- Phoenix Bridging view (separate module, own data store) ----
-  if (!active && view === 'bridging') {
-    return <window.PhoenixBridgingApp onBackToPortfolio={() => setView('portfolio')} />;
-  }
+  // ---- Persistent shell: Clients / Bridging / Development / Appraisals ----
+  // CRMApp's own dark sidebar (Clients/Appraisals/Sign out, already built)
+  // is generalised into the one app-wide shell — Bridging, Development and
+  // Portfolio render as `externalContent` inside its main pane instead of
+  // each being a separate full-page app with its own duplicate chrome.
+  if (!active) {
+    let externalContent = null;
+    if (view === 'bridging') {
+      externalContent = (
+        <window.PhoenixBridgingApp
+          accounts={accounts}
+          presetAccount={pendingDealAccount}
+          onConsumePreset={() => setPendingDealAccount(null)}
+          onOpenAccount={openAccountFromDeal}
+          initialDealId={openBridgingDealId}
+          onDealOpened={() => setOpenBridgingDealId(null)}
+        />
+      );
+    } else if (view === 'development') {
+      externalContent = (
+        <window.PhoenixDevelopmentApp
+          accounts={accounts}
+          presetAccount={pendingDealAccount}
+          onConsumePreset={() => setPendingDealAccount(null)}
+          onOpenAccount={openAccountFromDeal}
+          initialDealId={openDevelopmentDealId}
+          onDealOpened={() => setOpenDevelopmentDealId(null)}
+        />
+      );
+    } else if (view === 'portfolio') {
+      externalContent = (
+        <div className="app">
+          <div className="topbar">
+            <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
+            <div className="ref">PORTFOLIO</div>
+            <div className="spacer"></div>
+          </div>
+          {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
+          <TabErrorBoundary resetLabel="Dismiss & return to portfolio" onReset={() => { setShowNew(false); setShowImport(false); }}>
+            <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => { if (!window.ImportModal) { alert('The import screen is unavailable. Please press F12, copy any red error from the Console, and report it.'); return; } setShowImport(true); }} onClone={cloneProject} onDelete={deleteProject} />
+            {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
+            {showImport && ImportModal ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
+          </TabErrorBoundary>
+        </div>
+      );
+    }
 
-  // ---- CRM view (no project open) ----
-  if (!active && view === 'crm') {
     return (
       <window.CRMApp
         accounts={accounts} projects={projects} session={session}
@@ -423,39 +481,15 @@ function Workspace({ session }) {
         onOpenJob={(id) => openProject(id)}
         createAccount={createAccount} saveAccount={saveAccount} deleteAccount={deleteAccount}
         assignJob={assignJob} setJobStage={setJobStage}
+        onOpenBridgingDeal={(dealId) => { setOpenBridgingDealId(dealId); setView('bridging'); }}
+        onOpenDevelopmentDeal={(dealId) => { setOpenDevelopmentDealId(dealId); setView('development'); }}
+        onCreateDeal={createDealForAccount}
+        openAccountId={openAccountId}
+        onAccountOpened={() => setOpenAccountId(null)}
+        topView={view}
+        setTopView={setView}
+        externalContent={externalContent}
       />
-    );
-  }
-
-  // ---- Portfolio view ----
-  if (!active) {
-    return (
-      <div className="app">
-        <div className="topbar">
-          <div className="brand"><div className="mark">P</div><div className="title">Phoenix <span style={{ opacity: .6, fontWeight: 400 }}>· Appraisal</span></div></div>
-          <div className="ref">PORTFOLIO</div>
-          <div className="spacer"></div>
-          <button onClick={() => setView('crm')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,cursor:'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Clients
-          </button>
-          <button onClick={() => setView('bridging')} style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--paper-border)',background:'var(--paper)',color:'#46586a',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,cursor:'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 13V6l6-4 6 4v7M6.5 13V9h3v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Bridging
-          </button>
-          <a href="Phoenix Hub.html" style={{ display:'inline-flex',alignItems:'center',gap:6,border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--muted)',fontFamily:'var(--mono)',fontSize:11,fontWeight:600,padding:'7px 12px',borderRadius:5,textDecoration:'none' }}>Phoenix Hub</a>
-          <div className="acct">
-            <span className="acct-email" title={session.user.email}>{session.user.email}</span>
-            <button className="btn ghost acct-out" onClick={signOut}>Sign out</button>
-          </div>
-        </div>
-        {loadErr ? <div className="dberr">⚠ {loadErr}</div> : null}
-        <TabErrorBoundary resetLabel="Dismiss & return to portfolio" onReset={() => { setShowNew(false); setShowImport(false); }}>
-          <Portfolio projects={projects} onOpen={openProject} onNew={() => setShowNew(true)} onImport={() => { if (!window.ImportModal) { alert('The import screen is unavailable. Please press F12, copy any red error from the Console, and report it.'); return; } setShowImport(true); }} onClone={cloneProject} onDelete={deleteProject} />
-          {showNew ? <NewProjectModal onClose={() => setShowNew(false)} onCreate={newProject} /> : null}
-          {showImport && ImportModal ? <ImportModal onClose={() => setShowImport(false)} onImport={importProject} /> : null}
-        </TabErrorBoundary>
-      </div>
     );
   }
 

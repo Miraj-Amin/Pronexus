@@ -246,6 +246,14 @@ External Solicitor, External Funder`), matching the brief's role list.
   check `roles`) should be replicated for: waivers (Principal/Admin only,
   per "waivers require senior approval"), `Not proceeding` outcome writes,
   and fee-received confirmation.
+- **Shared reference data**: `bridging_reason_codes` (and any similar future
+  lookup table, e.g. a global product-type list) is not tenant-scoped, so it
+  doesn't get the `organisation_id`/`deal_id` isolation policy — but RLS is
+  still enabled on it, with a `select`-only policy for authenticated users
+  and no insert/update/delete policy, so it's readable by every signed-in
+  user and writable only via a migration or the service role. Any new
+  non-tenant table should follow this pattern rather than being left with
+  RLS off.
 - **Client Portal / external users**: modelled via
   `bridging_client_portal_invites` (token-based, deal-scoped) — a
   `Client Portal User` role should get a *separate, much narrower* RLS
